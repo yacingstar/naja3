@@ -171,7 +171,7 @@ in real numbers from the admin panel. Verified against current sources
    fade/slide-in, hover lift, sticky-nav shrink) deliberately deferred to
    Phase 6 — user initially asked for them now, confirmed keeping the phases
    split instead: static/structural first, animated pass later.
-3. **Catalog & product detail** — not started.
+3. **Catalog & product detail** — ✅ done, see below.
 4. **Cart & checkout** — not started. Cart via React Context + localStorage.
    Checkout: prénom, nom, téléphone, wilaya (dropdown from `delivery_rates`),
    commune (free text — confirmed), delivery method (domicile/stopdesk, only
@@ -420,14 +420,57 @@ was never left with fake data.
 per-request (`ƒ`, not static `○`) since `CatalogPreview` reads cookies via
 the Supabase server client — expected, not a bug.
 
-## Status: Phase 2 complete, ready for Phase 3
+## What's actually been built (Phase 3 detail)
 
-**Next up: Phase 3 — catalog & product detail** (product listing page,
-product detail page with color variant selection respecting `in_stock`,
-photo gallery per color). Not started yet — waiting on the user to say go.
-Nothing committed to git yet this phase — ask before committing, per the
-user's established preference of committing at phase boundaries with a
-clear message.
+**Data layer** (`src/lib/products.ts`, extended): `getProducts()` for the
+full listing, `getProductBySlug()` for detail — both real Supabase queries,
+still return empty/`null` gracefully since the catalog is genuinely empty
+until Phase 5. Colors come back sorted in-stock-first, so the gallery's
+default selection is always something a customer could actually buy rather
+than defaulting to an unavailable one. New `src/lib/format.ts` with
+`formatPrice()` (`Intl.NumberFormat("fr-FR")` + " DA") so price formatting
+isn't reimplemented per component.
+
+**Pages**: `src/app/(site)/boutique/page.tsx` (listing, reuses `ProductCard`)
+and `src/app/(site)/boutique/[slug]/page.tsx` (detail, calls Next's
+`notFound()` for an unknown slug). `ProductCard` now links to
+`/boutique/[slug]` and uses `formatPrice`.
+
+**Interactive gallery** (`src/components/site/ProductGallery.tsx`, client
+component): picking a color swaps the photo set and resets to photo 0;
+multiple photos per color get a thumbnail row. Out-of-stock colors render
+**visibly but disabled** (`opacity-50`, `cursor-not-allowed`, a "(rupture)"
+label) rather than hidden or using red — matches the brief's "avoid default
+red/green" status-tag note. No "add to cart" button anywhere yet — that's
+explicitly Phase 4's job once the cart exists.
+
+**Fixed while here**: the `(site)` `Header` now has real pages to link to
+(`Boutique`), and its "Comment ça marche"/FAQ links and CTA switched from
+page-relative `#hash` anchors (which only worked *on* the homepage — a real
+bug that only surfaced once other pages existed) to `/#hash`/`/boutique`.
+Also added `src/app/(site)/not-found.tsx` with French copy — Next's default
+404 text is English, and the brief requires French everywhere; caught by
+actually navigating to a bad slug during verification, not by inspection.
+
+**Verification**: same throwaway-data pattern as Phase 2 — temporarily
+seeded one product with an in-stock color (2 placeholder photos, to test
+thumbnail switching) and an out-of-stock color via the service-role key,
+confirmed by screenshot: listing → detail navigation, color switching,
+disabled-color click has no effect, photo thumbnail switching updates the
+main image, and the new French 404 page. Deleted all three temp rows
+(photos, colors, product) immediately after and confirmed all three tables
+empty again via a fresh query. `npm run lint` and `npm run build` both pass.
+
+## Status: Phase 3 complete, ready for Phase 4
+
+**Next up: Phase 4 — cart & checkout** (cart via React Context +
+localStorage, checkout form with wilaya/commune/delivery method, real order
+insert snapshotting delivery_fee/order_total). This is one of the
+architecture-level decisions the user's brief calls out explicitly (cart
+strategy, checkout flow) — describe the plan in 3-5 sentences and confirm it
+matches expectations before writing significant code, same as was done for
+the Phase 1 write-path decision. Not started yet — waiting on the user to
+say go.
 
 ## Decisions explicitly confirmed with the user (don't re-litigate)
 

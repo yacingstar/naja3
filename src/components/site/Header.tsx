@@ -1,6 +1,8 @@
 import Link from "next/link";
 
 // Shrink-on-scroll behavior lands in Phase 6 — this is the static version.
+// "Comment ça marche"/FAQ are homepage sections, so they're homepage-relative
+// hashes (works whether you're already on / or coming from elsewhere).
 export function Header() {
   return (
     <header className="sticky top-0 z-40 border-b border-encre/10 bg-papier/90 backdrop-blur">
@@ -9,19 +11,22 @@ export function Header() {
           Naja
         </Link>
         <nav className="hidden items-center gap-8 text-sm font-medium sm:flex">
-          <a href="#comment-ca-marche" className="hover:text-lueur">
+          <Link href="/boutique" className="hover:text-lueur">
+            Boutique
+          </Link>
+          <Link href="/#comment-ca-marche" className="hover:text-lueur">
             Comment ça marche
-          </a>
-          <a href="#faq" className="hover:text-lueur">
+          </Link>
+          <Link href="/#faq" className="hover:text-lueur">
             FAQ
-          </a>
+          </Link>
         </nav>
-        <a
-          href="#creations"
+        <Link
+          href="/boutique"
           className="rounded-full bg-lueur px-5 py-2 text-sm font-medium text-encre transition hover:bg-lueur/90"
         >
           Découvrir
-        </a>
+        </Link>
       </div>
     </header>
   );

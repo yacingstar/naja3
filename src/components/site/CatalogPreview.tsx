@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { ProductCard } from "@/components/site/ProductCard";
 import { getFeaturedProducts } from "@/lib/products";
 
@@ -13,11 +14,18 @@ export async function CatalogPreview() {
           Les premières lampes arrivent très bientôt — repassez par ici.
         </p>
       ) : (
-        <div className="mt-10 grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-4">
-          {products.map((product, index) => (
-            <ProductCard key={product.id} product={product} index={index} />
-          ))}
-        </div>
+        <>
+          <div className="mt-10 grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-4">
+            {products.map((product, index) => (
+              <ProductCard key={product.id} product={product} index={index} />
+            ))}
+          </div>
+          <p className="mt-12 text-center">
+            <Link href="/boutique" className="text-sm font-medium hover:text-lueur">
+              Voir toute la collection →
+            </Link>
+          </p>
+        </>
       )}
     </section>
   );
