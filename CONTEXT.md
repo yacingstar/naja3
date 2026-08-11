@@ -1,0 +1,371 @@
+# Naja — project context
+
+This file exists so a new Claude Code session (or a human) can pick this project
+up cold. Read this before doing anything else. Update it at the end of every
+phase — don't let it go stale.
+
+## What this is
+
+**Naja** — a storefront for a friend's small business selling handmade,
+made-to-order 3D-printed lamps in Algeria. Cash on delivery only, ever — no
+payment gateway, no card UI. All user-facing text is in **French**; code,
+comments, and dev discussion are in English.
+
+The client is non-technical. The project owner (the person you're talking to)
+is building this *with* Claude Code, phase by phase, specifically to learn
+Next.js and Supabase — not asking for it to be built on autopilot. **Stop at
+the end of each phase, explain what was built and why in plain terms, and wait
+for explicit confirmation before starting the next phase.** Don't add features
+that weren't asked for (no email signup, no newsletter, no payment gateway, no
+inventory/stock-count system beyond a per-color in-stock toggle).
+
+## Stack
+
+- Next.js 16 (App Router, Turbopack) + TypeScript + Tailwind CSS v4
+- Supabase: Postgres + Auth (`@supabase/ssr`) + Storage (product photos)
+- Hosting: Netlify, connected to GitHub for auto-deploy (not set up yet — Phase 7)
+- Package manager: npm
+- Project lives at `D:/CODE/naja3`, not yet pushed to a GitHub remote (local git
+  repo only, initialized by `create-next-app`)
+
+## Prior attempts — read this before reusing anything
+
+Two earlier full builds of this same idea exist as siblings: `D:/CODE/naja`
+(JavaScript) and `D:/CODE/naja2` (TypeScript, more refined). **naja3 is a
+deliberate clean restart, not a continuation.** Do not port code from them
+without checking with the user first — the design system and some
+architecture choices are intentionally different this time:
+
+| | naja2 (prior) | naja3 (this project) |
+|---|---|---|
+| Palette | cream/night, Fraunces + Nunito | papier/encre/lueur/blush/crépuscule/sauge — see below |
+| Fonts | Fraunces + Nunito | Fredoka + Work Sans + Caveat |
+| Commune field | dropdown fed by a 1,521-commune dataset | **free text** (confirmed with user) |
+| Admin identity | `admin_users` table + `is_admin()` SQL function | **plain Supabase Auth users, no custom table** (confirmed with user) |
+| Product visuals | generated SVG lamp shapes | real product photos in an organic "blob" mask |
+| Smooth scroll | Lenis-driven | not decided yet — scroll-snap only on homepage per brief |
+
+What *does* carry forward from naja2 as validated, hard-won lessons (see
+"Known gotchas" below): the RLS-vs-grants footgun, the `middleware.ts` →
+`proxy.ts` rename in Next 16, the service-role-key-server-only discipline, and
+the general shape of "admin panel needs its own layout tree." These are
+already folded into this project's structure — see Phase 0 below.
+
+## Design direction
+
+Visual reference: aardvarkbookclub.com — warm, editorial product grid, clear
+"how it works" steps, scroll fade/slide-ins, hover lift/scale on product
+cards, sticky nav that shrinks on scroll, scroll-snap **on the homepage
+only** (flag it if scroll-snap fights normal page flow anywhere else).
+
+**Brand thesis: a lamp switched on at dusk.** Not generic warm-cream-and-
+terracotta. Small, glowing, slightly imperfect, handmade objects.
+
+CSS variable palette (use only these, don't invent others — not yet wired
+into `globals.css`, that's Phase 2):
+```
+--papier      #FFF6EE   background, warm ivory
+--encre       #3A2E36   text, soft plum-brown instead of black
+--lueur       #F2A65A   primary accent / CTAs — the color of a lit lamp
+--blush       #F6C6CE   secondary accent, card backgrounds, soft tags
+--crepuscule  #A79BE0   cool contrast accent, dusk lavender
+--sauge       #A8C3A0   status tags like "en stock" (avoid default red/green)
+```
+
+Typography (also Phase 2, not wired yet):
+- **Fredoka** — headlines, product names
+- **Work Sans** — body text, forms, nav
+- **Caveat** — sparingly, small handwritten touches only (e.g. "fait main"), never body copy
+
+Signature element: every product photo sits in an **organic blob shape** (not
+a rounded rectangle) with a soft warm glow behind it, like it's plugged in.
+Everything else (nav, buttons, forms) stays quiet: pill buttons, hairline
+borders, generous whitespace. The blob-glow treatment is the one bold move —
+don't dilute it by decorating elsewhere.
+
+## Data model — live in Supabase as of Phase 1
+
+The original draft below was adjusted during Phase 1 (see "What's actually
+been built (Phase 1 detail)" for the reasoning) and is now the **actual live
+schema**, not a draft. Source of truth is `supabase/migrations/*.sql`.
+
+```
+products
+  id (bigint identity), slug (unique), name, description, price (integer DZD), created_at
+
+product_colors
+  id, product_id → products, color_name, color_hex (nullable), in_stock (boolean), created_at
+  unique (product_id, color_name)
+
+product_photos
+  id, product_color_id → product_colors, url, position
+
+delivery_rates
+  id, wilaya (text, unique), domicile_price (integer), stopdesk_price (integer, nullable),
+  created_at, updated_at (auto-maintained by trigger)
+  -- fully admin-managed (add/edit/delete rows) — do NOT hardcode wilayas in app code.
+  -- Algeria moved from 58 to 69 wilayas in April 2026 (Loi 26-06); confirmed the
+  -- original 01-58 numbering/names are unaffected — the 11 new ones are numbered
+  -- 59-69, still transitioning through end of 2026, carriers not caught up yet.
+  -- Admin adds new rows herself from /admin/livraison when needed — no code change.
+  -- stopdesk_price nullable because not every wilaya has a stopdesk option.
+
+orders
+  id, created_at, status (enum: nouvelle, confirmée, expédiée, livrée, annulée),
+  customer_first_name, customer_last_name, phone,
+  wilaya (FK → delivery_rates.wilaya, on delete restrict), commune (free text),
+  delivery_method (enum: domicile, stopdesk), delivery_fee (integer, snapshot at order time),
+  products_total (integer), order_total (GENERATED ALWAYS AS products_total + delivery_fee),
+  notes_client, internal_notes (admin-only, not shown to customer)
+  -- delivery_fee is a snapshot, not a live join — rates can change later without
+  -- touching past orders. order_total can't drift from reality since it's DB-computed.
+
+order_items
+  id, order_id → orders (on delete cascade),
+  product_id → products (on delete restrict), product_color_id → product_colors (on delete restrict),
+  quantity (check > 0), price_at_order (integer)
+  -- restrict, not cascade: a product/color that's ever been ordered can never be
+  -- deleted, only retired via the in_stock toggle. Keeps order history intact.
+
+-- admin identity handled entirely by Supabase Auth users — no custom admin table.
+```
+
+Seed data for `delivery_rates`: 58 rows, the wilaya list from the original
+brief, `domicile_price`/`stopdesk_price` = 0 as placeholders — client fills
+in real numbers from the admin panel. Verified against current sources
+(April 2026 split confirmed 01-58 unchanged) before seeding — see Phase 1 detail.
+
+## Known gotchas — don't repeat these
+
+- **RLS policies AND base table grants are both required.** A fresh Supabase
+  project can leave `anon`/`authenticated`/`service_role` with zero
+  privileges on `public` even with RLS fully written — every query fails
+  `42501 permission denied for table …`, including from `service_role` (it
+  bypasses RLS but not GRANTs). Set up both together, every time, every
+  table. (Validated the hard way in naja2.)
+- **Env var changes require a dev server restart.** Not always obvious when
+  something "isn't working."
+- **Next.js 16 renamed `middleware.ts` → `proxy.ts`.** Confirmed against the
+  actual bundled docs in `node_modules/next/dist/docs/01-app/03-api-reference/
+  03-file-conventions/proxy.md` — file must be named `proxy.ts`, function
+  `proxy` (default or named export), root layout still requires `html`/`body`
+  tags. This project's `AGENTS.md` (auto-generated by `create-next-app`) warns
+  that Next 16 has real breaking changes vs. training data — check
+  `node_modules/next/dist/docs/` before writing anything that touches
+  routing/middleware/caching APIs.
+- **Admin panel must live in its own route group/layout tree**, never nested
+  inside the public site's root layout. Already solved structurally in Phase
+  0 — see below.
+- **Writes from the admin panel use the `service_role` key strictly inside
+  Server Actions** — never client-side. `src/lib/supabase/admin.ts` is
+  guarded with `import "server-only"` specifically so this can't happen by
+  accident.
+- **`cookies()` from `next/headers` is async** in this Next.js version — must
+  `await cookies()`. Already handled correctly in `src/lib/supabase/server.ts`.
+
+## Phases (from the original brief) and current status
+
+0. **Project setup** — ✅ done.
+1. **Database schema** — ✅ done, see below.
+2. **Public storefront shell** — not started. Root layout, homepage (hero,
+   catalog preview, "how it works," FAQ), Tailwind theme (palette/fonts) wired up.
+3. **Catalog & product detail** — not started.
+4. **Cart & checkout** — not started. Cart via React Context + localStorage.
+   Checkout: prénom, nom, téléphone, wilaya (dropdown from `delivery_rates`),
+   commune (free text — confirmed), delivery method (domicile/stopdesk, only
+   show stopdesk if that wilaya has a price), note optionnelle. Real order
+   insert, snapshotting delivery_fee/order_total.
+5. **Admin dashboard** — not started. Route group `(admin)`... actually see
+   Phase 0 note below: admin already lives at `src/app/admin/`, separate from
+   `(site)`. Supabase Auth login, orders list + filters, order detail, status
+   update, internal notes, delivery rates screen (add/edit/delete wilayas).
+6. **Animation & polish** — not started. Scroll fade/slide-in, hover
+   lift/scale, sticky nav shrink, homepage-only scroll-snap. Keep subtle.
+7. **Deploy** — not started. Netlify + GitHub auto-deploy, env vars on
+   Netlify (not just local), flag Supabase free-tier inactivity pause +
+   mention UptimeRobot as a fix (don't implement, just flag).
+
+## What's actually been built (Phase 0 detail)
+
+Ran, in order:
+```
+npx create-next-app@latest . --typescript --tailwind --eslint --app --src-dir --import-alias "@/*" --use-npm
+npm install @supabase/supabase-js @supabase/ssr server-only
+npx supabase init
+```
+
+Verified versions at scaffold time: Next.js 16.3.0, Tailwind 4.3.3,
+`@supabase/ssr` 0.12.4, React 19.2.8.
+
+**Folder structure:**
+```
+src/app/
+├── layout.tsx            bare root shell — html/body, metadata, font vars
+│                          (placeholder Geist fonts — real fonts land in Phase 2)
+│                          NO Header/Footer, NO theme tokens yet
+├── globals.css            still create-next-app's default (Tailwind v4
+│                          zero-config: @import "tailwindcss" + @theme inline,
+│                          no tailwind.config.js file — that's normal for v4)
+├── (site)/                route group for the public storefront
+│   ├── layout.tsx          placeholder passthrough, gets Header/Footer in Phase 2
+│   └── page.tsx            placeholder homepage stub
+└── admin/                 sibling of (site), NOT nested inside it
+    ├── layout.tsx          placeholder passthrough, gets auth guard + nav in Phase 5
+    └── page.tsx            placeholder stub
+
+src/lib/supabase/
+├── client.ts               browser client (createBrowserClient, anon key)
+├── server.ts                server client (createServerClient, anon key,
+│                            session cookies via async next/headers cookies())
+└── admin.ts                 service-role client, `import "server-only"` guard,
+                              not used anywhere yet — exists so Phase 5 writes
+                              never reach for the anon client by mistake
+
+supabase/                  from `supabase init` — config.toml + its own
+                            .gitignore (.branches, .temp, .env.local). No
+                            migrations/seed files yet — that's Phase 1.
+                            Not linked to a cloud project yet (`supabase link`
+                            deferred until Phase 1, needs `supabase login`).
+
+.env.local.example          committed, three var names, no values:
+                            NEXT_PUBLIC_SUPABASE_URL
+                            NEXT_PUBLIC_SUPABASE_ANON_KEY
+                            SUPABASE_SERVICE_ROLE_KEY
+.env.local                  created, gitignored, populated with a real
+                            Supabase project's credentials (new-style
+                            `sb_publishable_...` / `sb_secret_...` keys, not
+                            the legacy JWT anon/service_role format — these
+                            slot into the same anon-key/service-role-key
+                            parameters in @supabase/supabase-js and
+                            @supabase/ssr, no code difference). Verified live:
+                            project's /auth/v1/health endpoint returns 200
+                            with the publishable key, and `npm run dev`
+                            picked up .env.local (logged
+                            "Environments: .env.local") with both routes
+                            still responding 200.
+.gitignore                  patched: default Next.js .gitignore blanket-
+                            ignores `.env*`, which would've also hidden the
+                            committed example file — added
+                            `!.env.local.example` to un-ignore it specifically
+```
+
+Verified working: `npm run build` (both `/` and `/admin` compile as static
+routes), `npm run lint` (clean), and a live `npm run dev` smoke test — both
+routes return 200 with no shared chrome between them.
+
+Not yet committed to git — nothing has been committed this session. `git
+status` as of end of Phase 0 shows the above files modified/untracked on
+branch `master`, no commits beyond `create-next-app`'s initial one.
+
+Auto-generated by `create-next-app` and left alone (not part of my plan, just
+noting they exist): `AGENTS.md` (Next 16's own warning to check
+`node_modules/next/dist/docs/` before assuming API behavior — genuinely worth
+reading, this Next version has real breaking changes), `.claude/settings.json`
+(one allowed Bash command from the scaffold step), default `README.md`
+(untouched, still create-next-app boilerplate).
+
+## What's actually been built (Phase 1 detail)
+
+Adjustments made to the user's draft schema, confirmed with them before
+writing SQL (3-5 sentence architecture check per the "describe the plan
+first" rule in this file's intro):
+- **bigint identity PKs, not UUIDs** — simpler, no extension dependency,
+  readable order numbers (#482) for the shop owner.
+- **Prices are plain integers in DZD**, no decimals — matches how dinars are
+  actually quoted (same call naja2 made).
+- **`orders.order_total` is a generated column** (`products_total +
+  delivery_fee`, `STORED`) instead of an app-supplied value — structurally
+  cannot drift from the truth.
+- **`orders.wilaya` is a real FK into `delivery_rates.wilaya`** (`on update
+  cascade on delete restrict`) — an order can never reference a nonexistent
+  wilaya, while `delivery_fee` stays an independent snapshot.
+- **Single write path, no exceptions**: `anon` and `authenticated` get
+  SELECT-only grants everywhere (anon: catalog + delivery_rates only;
+  authenticated: same plus orders/order_items for the admin dashboard). No
+  role has direct INSERT/UPDATE/DELETE anywhere. Every write — checkout in
+  Phase 4, every admin edit in Phase 5 — goes through a Server Action using
+  `src/lib/supabase/admin.ts` (service_role), which re-validates and
+  recomputes before writing. This generalizes the brief's own gotcha
+  ("service_role strictly inside Server Actions") to every table instead of
+  just some.
+
+Files created:
+```
+supabase/migrations/
+├── 20260811131001_init_schema.sql   enums, 6 tables, FKs, checks, indexes
+├── 20260811131002_rls.sql            RLS enabled everywhere; SELECT-only
+│                                      policies (see below)
+├── 20260811131003_grants.sql         base table grants — required in addition
+│                                      to RLS, see "Known gotchas"
+└── 20260811131004_storage.sql        public `product-photos` bucket +
+                                       SELECT policy on storage.objects
+supabase/seed.sql                     58 wilayas, idempotent (ON CONFLICT DO
+                                       NOTHING), 0 DZD placeholders
+```
+
+RLS policies in plain terms:
+- `products`/`product_colors`/`product_photos`/`delivery_rates`: readable by
+  **everyone**, including logged-out visitors (needed for the public site and
+  checkout's wilaya dropdown).
+- `orders`/`order_items`: readable **only by a logged-in admin**
+  (`authenticated`). A customer can't read back their own just-placed order —
+  matches the brief, no account system or order-lookup-by-reference exists.
+- No INSERT/UPDATE/DELETE policy exists on any table, anywhere, on purpose —
+  see "single write path" above.
+
+Wilaya list verified via web search before seeding (user's brief explicitly
+asked not to trust it blindly): the April 2026 split to 69 wilayas (loi
+26-06) added 11 *new* wilayas numbered 59-69 as carve-outs from existing
+ones; the original 01-58 numbers/names are confirmed unchanged. So the
+brief's 58-wilaya list is still accurate — seeded as-is.
+
+Applied by the user directly via Supabase Studio's SQL Editor (their choice
+over sharing the DB password for a CLI push). Verified live afterward via
+`curl` against the project's REST/Storage APIs using the anon and
+service_role keys:
+- `delivery_rates`: 58 rows confirmed via `Content-Range` header, sample
+  rows match.
+- `products`: table exists, empty (expected, catalog seeding is Phase 3).
+- `orders` via anon key: correctly rejected —
+  `{"code":"42501","message":"permission denied for table orders"}` — proves
+  the grants layer is working, not just RLS.
+- `product-photos` bucket: exists, `public: true` (confirmed via
+  service_role — the anon key can't read bucket *metadata*, that's a
+  separate RLS surface on `storage.buckets` we didn't grant, which is
+  correct/intentional). Public object downloads confirmed working via
+  `/storage/v1/object/public/product-photos/...` (returns "Object not
+  found" for a missing file, not "Bucket not found").
+
+One hiccup, resolved: user re-ran `storage.sql` a second time to double-check
+it, which errored on `create policy ... already exists` (policies aren't
+idempotent like the `ON CONFLICT DO NOTHING` bucket insert is) — this
+confirmed the file succeeded the first time rather than indicating a
+problem. No fix needed.
+
+Supabase CLI is still not linked to the cloud project (`supabase link` /
+`supabase login` never run) — all schema changes so far went through the
+dashboard SQL Editor. Decide in a later phase whether that's worth setting
+up, or whether pasting SQL into the editor stays the workflow for the rest
+of the project.
+
+## Status: Phase 1 complete, ready for Phase 2
+
+Schema, RLS, grants, storage bucket, and seed data are all live and verified
+on the real Supabase project. **Next up: Phase 2 — public storefront shell**
+(root layout, homepage with hero/catalog preview/"how it works"/FAQ, Tailwind
+theme wired up with the palette + fonts from "Design direction" above). Not
+started yet — waiting on the user to say go.
+
+## Decisions explicitly confirmed with the user (don't re-litigate)
+
+- TypeScript, not JavaScript.
+- Brand new Supabase project, not reusing naja2's.
+- Commune field is free text, not a dataset-backed dropdown (naja2 had the
+  dropdown; explicitly rejected for naja3).
+- Admin identity is plain Supabase Auth users, no `admin_users` table
+  (naja2 had the table; explicitly rejected for naja3). Any authenticated
+  Supabase Auth user is treated as the admin — there's exactly one owner.
+- The two items above were the only points where the user's "reuse naja2's
+  admin panel and commune dataset" request conflicted with the original
+  written brief; both were resolved in favor of the original brief after
+  asking directly.
