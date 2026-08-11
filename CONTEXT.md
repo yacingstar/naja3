@@ -175,8 +175,8 @@ in real numbers from the admin panel. Verified against current sources
 4. **Cart & checkout** — ✅ done, see below.
 5. **Admin dashboard** — ✅ done, see below. Scope grew beyond the brief's
    literal text — see "Decisions" at the bottom.
-6. **Animation & polish** — not started. Scroll fade/slide-in, hover
-   lift/scale, sticky nav shrink, homepage-only scroll-snap. Keep subtle.
+6. **Animation & polish** — ✅ done, see below. Caught and fixed a real
+   scroll-snap bug during verification — see below before touching this again.
 7. **Deploy** — not started. Netlify + GitHub auto-deploy, env vars on
    Netlify (not just local), flag Supabase free-tier inactivity pause +
    mention UptimeRobot as a fix (don't implement, just flag).
@@ -625,14 +625,94 @@ did persist. Cleaned up everything after: order, order_items, product
 and the test admin account itself — confirmed all empty/gone via fresh
 queries.
 
-## Status: Phase 5 complete, ready for Phase 6
+## What's actually been built (Phase 6 detail)
 
-**Next up: Phase 6 — animation & polish**: scroll fade/slide-in on sections
-and product cards, hover lift/scale on product cards, sticky nav that
-shrinks on scroll, homepage-only scroll-snap (flag it if it fights normal
-page flow anywhere else — checkout/product pages must not scroll-snap).
-Keep it subtle per the brief — support the content, don't upstage it. Not
-started yet — waiting on the user to say go.
+No animation library — everything is CSS transitions plus a small amount of
+JS to toggle state (IntersectionObserver for reveals, a scroll listener for
+the header, a mount/unmount effect for scroll-snap). `prefers-reduced-motion`
+neutralizes all of it in one place (`globals.css`), which wasn't explicitly
+asked for but is a real accessibility case, not scope creep.
+
+- **`src/components/site/Reveal.tsx`** — generic fade/slide-in wrapper,
+  fires once per element via `IntersectionObserver` then disconnects
+  (doesn't re-animate on scroll-back). Wraps section headings on the
+  homepage, boutique, and every `ProductCard` (embedded inside the card
+  component itself, not at each call site, so both the homepage preview
+  grid and the full `/boutique` listing get it for free, staggered by
+  index — `(index % 4) * 80ms`).
+- **Hover lift/scale** — `ProductCard`'s link: `hover:-translate-y-1
+  hover:scale-[1.03]`, pure Tailwind, no JS.
+- **Sticky nav shrink** — `Header` is now a Client Component tracking
+  `window.scrollY` (RAF-throttled). Shrink is applied via an **inline**
+  `style={{ transform: "scale(0.92)" }}`, not a Tailwind `scale-*` class —
+  see the bug below for why.
+- **Homepage-only scroll-snap** — `ScrollSnapHomepage.tsx` toggles a
+  `.snap-homepage` class on `<html>` for exactly as long as the homepage is
+  mounted (cleanup on unmount), rather than wrapping content in a nested
+  scroll container. This keeps real body/window scroll as the scroll
+  mechanism (sticky positioning, mobile browser chrome, etc. all behave
+  normally) and makes it structurally impossible for `.snap-homepage` to
+  leak onto any other route, since nothing outside `(site)/page.tsx` renders
+  that component. Uses `proximity`, not `mandatory` — deliberately, since
+  the brief itself warned this could fight normal page flow, and the
+  homepage's sections have organic, varying heights rather than being
+  designed as fixed-height slides; `mandatory` would force a hard stop at
+  every boundary regardless of scroll speed.
+
+### Two real bugs, found only by actually scrolling the page, not by reading the code
+
+**1. Scroll-snap + the shrinking header combined to trap scrolling partway
+down the page.** First implementation shrank the header via `padding`/
+`font-size` (layout-affecting properties). On the homepage, with
+`scroll-snap-type` on `<html>`, that dynamic layout shift during scroll fed
+back into the browser's max-scroll calculation and **permanently capped
+scrolling before the FAQ section** — confirmed with `window.scrollTo({top:
+100000})`, an extreme forced jump, which still landed short and couldn't be
+scrolled further by any means. Diagnosed by freezing the header's padding
+via an injected style and re-testing — scrolling immediately reached the
+true document end, isolating the cause precisely. Fixed by rebuilding the
+shrink effect around `transform: scale()` instead, which never affects
+layout, since it composites in the paint stage rather than participating in
+box layout/reflow — the whole class of bug is structurally impossible once
+nothing layout-affecting changes during scroll.
+
+**2. Even after that fix, the very last snap point (FAQ) sat ~58px short of
+the true page end, so proximity-snap scrolling settled there and further
+wheel input didn't reach the footer at all.** Root cause: nothing past the
+last snap-aligned section had its own snap point for the browser to settle
+at next, and proximity snap doesn't force scrolling past the last defined
+point. Fixed by giving `Footer` a `snap-section` class too (harmless
+everywhere else — `scroll-snap-align` is inert without an ancestor
+`scroll-snap-type`, which only exists on the homepage), making the actual
+end of the page a valid snap point instead of leaving a dead zone after the
+last section.
+
+A third thing turned out to be a **false alarm, not a bug**: hover lift and
+the header shrink both initially looked broken when checked via
+`getComputedStyle(el).transform` (`"none"`). Root cause was the check, not
+the app — Tailwind v4 generates its `scale-*`/`translate-*` utilities using
+the native CSS `scale`/`translate` properties, not the legacy composed
+`transform` property, so `getComputedStyle(el).scale` /`.translate` showed
+the correct values all along. Worth remembering before "fixing" a transform
+utility that looks inert: check the right computed style property first.
+
+**Verification**: seeded 3 temporary products (deleted after) to give the
+reveal/hover effects real cards to animate. Confirmed via direct
+`window.scrollY`/`scrollHeight` checks (not just visual screenshots) that
+the homepage now scrolls to its true end, `.snap-homepage` never appears on
+`/boutique` or any other route, `prefers-reduced-motion: reduce` correctly
+sets reveal opacity to 1 immediately and `scroll-snap-type: none`, and both
+bugs above are fixed. `npm run lint` and `npm run build` both pass.
+
+## Status: Phase 6 complete, ready for Phase 7
+
+**Next up: Phase 7 — deploy**: connect the GitHub repo to Netlify, set up
+auto-deploy, confirm env vars are set on Netlify (not just locally), and
+flag the Supabase free-tier inactivity-pause issue with UptimeRobot as a
+suggested fix (flag only, brief says not to implement it). Not started yet —
+waiting on the user to say go. Note: this repo has no GitHub remote yet
+(local git only) — that'll need setting up first, and pushing to a remote is
+exactly the kind of action to confirm before doing.
 
 ## Decisions explicitly confirmed with the user (don't re-litigate)
 

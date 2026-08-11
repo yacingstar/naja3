@@ -1,6 +1,6 @@
 export function Hero() {
   return (
-    <section className="relative overflow-hidden px-6 pt-32 pb-24 text-center sm:pt-40">
+    <section className="snap-section relative overflow-hidden px-6 pt-32 pb-24 text-center sm:pt-40">
       <div
         aria-hidden
         className="pointer-events-none absolute left-1/2 top-16 h-72 w-72 -translate-x-1/2 rounded-full bg-lueur/40 blur-3xl"

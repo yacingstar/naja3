@@ -1,13 +1,16 @@
 import Link from "next/link";
 import { ProductCard } from "@/components/site/ProductCard";
+import { Reveal } from "@/components/site/Reveal";
 import { getFeaturedProducts } from "@/lib/products";
 
 export async function CatalogPreview() {
   const products = await getFeaturedProducts();
 
   return (
-    <section id="creations" className="mx-auto max-w-6xl px-6 py-24">
-      <h2 className="text-center font-heading text-3xl">Nos créations</h2>
+    <section id="creations" className="snap-section mx-auto max-w-6xl px-6 py-24">
+      <Reveal>
+        <h2 className="text-center font-heading text-3xl">Nos créations</h2>
+      </Reveal>
 
       {products.length === 0 ? (
         <p className="mx-auto mt-8 max-w-md text-center text-encre/70">

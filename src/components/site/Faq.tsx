@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Reveal } from "@/components/site/Reveal";
 
 // Draft copy — worth a pass together before this goes live.
 const FAQS = [
@@ -26,8 +27,10 @@ export function Faq() {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
 
   return (
-    <section id="faq" className="mx-auto max-w-3xl px-6 py-24">
-      <h2 className="text-center font-heading text-3xl">Questions fréquentes</h2>
+    <section id="faq" className="snap-section mx-auto max-w-3xl px-6 py-24">
+      <Reveal>
+        <h2 className="text-center font-heading text-3xl">Questions fréquentes</h2>
+      </Reveal>
       <div className="mt-10 divide-y divide-encre/10 border-y border-encre/10">
         {FAQS.map((item, index) => {
           const open = openIndex === index;

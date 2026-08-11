@@ -58,4 +58,42 @@ body {
     outline: 2px solid var(--lueur);
     outline-offset: 1px;
   }
+
+  /* Scroll-triggered fade/slide-in (Reveal.tsx toggles data-reveal). */
+  .reveal {
+    opacity: 0;
+    transform: translateY(16px);
+    transition:
+      opacity 0.6s ease-out,
+      transform 0.6s ease-out;
+  }
+  .reveal[data-reveal="visible"] {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* Homepage-only scroll-snap (ScrollSnapHomepage.tsx toggles this class on
+     <html> for as long as the homepage is mounted). proximity, not
+     mandatory — mandatory forces a hard stop at every section boundary
+     regardless of scroll speed, which fights content that isn't literally
+     full-screen slides (our sections have organic, varying heights). Each
+     section still gets a natural resting point without trapping the user. */
+  .snap-homepage {
+    scroll-snap-type: y proximity;
+  }
+  .snap-section {
+    scroll-snap-align: start;
+    scroll-margin-top: 4.5rem; /* clears the sticky header */
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+  .snap-homepage {
+    scroll-snap-type: none;
+  }
 }
