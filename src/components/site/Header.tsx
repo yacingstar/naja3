@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { CartLink } from "@/components/site/CartLink";
 
 // Shrink-on-scroll behavior lands in Phase 6 — this is the static version.
 // "Comment ça marche"/FAQ are homepage sections, so they're homepage-relative
@@ -21,12 +22,15 @@ export function Header() {
             FAQ
           </Link>
         </nav>
-        <Link
-          href="/boutique"
-          className="rounded-full bg-lueur px-5 py-2 text-sm font-medium text-encre transition hover:bg-lueur/90"
-        >
-          Découvrir
-        </Link>
+        <div className="flex items-center gap-6">
+          <CartLink />
+          <Link
+            href="/boutique"
+            className="rounded-full bg-lueur px-5 py-2 text-sm font-medium text-encre transition hover:bg-lueur/90"
+          >
+            Découvrir
+          </Link>
+        </div>
       </div>
     </header>
   );

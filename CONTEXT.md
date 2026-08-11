@@ -172,11 +172,7 @@ in real numbers from the admin panel. Verified against current sources
    Phase 6 — user initially asked for them now, confirmed keeping the phases
    split instead: static/structural first, animated pass later.
 3. **Catalog & product detail** — ✅ done, see below.
-4. **Cart & checkout** — not started. Cart via React Context + localStorage.
-   Checkout: prénom, nom, téléphone, wilaya (dropdown from `delivery_rates`),
-   commune (free text — confirmed), delivery method (domicile/stopdesk, only
-   show stopdesk if that wilaya has a price), note optionnelle. Real order
-   insert, snapshotting delivery_fee/order_total.
+4. **Cart & checkout** — ✅ done, see below.
 5. **Admin dashboard** — not started. Route group `(admin)`... actually see
    Phase 0 note below: admin already lives at `src/app/admin/`, separate from
    `(site)`. Supabase Auth login, orders list + filters, order detail, status
@@ -461,16 +457,84 @@ main image, and the new French 404 page. Deleted all three temp rows
 (photos, colors, product) immediately after and confirmed all three tables
 empty again via a fresh query. `npm run lint` and `npm run build` both pass.
 
-## Status: Phase 3 complete, ready for Phase 4
+## What's actually been built (Phase 4 detail)
 
-**Next up: Phase 4 — cart & checkout** (cart via React Context +
-localStorage, checkout form with wilaya/commune/delivery method, real order
-insert snapshotting delivery_fee/order_total). This is one of the
-architecture-level decisions the user's brief calls out explicitly (cart
-strategy, checkout flow) — describe the plan in 3-5 sentences and confirm it
-matches expectations before writing significant code, same as was done for
-the Phase 1 write-path decision. Not started yet — waiting on the user to
-say go.
+Plan was described and confirmed before building, per the brief's
+architecture-level-decision rule (cart strategy, checkout flow are both
+explicitly named). One real fork point was asked rather than assumed: how
+the confirmation page gets its order data. Confirmed **sessionStorage
+handoff** — the Server Action returns the order summary, the browser stashes
+it in sessionStorage, the confirmation page reads-and-clears it once. No
+order is ever fetchable by ID/reference (matches naja2's validated privacy
+reasoning, restated fresh here): a shared or guessed confirmation link can't
+leak another customer's name/phone/address. Tradeoff accepted: a page
+refresh loses the detail and falls back to a generic "commande confirmée"
+message.
+
+**Cart** (`src/lib/cart.tsx`): React Context + `localStorage`, hydrated
+post-mount (empty on both server render and first client render to avoid a
+hydration mismatch, then synced from storage in a `useEffect` — the standard
+fix for "state from a browser-only API," not a smell, despite
+`eslint-plugin-react-hooks`'s newer `set-state-in-effect` rule flagging it;
+disabled inline with a reason at both call sites, here and in the
+confirmation page). Line items keyed by `productId:colorId`, storing a
+*display* price snapshot only — quantity, product/color names, a photo URL.
+That price is never what gets charged.
+
+**Add-to-cart lives inside `ProductGallery`** (extended, not a new
+component) rather than as a sibling — it already owns `selectedColorId`
+state for the photo gallery, and add-to-cart needs to know exactly the same
+thing (which color is selected). A separate component would've meant two
+copies of that state that could drift out of sync (swatch shows "Lavande"
+selected, cart button silently adds "Ambre").
+
+**Checkout is the single write path applied for real** (Phase 1 set this up
+structurally, Phase 4 is where it's actually exercised): `CheckoutForm`
+(client) collects the form + reads cart context for display totals only.
+`src/app/(site)/commande/actions.ts`'s `placeOrder` Server Action —
+`service_role`, the only role with INSERT on `orders`/`order_items` — is
+where the real order gets built: re-fetches every product/color by ID from
+the live database, rejects if a color is no longer `in_stock` or a
+product/color no longer exists, re-derives `delivery_fee` from
+`delivery_rates` by wilaya + method (rejects `stopdesk` if that wilaya's
+`stopdesk_price` is `null`), and only then inserts. `products_total` is
+computed server-side from re-fetched prices; `order_total` is the Phase 1
+generated column, never set directly. A tampered cart in devtools changes
+nothing about what's actually charged.
+
+**Routes**: `/panier` (cart, client), `/commande` (checkout — server
+component fetches `delivery_rates` live via `getDeliveryRates()`, passes to
+`CheckoutForm`), `/commande/confirmation` (client, sessionStorage read).
+Header gained `CartLink` (client component showing a live item-count badge,
+composed into the otherwise-server `Header` — Server Components can render
+Client Components as children without becoming client themselves).
+
+New `.input` utility class in `globals.css` for form fields (hairline
+border, `papier` background, `lueur` focus ring) — first form on the site,
+so this didn't exist before.
+
+**Verified with a full live run, not just component-level checks**: seeded
+one real product + in-stock color, temporarily set Alger's rates to
+600/400 DZD (seed placeholders are 0, which would've made the fee math
+untestable), then drove the entire flow with Playwright — add to cart
+(header badge updates), `/panier` (quantity controls, line totals), 
+`/commande` (fee/total updates live when switching wilaya or
+domicile→stopdesk), submit, confirmation page. Queried the resulting
+`orders`/`order_items` rows directly afterward and confirmed every value was
+correct, including `order_total` computing itself via the generated column.
+Deleted the order, order_items, product, color, and reverted Alger's rates
+back to 0/0 — confirmed via fresh queries that everything is back to exactly
+the state the client left it in.
+
+## Status: Phase 4 complete, ready for Phase 5
+
+**Next up: Phase 5 — admin dashboard**: route group separated from the
+public layout (already structurally true — admin lives at `src/app/admin/`,
+sibling of `(site)`, since Phase 0), Supabase Auth login, orders list with
+status filters, order detail, status update, internal notes, and a delivery
+rates screen (add/edit/delete wilaya rows) — this is what finally lets the
+client add real products and set real delivery prices herself. Not started
+yet — waiting on the user to say go.
 
 ## Decisions explicitly confirmed with the user (don't re-litigate)
 
@@ -488,3 +552,6 @@ say go.
 - Animations stay in Phase 6, not pulled into Phase 2, despite the user's
   initial "I want all its animations" ask for Phase 2 — confirmed after
   clarifying the brief already splits static structure from animation.
+- Order confirmation uses sessionStorage handoff, not fetch-by-order-ID —
+  confirmed with the user (Phase 4) after presenting the privacy tradeoff.
+  No order is ever fetchable by reference; a refresh loses the detail view.

@@ -41,4 +41,21 @@ body {
   .blob-c {
     border-radius: 38% 62% 63% 37% / 41% 44% 56% 59%;
   }
+
+  /* Checkout/form fields — hairline border, generous padding, no default
+     browser chrome, matching the rest of the site's quiet form language. */
+  .input {
+    width: 100%;
+    border-radius: 0.75rem;
+    border-width: 1px;
+    border-color: color-mix(in srgb, var(--encre) 20%, transparent);
+    background-color: var(--papier);
+    padding: 0.625rem 1rem;
+    font-size: 0.875rem;
+    color: var(--encre);
+  }
+  .input:focus {
+    outline: 2px solid var(--lueur);
+    outline-offset: 1px;
+  }
 }
