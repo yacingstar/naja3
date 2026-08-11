@@ -1,26 +1,44 @@
 @import "tailwindcss";
 
+/* Naja's brand palette — a lamp switched on at dusk. One fixed warm identity,
+   not a light/dark adaptive theme, so no prefers-color-scheme override here. */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --papier: #fff6ee;
+  --encre: #3a2e36;
+  --lueur: #f2a65a;
+  --blush: #f6c6ce;
+  --crepuscule: #a79be0;
+  --sauge: #a8c3a0;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+  --color-papier: var(--papier);
+  --color-encre: var(--encre);
+  --color-lueur: var(--lueur);
+  --color-blush: var(--blush);
+  --color-crepuscule: var(--crepuscule);
+  --color-sauge: var(--sauge);
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --font-heading: var(--font-fredoka), sans-serif;
+  --font-body: var(--font-work-sans), sans-serif;
+  --font-hand: var(--font-caveat), cursive;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--papier);
+  color: var(--encre);
+}
+
+/* Organic blob variants for the signature product-photo treatment — a few
+   presets cycled by index so cards don't look stamped from one template. */
+@layer components {
+  .blob-a {
+    border-radius: 42% 58% 70% 30% / 45% 45% 55% 55%;
+  }
+  .blob-b {
+    border-radius: 63% 37% 30% 70% / 50% 60% 40% 50%;
+  }
+  .blob-c {
+    border-radius: 38% 62% 63% 37% / 41% 44% 56% 59%;
+  }
 }

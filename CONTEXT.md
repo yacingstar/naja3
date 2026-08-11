@@ -167,8 +167,10 @@ in real numbers from the admin panel. Verified against current sources
 
 0. **Project setup** — ✅ done.
 1. **Database schema** — ✅ done, see below.
-2. **Public storefront shell** — not started. Root layout, homepage (hero,
-   catalog preview, "how it works," FAQ), Tailwind theme (palette/fonts) wired up.
+2. **Public storefront shell** — ✅ done, see below. Animations (scroll
+   fade/slide-in, hover lift, sticky-nav shrink) deliberately deferred to
+   Phase 6 — user initially asked for them now, confirmed keeping the phases
+   split instead: static/structural first, animated pass later.
 3. **Catalog & product detail** — not started.
 4. **Cart & checkout** — not started. Cart via React Context + localStorage.
    Checkout: prénom, nom, téléphone, wilaya (dropdown from `delivery_rates`),
@@ -348,13 +350,84 @@ dashboard SQL Editor. Decide in a later phase whether that's worth setting
 up, or whether pasting SQL into the editor stays the workflow for the rest
 of the project.
 
-## Status: Phase 1 complete, ready for Phase 2
+## What's actually been built (Phase 2 detail)
 
-Schema, RLS, grants, storage bucket, and seed data are all live and verified
-on the real Supabase project. **Next up: Phase 2 — public storefront shell**
-(root layout, homepage with hero/catalog preview/"how it works"/FAQ, Tailwind
-theme wired up with the palette + fonts from "Design direction" above). Not
-started yet — waiting on the user to say go.
+Scope check before building: the user's first message about Phase 2 asked
+for animations "like that inspiration website" included now. Flagged that
+the brief itself splits this — Phase 2 is structure/visual identity, Phase 6
+is the scroll/hover/sticky-nav animation pass — and asked which they wanted.
+Confirmed: keep the split, static/structural now, animate later.
+
+**Theme wiring** (`src/app/globals.css`, `src/app/layout.tsx`):
+- All 6 palette variables (`--papier`/`--encre`/`--lueur`/`--blush`/
+  `--crepuscule`/`--sauge`) defined on `:root` and mapped into a Tailwind v4
+  `@theme inline` block, so they're usable as `bg-papier`, `text-encre`,
+  `bg-lueur/40`, etc. — including opacity modifiers, which Tailwind v4
+  supports on any theme color.
+- **Removed** create-next-app's default `prefers-color-scheme: dark`
+  override entirely — Naja has one fixed warm brand identity, not an
+  adaptive light/dark theme. Worth remembering if a future dark-mode request
+  ever comes up: it wasn't an oversight, it was deliberate.
+- Fredoka (headings), Work Sans (body — exported as `Work_Sans` from
+  `next/font/google`, underscore not space), and Caveat (handwritten
+  accents) all loaded as **variable-weight** fonts (all three support a
+  `wght` axis, confirmed by inspecting
+  `next/font/google`'s bundled `font-data.json` directly rather than
+  guessing), exposed as `font-heading`/`font-body`/`font-hand` Tailwind
+  utilities via CSS variables set in the root layout.
+
+**Signature blob-glow treatment** (`src/components/site/BlobPhoto.tsx`):
+Two stacked divs — a blurred `bg-lueur/50` glow shape behind, a
+`overflow-hidden` photo container in front — both clipped with the same
+organic `border-radius` (three hand-picked variants: `.blob-a/b/c` in
+`globals.css`, cycled by card index so a grid doesn't look stamped from one
+template). **First attempt at the border-radius values read as a plain
+circle in the screenshot** (percentages too close together, e.g. `63% 37%`
+vs needing something like `42% 58% 70% 30%` for real visual asymmetry) —
+caught by actually rendering it, not by eyeballing the CSS, and fixed by
+widening the spread. Falls back to a plain `bg-blush` swatch when there's no
+photo yet (no upload pipeline until Phase 5) — no fake/placeholder photos.
+
+**Homepage sections** (`src/components/site/`): `Header` (sticky, no
+shrink-on-scroll yet), `Footer`, `Hero` (decorative glow blob, no product
+photo needed), `CatalogPreview` (server component, queries real Supabase
+data via `src/lib/products.ts`'s `getFeaturedProducts()`, shows an honest
+"Les premières lampes arrivent très bientôt" empty state rather than mock
+products — the catalog genuinely is empty until Phase 5), `ProductCard`
+(uses `BlobPhoto`), `HowItWorks` (4 static steps), `Faq` (client component,
+CSS grid-template-rows accordion — not a scroll/hover animation, so
+in-scope for Phase 2 under the split above). All FAQ and hero copy is draft
+French marketing copy the user will likely want to revise — flagged, not
+hidden.
+
+`src/app/(site)/layout.tsx` now renders `Header`/`children`/`Footer`;
+`src/app/(site)/page.tsx` composes `Hero`/`CatalogPreview`/`HowItWorks`/`Faq`.
+
+**Verification:** No `chromium-cli` or system browser available in this
+environment, so set up a throwaway Playwright + Chromium install in the
+scratchpad directory (outside the project, not a project dependency) to
+actually screenshot the running dev server rather than trust the build
+output alone. Confirmed: palette/fonts/layout render correctly, FAQ
+accordion opens/closes, no console errors. Also **temporarily inserted one
+throwaway product + color via the service-role key** specifically to see the
+blob-glow card render with real data flowing through the query (the empty
+state never exercises that code path) — this is what caught the
+circle-not-blob issue above — then **deleted both rows immediately after**
+and confirmed `products` is empty again via a fresh query. The live database
+was never left with fake data.
+
+`npm run lint` and `npm run build` both pass. `/` is now server-rendered
+per-request (`ƒ`, not static `○`) since `CatalogPreview` reads cookies via
+the Supabase server client — expected, not a bug.
+
+## Status: Phase 2 complete, ready for Phase 3
+
+**Next up: Phase 3 — catalog & product detail** (product listing page,
+product detail page with color variant selection respecting `in_stock`,
+photo gallery per color). Not started yet — waiting on the user to say go.
+Nothing committed to git yet this phase — ask before committing, per the
+user's established preference of committing at phase boundaries with a
+clear message.
 
 ## Decisions explicitly confirmed with the user (don't re-litigate)
 
@@ -369,3 +442,6 @@ started yet — waiting on the user to say go.
   admin panel and commune dataset" request conflicted with the original
   written brief; both were resolved in favor of the original brief after
   asking directly.
+- Animations stay in Phase 6, not pulled into Phase 2, despite the user's
+  initial "I want all its animations" ask for Phase 2 — confirmed after
+  clarifying the brief already splits static structure from animation.

@@ -1,4 +1,12 @@
-// Placeholder — gets the Header/Footer and Tailwind theme tokens in Phase 2.
+import { Footer } from "@/components/site/Footer";
+import { Header } from "@/components/site/Header";
+
 export default function SiteLayout({ children }: LayoutProps<"/">) {
-  return <>{children}</>;
+  return (
+    <>
+      <Header />
+      {children}
+      <Footer />
+    </>
+  );
 }
