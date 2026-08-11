@@ -173,10 +173,8 @@ in real numbers from the admin panel. Verified against current sources
    split instead: static/structural first, animated pass later.
 3. **Catalog & product detail** — ✅ done, see below.
 4. **Cart & checkout** — ✅ done, see below.
-5. **Admin dashboard** — not started. Route group `(admin)`... actually see
-   Phase 0 note below: admin already lives at `src/app/admin/`, separate from
-   `(site)`. Supabase Auth login, orders list + filters, order detail, status
-   update, internal notes, delivery rates screen (add/edit/delete wilayas).
+5. **Admin dashboard** — ✅ done, see below. Scope grew beyond the brief's
+   literal text — see "Decisions" at the bottom.
 6. **Animation & polish** — not started. Scroll fade/slide-in, hover
    lift/scale, sticky nav shrink, homepage-only scroll-snap. Keep subtle.
 7. **Deploy** — not started. Netlify + GitHub auto-deploy, env vars on
@@ -526,15 +524,115 @@ Deleted the order, order_items, product, color, and reverted Alger's rates
 back to 0/0 — confirmed via fresh queries that everything is back to exactly
 the state the client left it in.
 
-## Status: Phase 4 complete, ready for Phase 5
+## What's actually been built (Phase 5 detail)
 
-**Next up: Phase 5 — admin dashboard**: route group separated from the
-public layout (already structurally true — admin lives at `src/app/admin/`,
-sibling of `(site)`, since Phase 0), Supabase Auth login, orders list with
-status filters, order detail, status update, internal notes, and a delivery
-rates screen (add/edit/delete wilaya rows) — this is what finally lets the
-client add real products and set real delivery prices herself. Not started
-yet — waiting on the user to say go.
+**Scope was expanded before building, flagged rather than assumed.** The
+brief's Phase 5 text literally only lists orders management + delivery
+rates — it never mentions product/catalog management, yet nothing else in
+the brief gives the non-technical client any way to populate the catalog.
+Flagged this as a likely oversight; confirmed with the user to fold product
+management (create/edit/delete products, colors, photo upload) into Phase 5
+too. Also confirmed how the admin login gets created: the user sets it up
+themselves via the Supabase dashboard (Authentication → Users → Add user) —
+I never handle her real credentials.
+
+**Auth — three layers, matching the plan confirmed before building:**
+1. `src/proxy.ts` (Next 16's renamed middleware) — refreshes the Supabase
+   session cookie on every `/admin/*` request via `@supabase/ssr`'s
+   `createServerClient` with request/response cookie handlers, and redirects
+   to `/admin/connexion` if there's no user (except the login route itself).
+2. `src/app/admin/(espace)/layout.tsx` — server-side backstop, re-checks
+   `auth.getUser()` and redirects if somehow reached without a session.
+3. `src/lib/adminAuth.ts`'s `requireAdminUser()` — called at the top of
+   **every** admin Server Action. This one matters most: a Server Action is
+   its own POST endpoint, not protected by proxy.ts's page-navigation
+   redirect, so without this a write could be invoked directly bypassing the
+   UI entirely.
+
+No `admin_users` table anywhere (per the standing decision) — "has a valid
+Supabase session" is the entire authorization check, since there's exactly
+one admin. Login (`/admin/connexion`) and sign-out
+(`src/components/admin/SignOutButton.tsx`) both use the plain browser
+Supabase client (`signInWithPassword`/`signOut`) — no custom auth endpoints.
+
+**Every admin Server Action returns `ActionResult<T>`
+(`src/lib/actionResult.ts`, `{ ok: true; data?: T } | { ok: false; error }`)
+instead of throwing.** This wasn't the original approach — orders/delivery-
+rates actions initially threw `Error`s, which the calling client components
+called without try/catch, so a real failure (e.g. deleting a wilaya an order
+still references) would have failed silently with just a console warning.
+Caught and fixed before building products, so every write path is
+consistent. This also sidesteps a real Next.js footgun: `redirect()` thrown
+inside a Server Action gets swallowed if the caller wraps the call in
+try/catch, since redirect works by throwing — returning a result and doing
+`router.push()` client-side avoids that entirely (see `ProductForm`'s create
+flow).
+
+**Data integrity from Phase 1 is now load-bearing, not theoretical**: tried
+to delete a color that a real order referenced during verification, and got
+exactly the intended `ON DELETE RESTRICT` failure, surfaced as
+"Impossible de supprimer cette couleur — elle fait peut-être partie d'une
+commande existante." — not a raw Postgres error. Same protection applies to
+products and delivery rates. `src/lib/orders.ts`'s admin reads never fall
+back to anything on error (unlike the public `src/lib/products.ts`) —
+showing stale/fake data in the admin screens would let someone believe
+they'd saved a real edit that didn't happen; mirrored in the new
+`src/lib/adminProducts.ts`.
+
+**Photo upload** (`uploadPhoto` in `produits/actions.ts`) takes a `FormData`
+with a `File`, uploads to the `product-photos` bucket at
+`${colorId}/${timestamp}-${sanitizedFilename}`, gets the public URL via
+`getPublicUrl()`, and inserts the `product_photos` row — all through the
+service-role client, consistent with the single-write-path pattern (the
+bucket has no write policy for `anon`/`authenticated`, only the Phase 1
+public-read policy). Deleting a photo derives its storage path by string-
+splitting the stored public URL rather than keeping a separate path column
+— simple since the bucket name is fixed and never appears twice in a path.
+
+**Status badges avoid red/green** (`src/components/admin/StatusBadge.tsx`):
+nouvelle→crépuscule, confirmée→lueur, expédiée→sauge, livrée→solid encre,
+annulée→muted blush — five brand colors instead of a semaphore.
+
+**Client/server import boundary bug, caught by the build, not by review**:
+`OrderStatusControl` (a Client Component) originally imported `OrderStatus`
+from `src/lib/orders.ts`, which imports the server-only Supabase client —
+Turbopack correctly refused to build ("You're importing a module that
+depends on next/headers... in the Pages Router" — misleading message, real
+issue was the client/server boundary). Fixed by splitting the pure
+type/constant into `src/lib/orderStatus.ts` with zero server imports, and
+pointing every Client Component at that file instead of `orders.ts`.
+
+**Verification was the most thorough yet, and found two real things**:
+created a throwaway admin account via `auth.admin.createUser()` (service-
+role, not the user's real credentials), then drove login → delivery-rate
+add → product create → color add → **real photo upload** (generated a
+minimal valid PNG, uploaded it, confirmed both the `product_photos` row and
+the actual Storage object exist and are downloadable) → confirmed the new
+product appears live on the public `/boutique` → placed a **real order**
+through checkout against it → confirmed the order in admin (list, status
+filter, detail, status change, internal note) → tried deleting the
+in-use color and got the expected `ON DELETE RESTRICT` error → signed out
+and confirmed the guard re-engages. Two real bugs surfaced this way, not by
+reading the code: (1) a screenshot taken before `router.refresh()` finished
+made photo upload look broken until a fresh page load proved otherwise —
+harmless, just a test-timing issue; (2) my own verification script's
+`waitForSelector("text=Enregistré ✓")` matched a *different*, already-visible
+"saved" indicator (the status control's) instead of the note form's own,
+so an early screenshot appeared to show the note unsaved — re-verified with
+a proper wait condition and confirmed via direct query that the note really
+did persist. Cleaned up everything after: order, order_items, product
+(cascaded colors/photos), the Storage object, the test delivery rate row,
+and the test admin account itself — confirmed all empty/gone via fresh
+queries.
+
+## Status: Phase 5 complete, ready for Phase 6
+
+**Next up: Phase 6 — animation & polish**: scroll fade/slide-in on sections
+and product cards, hover lift/scale on product cards, sticky nav that
+shrinks on scroll, homepage-only scroll-snap (flag it if it fights normal
+page flow anywhere else — checkout/product pages must not scroll-snap).
+Keep it subtle per the brief — support the content, don't upstage it. Not
+started yet — waiting on the user to say go.
 
 ## Decisions explicitly confirmed with the user (don't re-litigate)
 
@@ -555,3 +653,11 @@ yet — waiting on the user to say go.
 - Order confirmation uses sessionStorage handoff, not fetch-by-order-ID —
   confirmed with the user (Phase 4) after presenting the privacy tradeoff.
   No order is ever fetchable by reference; a refresh loses the detail view.
+- Phase 5 scope includes full product/catalog management (not just orders +
+  delivery rates as the brief literally says) — confirmed with the user
+  after flagging the gap: without it, the client would have no way to ever
+  populate the catalog herself.
+- The admin login account is created by the user directly via the Supabase
+  dashboard, not by Claude — confirmed with the user; her real credentials
+  are never handled in this session. (Verification instead used a throwaway
+  test account created via the service-role admin API and deleted after.)
