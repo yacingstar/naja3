@@ -1,3 +1,5 @@
+import Image from "next/image";
+
 // Product photo treatment: a soft rounded-square card with a warm glow
 // behind it, like it's actually plugged in. object-contain, not cover —
 // product shots come in whatever aspect ratio they're shot in (e.g. a 2:3
@@ -14,11 +16,17 @@ export function BlobPhoto({
   src,
   alt,
   tint,
+  // Required whenever this renders at a known size, because the two call
+  // sites differ by an order of magnitude — a 512px detail-page photo and
+  // an 80px cart thumbnail. Left to its default the browser would assume
+  // 100vw and fetch a desktop-width file for that thumbnail.
+  sizes = "100vw",
   className = "",
 }: {
   src?: string | null;
   alt: string;
   tint?: "papier" | "blush";
+  sizes?: string;
   className?: string;
 }) {
   // No photo and no explicit choice: fall back to the tinted card so the
@@ -28,12 +36,16 @@ export function BlobPhoto({
   return (
     <div className={`relative ${className}`}>
       <div aria-hidden className="blob-photo absolute inset-4 bg-lueur/50 blur-2xl" />
-      <div
-        className={`blob-photo relative aspect-square overflow-hidden ${panel}`}
-      >
+      <div className={`blob-photo relative aspect-square overflow-hidden ${panel}`}>
         {src ? (
-          // eslint-disable-next-line @next/next/no-img-element -- remote Supabase Storage URLs, revisit with next/image once real photos exist (Phase 3/5)
-          <img src={src} alt={alt} className="h-full w-full object-contain" />
+          <Image
+            src={src}
+            alt={alt}
+            fill
+            sizes={sizes}
+            quality={85}
+            className="object-contain"
+          />
         ) : null}
       </div>
     </div>

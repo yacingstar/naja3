@@ -1,6 +1,41 @@
 import type { NextConfig } from "next";
 
+// Product photos live in Supabase Storage, and next/image refuses to
+// optimize a remote host that isn't allowlisted. Derived from the same env
+// var the browser client already uses rather than hardcoded, so swapping
+// Supabase projects stays a one-line .env change. Next loads .env before
+// evaluating this file (visible in the build log: "Environments: .env.local"
+// prints first), so the value is there for a normal build.
+//
+// The wildcard fallback keeps a build working somewhere .env isn't present
+// (CI doing a type-check, say) without widening the allowlist to the whole
+// internet — still Supabase only, still the public-object path only.
+const supabaseHostname = process.env.NEXT_PUBLIC_SUPABASE_URL
+  ? new URL(process.env.NEXT_PUBLIC_SUPABASE_URL).hostname
+  : "*.supabase.co";
+
 const nextConfig: NextConfig = {
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: supabaseHostname,
+        port: "",
+        // Storage public URLs are /storage/v1/object/public/<bucket>/<path>
+        pathname: "/storage/v1/object/public/**",
+        search: "",
+      },
+    ],
+    // Next 16 turned `qualities` into an allowlist (default `[75]`); a
+    // `quality` prop outside it gets coerced to the nearest allowed value,
+    // and a direct hit on the optimizer endpoint with another value 400s.
+    //
+    // 85 rather than the default 75 on purpose: every product photo here is
+    // a background-removed cutout, and soft edges plus drop shadows are
+    // exactly where lossy artefacts (halos, banding) show up first. The
+    // saving over 75 is small; the risk of visible fringing isn't worth it.
+    qualities: [85],
+  },
   experimental: {
     serverActions: {
       // Default is 1MB — too small for real phone/camera product photos

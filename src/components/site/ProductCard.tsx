@@ -1,4 +1,5 @@
 import type { CSSProperties } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { Reveal } from "@/components/site/Reveal";
 import { formatPrice } from "@/lib/format";
@@ -68,21 +69,32 @@ export function ProductCard({
         <div className="relative flex aspect-[4/5] items-center justify-center overflow-hidden rounded-2xl bg-papier p-6">
           <div aria-hidden className="absolute inset-8 rounded-full bg-lueur/30 blur-2xl" />
           {product.photoUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element -- remote Supabase Storage URL
-            <img
-              src={product.photoUrl}
-              alt={product.name}
-              // Only the first couple of cards are on screen — in the
-              // homepage carousel the rest are off to the right, and in the
-              // /boutique grid they're below the fold. Those stayed eager,
-              // so every product photo competed for bandwidth on first
-              // paint. The leading cards keep loading eagerly on purpose:
-              // one of them is the LCP element on /boutique, and lazy
-              // images are fetched at lower priority.
-              loading={index < 2 ? "eager" : "lazy"}
-              decoding="async"
-              className="relative h-full w-full object-contain transition-transform duration-500 ease-out group-hover:scale-110"
-            />
+            // `fill` resolves against the nearest positioned ancestor's
+            // PADDING box, so pointing it at the panel above would push the
+            // photo out under that panel's p-6 and enlarge it. This inner
+            // wrapper is a flex child, so it lands on the content box and
+            // the framing stays exactly as it was.
+            <div className="relative h-full w-full">
+              <Image
+                src={product.photoUrl}
+                alt={product.name}
+                fill
+                // Cards cap out around 288px wide (w-80 in the carousel, a
+                // third of max-w-6xl in the /boutique grid) minus the card
+                // and panel padding. Without `sizes` the browser assumes
+                // 100vw and pulls a needlessly huge file.
+                sizes="(min-width: 640px) 288px, 280px"
+                quality={85}
+                // Only the first couple of cards are on screen — in the
+                // homepage carousel the rest are off to the right, and in
+                // the /boutique grid they're below the fold. The leading
+                // cards stay eager on purpose: one of them is the LCP
+                // element on /boutique, and lazy images are fetched at
+                // lower priority.
+                loading={index < 2 ? "eager" : "lazy"}
+                className="object-contain transition-transform duration-500 ease-out group-hover:scale-110"
+              />
+            </div>
           ) : null}
         </div>
 

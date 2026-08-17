@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useRef, useState, useTransition } from "react";
 import {
@@ -182,8 +183,15 @@ export function ColorRow({
       <div className="mt-2 flex flex-wrap gap-3">
         {color.photos.map((photo) => (
           <div key={photo.id} className="relative">
-            {/* eslint-disable-next-line @next/next/no-img-element -- remote Supabase Storage URL, admin thumbnail */}
-            <img src={photo.url} alt="" className="h-20 w-20 rounded-xl object-cover" />
+            <Image
+              src={photo.url}
+              alt=""
+              width={80}
+              height={80}
+              sizes="80px"
+              quality={85}
+              className="h-20 w-20 rounded-xl object-cover"
+            />
             <button
               type="button"
               onClick={() => handleDeletePhoto(photo.id, photo.url)}
@@ -212,10 +220,13 @@ export function ColorRow({
       <div className="mt-2 flex flex-wrap gap-3">
         {color.cutoutPhotoUrl ? (
           <div className="relative">
-            {/* eslint-disable-next-line @next/next/no-img-element -- remote Supabase Storage URL, admin thumbnail */}
-            <img
+            <Image
               src={color.cutoutPhotoUrl}
               alt=""
+              width={80}
+              height={80}
+              sizes="80px"
+              quality={85}
               className="h-20 w-20 rounded-xl bg-blush object-contain"
             />
             <button

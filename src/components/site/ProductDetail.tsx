@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 import { BlobPhoto } from "@/components/site/BlobPhoto";
@@ -90,6 +91,9 @@ export function ProductDetail({
                 ? `${product.name} — ${selectedColor.colorName}`
                 : product.name
             }
+            // Capped at max-w-lg (512px) on desktop; full column width
+            // below that, since the grid collapses to one column.
+            sizes="(min-width: 640px) 512px, 100vw"
             className="mx-auto w-full max-w-lg"
           />
         ) : (
@@ -118,8 +122,15 @@ export function ProductDetail({
                     : "border-encre/10 hover:border-encre/30"
                 }`}
               >
-                {/* eslint-disable-next-line @next/next/no-img-element -- remote Supabase Storage URL, thumbnail-only */}
-                <img src={p.url} alt="" className="h-full w-full object-cover" />
+                <Image
+                  src={p.url}
+                  alt=""
+                  width={64}
+                  height={64}
+                  sizes="64px"
+                  quality={85}
+                  className="h-full w-full object-cover"
+                />
               </button>
             ))}
           </div>

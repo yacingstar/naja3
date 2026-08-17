@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { HangingLamp } from "@/components/site/HangingLamp";
 import { LampIllustration } from "@/components/site/LampIllustration";
@@ -150,14 +151,32 @@ export async function Hero() {
                     aria-hidden
                     className="absolute inset-3 -z-10 rounded-full bg-lueur/40 blur-2xl"
                   />
-                  {/* eslint-disable-next-line @next/next/no-img-element -- remote Supabase Storage URL, cutout photo hung straight on the cord (no frame) */}
-                  <img
+                  <Image
                     src={lamp.photoUrl}
                     alt={
                       lamp.colorName ? `${product.name} — ${lamp.colorName}` : product.name
                     }
-                    style={{ width: rig.width }}
-                    className="h-auto drop-shadow-lg"
+                    // The rig sizes each lamp in CSS (a clamp() width, auto
+                    // height) so cords and lamps scale continuously with the
+                    // viewport. next/image still needs intrinsic dimensions
+                    // for a remote file, and these are only an aspect-ratio
+                    // hint for the pre-load box — 2:3 matches the cutouts as
+                    // shot (720x1080, 1024x1536). `height: auto` in the style
+                    // below is what actually governs: once the file lands the
+                    // browser sizes from its real ratio, which is why the
+                    // docs pair a custom style width with height:auto.
+                    width={400}
+                    height={600}
+                    // Widest lamp in LAMP_RIG is 11rem (176px); the mobile
+                    // floor is around 5rem. Previously these arrived at full
+                    // resolution — a 1086px-wide file for an 83px lamp.
+                    sizes="(min-width: 640px) 176px, 112px"
+                    quality={85}
+                    // Above the fold and part of the hero's first
+                    // impression, so never deferred.
+                    loading="eager"
+                    style={{ width: rig.width, height: "auto" }}
+                    className="drop-shadow-lg"
                   />
                 </Link>
               ) : (
