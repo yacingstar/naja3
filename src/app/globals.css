@@ -70,14 +70,16 @@ html::-webkit-scrollbar {
   display: none;
 }
 
-/* Product-photo card shape. Was an organic blob path — replaced after
-   seeing it against a real photo (client feedback: distracting, not cute).
-   A plain rounded square reads cleaner with a real product shot; the warm
-   glow behind it (BlobPhoto.tsx) still carries the "plugged in" signature. */
+/* Product-photo card shape. Was three different organic blob paths
+   (.blob-a/b/c, picked per instance) — replaced after seeing them against a
+   real photo (client feedback: distracting, not cute). A plain rounded
+   square reads cleaner with a real product shot; the warm glow behind it
+   (BlobPhoto.tsx) still carries the "plugged in" signature. Since all three
+   then collapsed to the same border-radius, the variants — and BlobPhoto's
+   `variant` prop that selected between them — were vestigial and are gone;
+   this is now one shape with one name. */
 @layer components {
-  .blob-a,
-  .blob-b,
-  .blob-c {
+  .blob-photo {
     border-radius: 2rem;
   }
 
@@ -125,16 +127,6 @@ html::-webkit-scrollbar {
     scroll-margin-top: var(--header-height);
   }
 
-  /* Hero lamp motion (LampIllustration.tsx and the real product photo in
-     Hero.tsx). 3s, not 5s — asked for actively moving, not a slow drift. */
-  .animate-lamp-float {
-    animation: lamp-float 3s ease-in-out infinite;
-  }
-  .animate-lamp-swing {
-    animation: lamp-swing 4s ease-in-out infinite;
-    transform-origin: top center;
-  }
-
   /* Hero's row of hanging lamps (HangingLamp.tsx, positioned by Hero.tsx)
      — aardvarkbookclub.com suspends its book covers from cords across the
      hero; same device here, with real product photos.
@@ -147,9 +139,8 @@ html::-webkit-scrollbar {
      swing. `lamp-drop`'s end state is `rotate(-3deg)` — exactly
      `lamp-swing`'s 0%/100% state — and the swing's delay is the drop's
      duration plus that lamp's own stagger delay, so the handoff has no
-     visible jump (same pattern as `.hero-photo-enter` above).
-     `--swing-duration` differs per lamp (set inline), which is what keeps
-     the row from swinging in lockstep. */
+     visible jump. `--swing-duration` differs per lamp (set inline), which
+     is what keeps the row from swinging in lockstep. */
   .hanging-lamp {
     transform-origin: top center;
     animation:
@@ -225,18 +216,6 @@ html::-webkit-scrollbar {
     animation-direction: alternate;
   }
 
-  /* Hero product photo entrance (Hero.tsx and its LampIllustration
-     fallback) — fade + slide-up + rotate-into-place on page load, then
-     hands off straight into the existing lamp-float loop. The entrance's
-     end state (translateY(0) rotate(-7deg)) matches lamp-float's 0%/100%
-     state exactly, and lamp-float's own animation-delay is set to the
-     entrance's duration, so the loop picks up with no visible jump. */
-  .hero-photo-enter {
-    animation:
-      hero-photo-in 700ms cubic-bezier(0.16, 1, 0.3, 1) both,
-      lamp-float 3s ease-in-out 700ms infinite;
-  }
-
   /* Product card resting tilt + hover wobble (ProductCard.tsx) — client
      reference showed cards sitting at their own slight independent angle,
      "like scattered cards," and asked for a wobble on hover rather than a
@@ -256,23 +235,6 @@ html::-webkit-scrollbar {
   .product-card:hover {
     transform: rotate(var(--card-rotate, 0deg)) translateY(-6px);
     animation: card-wobble 500ms ease-in-out;
-  }
-}
-
-/* Stays tilted throughout (-7deg to -3deg, never back to upright) rather
-   than wobbling through vertical — a static upright lamp read as "polite
-   catalog shot," a consistent tilt reads as "just set down," closer to
-   the dynamic angles in the aardvarkbookclub.com reference. Bigger
-   translateY range + shorter duration than a typical subtle idle-float
-   (was ±14px/5s) — asked for a more actively moving hero image, not just
-   a gentle drift. */
-@keyframes lamp-float {
-  0%,
-  100% {
-    transform: translateY(0) rotate(-7deg);
-  }
-  50% {
-    transform: translateY(-30px) rotate(-3deg);
   }
 }
 
@@ -329,17 +291,6 @@ html::-webkit-scrollbar {
   }
 }
 
-@keyframes hero-photo-in {
-  0% {
-    opacity: 0;
-    transform: translateY(16px) rotate(-8deg) scale(0.96);
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(0) rotate(-7deg) scale(1);
-  }
-}
-
 @media (prefers-reduced-motion: reduce) {
   .reveal {
     opacity: 1 !important;
@@ -349,17 +300,10 @@ html::-webkit-scrollbar {
   .snap-homepage {
     scroll-snap-type: none;
   }
-  .animate-lamp-float,
-  .animate-lamp-swing,
   .blob-drift {
     animation: none !important;
   }
   .hanging-lamp {
-    animation: none !important;
-    opacity: 1 !important;
-    transform: none !important;
-  }
-  .hero-photo-enter {
     animation: none !important;
     opacity: 1 !important;
     transform: none !important;

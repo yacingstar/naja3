@@ -90,7 +90,6 @@ export function ProductDetail({
                 ? `${product.name} — ${selectedColor.colorName}`
                 : product.name
             }
-            variant="a"
             className="mx-auto w-full max-w-lg"
           />
         ) : (

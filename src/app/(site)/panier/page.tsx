@@ -35,7 +35,6 @@ export default function PanierPage() {
             <BlobPhoto
               src={item.photoUrl}
               alt={item.productName}
-              variant="a"
               className="w-20 shrink-0"
             />
             <div className="min-w-[8rem] flex-1">

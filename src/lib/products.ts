@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
 
 export type FeaturedProductColor = {
@@ -93,40 +94,24 @@ function cardColors(colors: ProductRow["product_colors"]): FeaturedProductColor[
   }));
 }
 
+const CARD_SELECT =
+  "id, slug, name, description, price, product_colors ( id, color_name, color_hex, in_stock, cutout_photo_url, product_photos ( url, position ) )";
+
 // Real data from day one — no mock catalog. Returns an empty list until
 // products exist (Phase 5 admin panel), and callers handle that gracefully
 // rather than showing fake content.
-export async function getFeaturedProducts(limit = 4): Promise<FeaturedProduct[]> {
+//
+// Wrapped in React's `cache` so several components in one render share a
+// single query: the homepage renders both Hero (which wants the first few)
+// and CatalogPreview (which wants all of them), and this used to be two
+// near-identical round trips to Supabase differing only by a LIMIT. Callers
+// that need fewer slice the result — the query CatalogPreview needs is a
+// superset of Hero's anyway, so there is nothing extra to fetch.
+export const getProducts = cache(async (): Promise<FeaturedProduct[]> => {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("products")
-    .select(
-      "id, slug, name, description, price, product_colors ( id, color_name, color_hex, in_stock, cutout_photo_url, product_photos ( url, position ) )",
-    )
-    .order("created_at", { ascending: true })
-    .limit(limit)
-    .returns<ProductRow[]>();
-
-  if (error || !data) return [];
-
-  return data.map((product) => ({
-    id: product.id,
-    slug: product.slug,
-    name: product.name,
-    description: product.description,
-    price: product.price,
-    photoUrl: cardPhotoUrl(product.product_colors ?? []),
-    colors: cardColors(product.product_colors ?? []),
-  }));
-}
-
-export async function getProducts(): Promise<FeaturedProduct[]> {
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("products")
-    .select(
-      "id, slug, name, description, price, product_colors ( id, color_name, color_hex, in_stock, cutout_photo_url, product_photos ( url, position ) )",
-    )
+    .select(CARD_SELECT)
     .order("created_at", { ascending: true })
     .returns<ProductRow[]>();
 
@@ -141,7 +126,7 @@ export async function getProducts(): Promise<FeaturedProduct[]> {
     photoUrl: cardPhotoUrl(product.product_colors ?? []),
     colors: cardColors(product.product_colors ?? []),
   }));
-}
+});
 
 type ProductDetailRow = {
   id: number;

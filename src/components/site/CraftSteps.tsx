@@ -118,6 +118,13 @@ export function CraftSteps() {
                   <img
                     src={step.illustration}
                     alt=""
+                    // Decorative, and this section sits ~3 screens below the
+                    // fold — no reason for four illustrations to compete with
+                    // the hero for bandwidth on first paint. The
+                    // aspect-square box below reserves their space, so
+                    // deferring them shifts nothing.
+                    loading="lazy"
+                    decoding="async"
                     // aspect-square, not a fixed height: the artwork is
                     // authored on a 500x500 viewBox, so a 1:1 box lets it
                     // fill the width it's given instead of being letterboxed.

@@ -72,6 +72,15 @@ export function ProductCard({
             <img
               src={product.photoUrl}
               alt={product.name}
+              // Only the first couple of cards are on screen — in the
+              // homepage carousel the rest are off to the right, and in the
+              // /boutique grid they're below the fold. Those stayed eager,
+              // so every product photo competed for bandwidth on first
+              // paint. The leading cards keep loading eagerly on purpose:
+              // one of them is the LCP element on /boutique, and lazy
+              // images are fetched at lower priority.
+              loading={index < 2 ? "eager" : "lazy"}
+              decoding="async"
               className="relative h-full w-full object-contain transition-transform duration-500 ease-out group-hover:scale-110"
             />
           ) : null}

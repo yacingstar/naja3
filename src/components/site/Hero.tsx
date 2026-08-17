@@ -2,7 +2,7 @@ import Link from "next/link";
 import { HangingLamp } from "@/components/site/HangingLamp";
 import { LampIllustration } from "@/components/site/LampIllustration";
 import { WavyBackground } from "@/components/site/WavyBackground";
-import { getFeaturedProducts, type FeaturedProduct } from "@/lib/products";
+import { getProducts, type FeaturedProduct } from "@/lib/products";
 
 // Per-lamp rig, applied by position in the row. Cord lengths and sizes
 // are deliberately uneven so the row reads as hand-hung rather than a
@@ -110,7 +110,9 @@ export async function Hero() {
   // covers because its catalog is a rotating surprise box — it can't show
   // real titles; Naja's catalog is small and fixed, so every lamp here can
   // double as a shortcut straight to its own product page).
-  const products = await getFeaturedProducts(LAMP_RIG.length);
+  // getProducts is request-cached, so this shares CatalogPreview's query
+  // rather than issuing a second one just to fetch fewer rows.
+  const products = (await getProducts()).slice(0, LAMP_RIG.length);
   const lamps = pickLampColors(products);
 
   return (
