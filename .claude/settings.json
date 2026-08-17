@@ -2,7 +2,9 @@
   "permissions": {
     "allow": [
       "Bash(npx --yes create-next-app@latest . --typescript --tailwind --eslint --app --src-dir --import-alias \"@/*\" --use-npm)",
-      "Bash(npm install *)"
+      "Bash(npm install *)",
+      "Read(//c/Users/lahme/AppData/Local/Temp/claude/d--CODE-naja3/9592201b-449a-4355-a57d-482f881f9efc/scratchpad/verify/**)",
+      "Bash(node -e ' *)"
     ]
   }
 }

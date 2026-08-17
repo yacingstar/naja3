@@ -4,8 +4,10 @@ import { useRouter } from "next/navigation";
 import { useRef, useState, useTransition } from "react";
 import {
   deleteColor,
+  deleteCutoutPhoto,
   deletePhoto,
   updateColor,
+  uploadCutoutPhoto,
   uploadPhoto,
 } from "@/app/admin/(espace)/produits/actions";
 import type { AdminProductColor } from "@/lib/adminProducts";
@@ -25,6 +27,8 @@ export function ColorRow({
   const [isPending, startTransition] = useTransition();
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploadingCutout, setUploadingCutout] = useState(false);
+  const cutoutFileInputRef = useRef<HTMLInputElement>(null);
 
   function handleSave() {
     setError(null);
@@ -57,23 +61,66 @@ export function ColorRow({
 
     setUploading(true);
     setError(null);
-    const formData = new FormData();
-    formData.set("photo", file);
-    const result = await uploadPhoto(color.id, productId, formData);
-    setUploading(false);
-    if (fileInputRef.current) fileInputRef.current.value = "";
-
-    if (!result.ok) {
-      setError(result.error);
-      return;
+    try {
+      const formData = new FormData();
+      formData.set("photo", file);
+      const result = await uploadPhoto(color.id, productId, formData);
+      if (!result.ok) {
+        setError(result.error);
+        return;
+      }
+      router.refresh();
+    } catch {
+      // A rejected Server Action call (e.g. the request body exceeding
+      // Next's serverActions.bodySizeLimit) never reaches uploadPhoto's own
+      // try/catch — without this, a too-large photo fails completely
+      // silently: no thumbnail, no error, nothing saved.
+      setError("Photo trop volumineuse ou connexion interrompue. Réessayez avec une image plus légère.");
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
     }
-    router.refresh();
   }
 
   function handleDeletePhoto(photoId: number, url: string) {
     setError(null);
     startTransition(async () => {
       const result = await deletePhoto(photoId, url, productId);
+      if (!result.ok) {
+        setError(result.error);
+        return;
+      }
+      router.refresh();
+    });
+  }
+
+  async function handleCutoutFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploadingCutout(true);
+    setError(null);
+    try {
+      const formData = new FormData();
+      formData.set("photo", file);
+      const result = await uploadCutoutPhoto(color.id, productId, formData);
+      if (!result.ok) {
+        setError(result.error);
+        return;
+      }
+      router.refresh();
+    } catch {
+      setError("Photo trop volumineuse ou connexion interrompue. Réessayez avec une image plus légère.");
+    } finally {
+      setUploadingCutout(false);
+      if (cutoutFileInputRef.current) cutoutFileInputRef.current.value = "";
+    }
+  }
+
+  function handleDeleteCutout() {
+    setError(null);
+    startTransition(async () => {
+      const result = await deleteCutoutPhoto(color.id, productId);
       if (!result.ok) {
         setError(result.error);
         return;
@@ -129,7 +176,10 @@ export function ColorRow({
       </div>
       {error ? <p className="mt-2 text-xs text-red-700">{error}</p> : null}
 
-      <div className="mt-4 flex flex-wrap gap-3">
+      <p className="mt-4 text-xs font-medium text-encre/50">
+        Photos (galerie — fiche produit)
+      </p>
+      <div className="mt-2 flex flex-wrap gap-3">
         {color.photos.map((photo) => (
           <div key={photo.id} className="relative">
             {/* eslint-disable-next-line @next/next/no-img-element -- remote Supabase Storage URL, admin thumbnail */}
@@ -155,6 +205,44 @@ export function ColorRow({
           />
         </label>
       </div>
+
+      <p className="mt-4 text-xs font-medium text-encre/50">
+        Photo sans fond (cartes — accueil, boutique)
+      </p>
+      <div className="mt-2 flex flex-wrap gap-3">
+        {color.cutoutPhotoUrl ? (
+          <div className="relative">
+            {/* eslint-disable-next-line @next/next/no-img-element -- remote Supabase Storage URL, admin thumbnail */}
+            <img
+              src={color.cutoutPhotoUrl}
+              alt=""
+              className="h-20 w-20 rounded-xl bg-blush object-contain"
+            />
+            <button
+              type="button"
+              onClick={handleDeleteCutout}
+              aria-label="Supprimer la photo sans fond"
+              className="absolute -right-2 -top-2 flex h-6 w-6 items-center justify-center rounded-full bg-encre text-xs text-papier"
+            >
+              ✕
+            </button>
+          </div>
+        ) : (
+          <label className="flex h-20 w-20 cursor-pointer items-center justify-center rounded-xl border border-dashed border-encre/30 text-center text-xs text-encre/50 hover:border-encre">
+            {uploadingCutout ? "…" : "+ Photo"}
+            <input
+              ref={cutoutFileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleCutoutFileChange}
+              className="hidden"
+            />
+          </label>
+        )}
+      </div>
+      <p className="mt-1 text-xs text-encre/40">
+        Sans photo sans fond, les cartes utilisent la première photo de la galerie.
+      </p>
     </div>
   );
 }

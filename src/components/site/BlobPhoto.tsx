@@ -6,22 +6,35 @@ const BLOB_CLASS = {
 
 type BlobVariant = keyof typeof BLOB_CLASS;
 
-// The signature treatment: an organic blob shape (not a rounded rectangle)
-// with a soft warm glow behind it, like it's actually plugged in. Falls back
-// to a plain blush-tinted blob when there's no photo yet (no image upload
-// pipeline until Phase 5).
+// Product photo treatment: a soft rounded-square card with a warm glow
+// behind it, like it's actually plugged in. object-contain, not cover —
+// product shots come in whatever aspect ratio they're shot in (e.g. a 2:3
+// portrait product photo), and cover was cropping into the lamp itself
+// rather than just trimming background.
+//
+// The panel is `papier`, matching the page and ProductCard's photo inset.
+// It used to be `blush`: with a portrait photo in a square box,
+// object-contain letterboxes it, and those bars rendered as two hard pink
+// slabs either side of the shot — read as a bug rather than a treatment.
+// `tint="blush"` keeps the old pink for the empty/no-photo case, where a
+// tinted card is the point rather than an accident.
 export function BlobPhoto({
   src,
   alt,
   variant = "a",
+  tint,
   className = "",
 }: {
   src?: string | null;
   alt: string;
   variant?: BlobVariant;
+  tint?: "papier" | "blush";
   className?: string;
 }) {
   const blob = BLOB_CLASS[variant];
+  // No photo and no explicit choice: fall back to the tinted card so the
+  // slot still reads as deliberate rather than as a blank hole.
+  const panel = (tint ?? (src ? "papier" : "blush")) === "blush" ? "bg-blush" : "bg-papier";
 
   return (
     <div className={`relative ${className}`}>
@@ -29,10 +42,10 @@ export function BlobPhoto({
         aria-hidden
         className={`absolute inset-4 bg-lueur/50 blur-2xl ${blob}`}
       />
-      <div className={`relative aspect-square overflow-hidden bg-blush ${blob}`}>
+      <div className={`relative aspect-square overflow-hidden ${panel} ${blob}`}>
         {src ? (
           // eslint-disable-next-line @next/next/no-img-element -- remote Supabase Storage URLs, revisit with next/image once real photos exist (Phase 3/5)
-          <img src={src} alt={alt} className="h-full w-full object-cover" />
+          <img src={src} alt={alt} className="h-full w-full object-contain" />
         ) : null}
       </div>
     </div>

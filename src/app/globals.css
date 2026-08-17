@@ -9,6 +9,12 @@
   --blush: #f6c6ce;
   --crepuscule: #a79be0;
   --sauge: #a8c3a0;
+  /* Measured, not guessed (was a separate hardcoded 4.5rem guess on
+     .snap-section below — now one source of truth). Header.tsx is `fixed`,
+     so every page needs this as top padding to avoid content hiding under
+     it; Hero.tsx cancels it with a matching negative margin so the hero
+     alone bleeds up to y=0, behind the header's transparent-at-top state. */
+  --header-height: 69px;
 }
 
 @theme inline {
@@ -29,17 +35,50 @@ body {
   color: var(--encre);
 }
 
-/* Organic blob variants for the signature product-photo treatment — a few
-   presets cycled by index so cards don't look stamped from one template. */
+/* iOS/Safari auto-inflates rendered text size on narrow viewports
+   ("text autosizing") independent of the declared font-size — invisible
+   in `getComputedStyle` (still reports the real CSS value) but very
+   visible on an actual phone: the hero h1 rendered roughly 2-3x its
+   intended 60px, eating the whole first screen. Confirmed by testing
+   under real WebKit mobile emulation (Chromium's mobile viewport
+   emulation doesn't reproduce this, which is why earlier mobile
+   screenshots all looked correct). This turns the behavior off so
+   rendered size always matches the CSS. */
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+/* Hidden native scrollbar, matching the inspiration site's cleaner look —
+   scrolling itself is untouched, just the OS/browser scrollbar chrome. */
+html {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* old Edge */
+}
+html::-webkit-scrollbar {
+  display: none; /* Chromium/WebKit */
+}
+
+/* Same treatment, reusable for any inner scroll container (ProductCarousel's
+   horizontal scroller) — the arrow buttons are the intended scroll UI there,
+   not a visible scrollbar track. */
+.scrollbar-hidden {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.scrollbar-hidden::-webkit-scrollbar {
+  display: none;
+}
+
+/* Product-photo card shape. Was an organic blob path — replaced after
+   seeing it against a real photo (client feedback: distracting, not cute).
+   A plain rounded square reads cleaner with a real product shot; the warm
+   glow behind it (BlobPhoto.tsx) still carries the "plugged in" signature. */
 @layer components {
-  .blob-a {
-    border-radius: 42% 58% 70% 30% / 45% 45% 55% 55%;
-  }
-  .blob-b {
-    border-radius: 63% 37% 30% 70% / 50% 60% 40% 50%;
-  }
+  .blob-a,
+  .blob-b,
   .blob-c {
-    border-radius: 38% 62% 63% 37% / 41% 44% 56% 59%;
+    border-radius: 2rem;
   }
 
   /* Checkout/form fields — hairline border, generous padding, no default
@@ -83,7 +122,221 @@ body {
   }
   .snap-section {
     scroll-snap-align: start;
-    scroll-margin-top: 4.5rem; /* clears the sticky header */
+    scroll-margin-top: var(--header-height);
+  }
+
+  /* Hero lamp motion (LampIllustration.tsx and the real product photo in
+     Hero.tsx). 3s, not 5s — asked for actively moving, not a slow drift. */
+  .animate-lamp-float {
+    animation: lamp-float 3s ease-in-out infinite;
+  }
+  .animate-lamp-swing {
+    animation: lamp-swing 4s ease-in-out infinite;
+    transform-origin: top center;
+  }
+
+  /* Hero's row of hanging lamps (HangingLamp.tsx, positioned by Hero.tsx)
+     — aardvarkbookclub.com suspends its book covers from cords across the
+     hero; same device here, with real product photos.
+
+     `transform-origin: top center` is the whole trick: the pivot is the
+     point where the cord meets the top edge, so the cord+lamp swings as
+     one pendulum instead of the lamp spinning about its own middle.
+
+     Two animations on one element: a one-shot drop-in, then the endless
+     swing. `lamp-drop`'s end state is `rotate(-3deg)` — exactly
+     `lamp-swing`'s 0%/100% state — and the swing's delay is the drop's
+     duration plus that lamp's own stagger delay, so the handoff has no
+     visible jump (same pattern as `.hero-photo-enter` above).
+     `--swing-duration` differs per lamp (set inline), which is what keeps
+     the row from swinging in lockstep. */
+  .hanging-lamp {
+    transform-origin: top center;
+    animation:
+      lamp-drop 600ms cubic-bezier(0.16, 1, 0.3, 1) var(--drop-delay, 0ms) both,
+      lamp-swing var(--swing-duration, 4s) ease-in-out
+        calc(600ms + var(--drop-delay, 0ms)) infinite;
+  }
+
+  /* "Comment c'est fait" cards (CraftSteps.tsx). The scattered look — a
+     per-card tilt plus a vertical offset — is desktop-only: on a phone
+     the cards stack full-width and dead straight. Hence a media query
+     rather than baking the transform into the inline style, which can't
+     be made responsive. The angles/offsets themselves come in per card as
+     --craft-rotate / --craft-offset.
+
+     This is a static transform, not motion, so it deliberately stays put
+     under prefers-reduced-motion — only the entrance animation (handled
+     by .reveal) is suppressed there. */
+  .craft-card {
+    transform: none;
+  }
+  @media (min-width: 40rem) {
+    .craft-card {
+      transform: rotate(var(--craft-rotate, 0deg))
+        translateY(var(--craft-offset, 0px));
+    }
+  }
+
+  /* Hover fan-out (aardvarkbookclub.com reference): the card under the
+     cursor pops forward and straightens, and its neighbours slide apart to
+     make room, undoing a bit of the overlap. Desktop-only, same breakpoint
+     as the overlap itself — on mobile the cards are already full-width and
+     stacked, nothing to fan out. `.craft-item` is the flex child (the
+     Reveal wrapper) that carries the overlap margin, so that's what has to
+     move; `.craft-card` is the li inside it that carries the tilt, so
+     that's what pops. */
+  @media (min-width: 40rem) {
+    .craft-item {
+      position: relative;
+      transition: transform 350ms cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .craft-item:hover {
+      z-index: 10;
+    }
+    .craft-item:hover ~ .craft-item {
+      transform: translateX(28px);
+    }
+    .craft-item:has(~ .craft-item:hover) {
+      transform: translateX(-28px);
+    }
+    .craft-card {
+      transition:
+        transform 350ms cubic-bezier(0.16, 1, 0.3, 1),
+        box-shadow 350ms ease;
+    }
+    .craft-item:hover .craft-card {
+      transform: translateY(calc(var(--craft-offset, 0px) - 14px)) scale(1.06);
+      box-shadow: 0 24px 48px -12px rgb(0 0 0 / 0.3);
+    }
+  }
+
+  /* Background blobs behind the hero (WavyBackground.tsx) — each blob is
+     its own full-bleed <svg>, so this same class drifts all of them via a
+     plain transform. Per-instance duration/direction come from Tailwind
+     arbitrary properties on each <svg> (16s/19s/15s, one reversed), so the
+     three never move in lockstep even though they share one keyframe.
+     Amplitude stays small (2-5% translate, 5% scale) — meant to read as
+     "alive," not busy. */
+  .blob-drift {
+    animation-name: blob-drift;
+    animation-timing-function: ease-in-out;
+    animation-iteration-count: infinite;
+    animation-direction: alternate;
+  }
+
+  /* Hero product photo entrance (Hero.tsx and its LampIllustration
+     fallback) — fade + slide-up + rotate-into-place on page load, then
+     hands off straight into the existing lamp-float loop. The entrance's
+     end state (translateY(0) rotate(-7deg)) matches lamp-float's 0%/100%
+     state exactly, and lamp-float's own animation-delay is set to the
+     entrance's duration, so the loop picks up with no visible jump. */
+  .hero-photo-enter {
+    animation:
+      hero-photo-in 700ms cubic-bezier(0.16, 1, 0.3, 1) both,
+      lamp-float 3s ease-in-out 700ms infinite;
+  }
+
+  /* Product card resting tilt + hover wobble (ProductCard.tsx) — client
+     reference showed cards sitting at their own slight independent angle,
+     "like scattered cards," and asked for a wobble on hover rather than a
+     flat lift. --card-rotate is set inline per card (ProductCard.tsx's
+     ROTATIONS array), so this class stays reusable across any angle.
+     The wobble is a one-shot `animation`, not a `transition` — a
+     transition can't overshoot past its own end value, and re-centering
+     the keyframes on var(--card-rotate) keeps the wobble anchored to each
+     card's own resting angle instead of a shared 0deg. The plain
+     `:hover` transform (same end state as the animation's last keyframe)
+     is what the animation hands off to once it finishes, and what
+     prefers-reduced-motion falls back to below. */
+  .product-card {
+    transform: rotate(var(--card-rotate, 0deg));
+    transition: transform 300ms ease-out;
+  }
+  .product-card:hover {
+    transform: rotate(var(--card-rotate, 0deg)) translateY(-6px);
+    animation: card-wobble 500ms ease-in-out;
+  }
+}
+
+/* Stays tilted throughout (-7deg to -3deg, never back to upright) rather
+   than wobbling through vertical — a static upright lamp read as "polite
+   catalog shot," a consistent tilt reads as "just set down," closer to
+   the dynamic angles in the aardvarkbookclub.com reference. Bigger
+   translateY range + shorter duration than a typical subtle idle-float
+   (was ±14px/5s) — asked for a more actively moving hero image, not just
+   a gentle drift. */
+@keyframes lamp-float {
+  0%,
+  100% {
+    transform: translateY(0) rotate(-7deg);
+  }
+  50% {
+    transform: translateY(-30px) rotate(-3deg);
+  }
+}
+
+@keyframes lamp-swing {
+  0%,
+  100% {
+    transform: rotate(-3deg);
+  }
+  50% {
+    transform: rotate(3deg);
+  }
+}
+
+@keyframes card-wobble {
+  0% {
+    transform: rotate(var(--card-rotate, 0deg)) translateY(0);
+  }
+  20% {
+    transform: rotate(calc(var(--card-rotate, 0deg) - 7deg)) translateY(-4px);
+  }
+  40% {
+    transform: rotate(calc(var(--card-rotate, 0deg) + 6deg)) translateY(-6px);
+  }
+  60% {
+    transform: rotate(calc(var(--card-rotate, 0deg) - 4deg)) translateY(-6px);
+  }
+  80% {
+    transform: rotate(calc(var(--card-rotate, 0deg) + 2deg)) translateY(-6px);
+  }
+  100% {
+    transform: rotate(var(--card-rotate, 0deg)) translateY(-6px);
+  }
+}
+
+/* Ends on lamp-swing's own 0% state (rotate(-3deg)) so the hero's lamps
+   hand off from "dropping in" to "swinging forever" without a jump. */
+@keyframes lamp-drop {
+  0% {
+    opacity: 0;
+    transform: translateY(-36px) rotate(-3deg);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) rotate(-3deg);
+  }
+}
+
+@keyframes blob-drift {
+  0% {
+    transform: translate(0, 0) scale(1);
+  }
+  100% {
+    transform: translate(2%, -3%) scale(1.05);
+  }
+}
+
+@keyframes hero-photo-in {
+  0% {
+    opacity: 0;
+    transform: translateY(16px) rotate(-8deg) scale(0.96);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) rotate(-7deg) scale(1);
   }
 }
 
@@ -95,5 +348,37 @@ body {
   }
   .snap-homepage {
     scroll-snap-type: none;
+  }
+  .animate-lamp-float,
+  .animate-lamp-swing,
+  .blob-drift {
+    animation: none !important;
+  }
+  .hanging-lamp {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+  .hero-photo-enter {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+  .product-card {
+    transform: none !important;
+  }
+  .product-card:hover {
+    animation: none !important;
+    transform: none !important;
+  }
+  .craft-item,
+  .craft-item:hover ~ .craft-item,
+  .craft-item:has(~ .craft-item:hover) {
+    transform: none !important;
+    transition: none !important;
+  }
+  .craft-item:hover .craft-card {
+    transform: rotate(var(--craft-rotate, 0deg)) translateY(var(--craft-offset, 0px)) !important;
+    box-shadow: none !important;
   }
 }

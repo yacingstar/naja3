@@ -1,11 +1,28 @@
 import { createClient } from "@/lib/supabase/server";
 
+export type FeaturedProductColor = {
+  id: number;
+  colorName: string;
+  colorHex: string | null;
+  inStock: boolean;
+  // This specific colour's card photo (cutout preferred, first gallery
+  // shot as fallback) — same rule as the product-level `photoUrl` below,
+  // just not collapsed to one "default" colour. Hero.tsx needs it to hang
+  // each lamp in a different colour; card components can keep ignoring it.
+  photoUrl: string | null;
+};
+
 export type FeaturedProduct = {
   id: number;
   slug: string;
   name: string;
+  // Cards show a short blurb now (aardvarkbookclub.com-style catalog
+  // card), so this is selected for card queries too — not just the
+  // detail page.
+  description: string;
   price: number;
   photoUrl: string | null;
+  colors: FeaturedProductColor[];
 };
 
 export type ProductPhoto = {
@@ -34,16 +51,46 @@ type ProductRow = {
   id: number;
   slug: string;
   name: string;
+  description: string;
   price: number;
   product_colors: Array<{
+    id: number;
+    color_name: string;
+    color_hex: string | null;
     in_stock: boolean;
+    cutout_photo_url: string | null;
     product_photos: Array<{ url: string; position: number }>;
   }>;
 };
 
-function firstPhoto(colors: ProductRow["product_colors"]) {
+// Cards (homepage hero/preview, /boutique listing) prefer a color's
+// dedicated cutout (background-removed) photo when set, falling back to
+// its normal first gallery photo otherwise. The product detail page
+// (getProductBySlug below) never uses the cutout — it shows the full
+// gallery with real backdrops, on purpose.
+function colorPhotoUrl(
+  color: ProductRow["product_colors"][number],
+): string | null {
+  if (color.cutout_photo_url) return color.cutout_photo_url;
+  return (
+    color.product_photos?.slice().sort((a, b) => a.position - b.position)[0]?.url ?? null
+  );
+}
+
+function cardPhotoUrl(colors: ProductRow["product_colors"]): string | null {
   const color = colors.find((c) => c.in_stock) ?? colors[0];
-  return color?.product_photos?.slice().sort((a, b) => a.position - b.position)[0];
+  if (!color) return null;
+  return colorPhotoUrl(color);
+}
+
+function cardColors(colors: ProductRow["product_colors"]): FeaturedProductColor[] {
+  return colors.map((color) => ({
+    id: color.id,
+    colorName: color.color_name,
+    colorHex: color.color_hex,
+    inStock: color.in_stock,
+    photoUrl: colorPhotoUrl(color),
+  }));
 }
 
 // Real data from day one — no mock catalog. Returns an empty list until
@@ -54,7 +101,7 @@ export async function getFeaturedProducts(limit = 4): Promise<FeaturedProduct[]>
   const { data, error } = await supabase
     .from("products")
     .select(
-      "id, slug, name, price, product_colors ( in_stock, product_photos ( url, position ) )",
+      "id, slug, name, description, price, product_colors ( id, color_name, color_hex, in_stock, cutout_photo_url, product_photos ( url, position ) )",
     )
     .order("created_at", { ascending: true })
     .limit(limit)
@@ -66,8 +113,10 @@ export async function getFeaturedProducts(limit = 4): Promise<FeaturedProduct[]>
     id: product.id,
     slug: product.slug,
     name: product.name,
+    description: product.description,
     price: product.price,
-    photoUrl: firstPhoto(product.product_colors ?? [])?.url ?? null,
+    photoUrl: cardPhotoUrl(product.product_colors ?? []),
+    colors: cardColors(product.product_colors ?? []),
   }));
 }
 
@@ -76,7 +125,7 @@ export async function getProducts(): Promise<FeaturedProduct[]> {
   const { data, error } = await supabase
     .from("products")
     .select(
-      "id, slug, name, price, product_colors ( in_stock, product_photos ( url, position ) )",
+      "id, slug, name, description, price, product_colors ( id, color_name, color_hex, in_stock, cutout_photo_url, product_photos ( url, position ) )",
     )
     .order("created_at", { ascending: true })
     .returns<ProductRow[]>();
@@ -87,8 +136,10 @@ export async function getProducts(): Promise<FeaturedProduct[]> {
     id: product.id,
     slug: product.slug,
     name: product.name,
+    description: product.description,
     price: product.price,
-    photoUrl: firstPhoto(product.product_colors ?? [])?.url ?? null,
+    photoUrl: cardPhotoUrl(product.product_colors ?? []),
+    colors: cardColors(product.product_colors ?? []),
   }));
 }
 

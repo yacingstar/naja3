@@ -56,6 +56,7 @@ export type AdminProductColor = {
   colorName: string;
   colorHex: string | null;
   inStock: boolean;
+  cutoutPhotoUrl: string | null;
   photos: Array<{ id: number; url: string; position: number }>;
 };
 
@@ -63,7 +64,9 @@ export async function getAdminProductColors(productId: number): Promise<AdminPro
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("product_colors")
-    .select("id, color_name, color_hex, in_stock, product_photos ( id, url, position )")
+    .select(
+      "id, color_name, color_hex, in_stock, cutout_photo_url, product_photos ( id, url, position )",
+    )
     .eq("product_id", productId)
     .order("id", { ascending: true });
 
@@ -74,6 +77,7 @@ export async function getAdminProductColors(productId: number): Promise<AdminPro
     colorName: color.color_name,
     colorHex: color.color_hex,
     inStock: color.in_stock,
+    cutoutPhotoUrl: color.cutout_photo_url,
     photos: (color.product_photos ?? [])
       .slice()
       .sort((a, b) => a.position - b.position),

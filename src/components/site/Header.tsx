@@ -7,13 +7,32 @@ import { CartLink } from "@/components/site/CartLink";
 // "Comment ça marche"/FAQ are homepage sections, so they're homepage-relative
 // hashes (works whether you're already on / or coming from elsewhere).
 //
-// The shrink-on-scroll effect uses a CSS transform (scale), never
-// padding/font-size. Changing a layout-affecting property here shrank the
-// header's actual box height while scrolling, and on the homepage that fed
-// back into scroll-snap-type's max-scroll calculation and permanently
-// trapped scrolling partway down the page (confirmed: freezing the
-// header's padding fixed it immediately). transform doesn't affect layout,
-// so scaling avoids the whole class of bug.
+// Always transparent now, on every page — no more solid-on-scroll swap
+// (previously `bg-papier/90 backdrop-blur` past a scroll threshold). Each
+// nav item carries its own background pill instead (see the nav/cart/CTA
+// classes below), so legibility no longer depends on the bar itself having
+// a solid backing — same treatment works over the colorful hero, a plain
+// papier page, or a product photo on the detail page.
+//
+// Only the wordmark reacts to scroll: it eases up and shrinks slightly
+// (`scrolled` below) while the nav/cart/CTA row stays put — asked to keep
+// the buttons steady and have "the company name" be the thing that moves.
+// Still a CSS `transform`, never padding/font-size — changing a
+// layout-affecting property here previously shrank the header's actual box
+// height while scrolling, and on the homepage that fed back into
+// scroll-snap-type's max-scroll calculation and permanently trapped
+// scrolling partway down the page (confirmed: freezing the header's
+// padding fixed it immediately). transform doesn't affect layout, so it
+// avoids the whole class of bug.
+//
+// `fixed`, not `sticky`: with `sticky`, the header sits in normal document
+// flow until scrolled, so at scroll position 0 it doesn't overlap the hero
+// at all — every page compensates with `padding-top: var(--header-height)`
+// in (site)/layout.tsx, and Hero.tsx cancels that specifically so it alone
+// bleeds up to y=0.
+const NAV_PILL =
+  "rounded-full bg-papier/85 px-4 py-2 shadow-sm transition hover:bg-lueur/25";
+
 export function Header() {
   const [scrolled, setScrolled] = useState(false);
 
@@ -33,30 +52,31 @@ export function Header() {
   }, []);
 
   return (
-    <header className="sticky top-0 z-40 border-b border-encre/10 bg-papier/90 backdrop-blur">
-      <div
-        style={{ transform: scrolled ? "scale(0.92)" : "scale(1)" }}
-        className="mx-auto flex max-w-6xl origin-top items-center justify-between px-6 py-4 transition-transform duration-300"
-      >
-        <Link href="/" className="font-heading text-2xl">
+    <header className="fixed inset-x-0 top-0 z-40">
+      <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
+        <Link
+          href="/"
+          style={{ transform: scrolled ? "translateY(-6px) scale(0.85)" : "translateY(0) scale(1)" }}
+          className="origin-left font-heading text-2xl transition-transform duration-300"
+        >
           Naja
         </Link>
-        <nav className="hidden items-center gap-8 text-sm font-medium sm:flex">
-          <Link href="/boutique" className="hover:text-lueur">
+        <nav className="hidden items-center gap-3 text-sm font-medium sm:flex">
+          <Link href="/boutique" className={NAV_PILL}>
             Boutique
           </Link>
-          <Link href="/#comment-ca-marche" className="hover:text-lueur">
-            Comment ça marche
+          <Link href="/#comment-c-est-fait" className={NAV_PILL}>
+            Comment c&apos;est fait
           </Link>
-          <Link href="/#faq" className="hover:text-lueur">
+          <Link href="/#faq" className={NAV_PILL}>
             FAQ
           </Link>
         </nav>
-        <div className="flex items-center gap-6">
+        <div className="flex items-center gap-3">
           <CartLink />
           <Link
             href="/boutique"
-            className="rounded-full bg-lueur px-5 py-2 text-sm font-medium text-encre transition hover:bg-lueur/90"
+            className="rounded-full bg-lueur px-5 py-2 text-sm font-medium text-encre shadow-sm transition hover:bg-lueur/90"
           >
             Découvrir
           </Link>

@@ -166,10 +166,10 @@ export async function deleteColor(colorId: number, productId: number): Promise<A
 
   const supabase = createAdminClient();
 
-  const { data: photos } = await supabase
-    .from("product_photos")
-    .select("url")
-    .eq("product_color_id", colorId);
+  const [{ data: photos }, { data: color }] = await Promise.all([
+    supabase.from("product_photos").select("url").eq("product_color_id", colorId),
+    supabase.from("product_colors").select("cutout_photo_url").eq("id", colorId).maybeSingle(),
+  ]);
 
   const { error } = await supabase.from("product_colors").delete().eq("id", colorId);
 
@@ -183,7 +183,10 @@ export async function deleteColor(colorId: number, productId: number): Promise<A
     };
   }
 
-  const paths = (photos ?? []).map((p) => storagePathFromUrl(p.url)).filter((p): p is string => Boolean(p));
+  const urls = [...(photos ?? []).map((p) => p.url), color?.cutout_photo_url].filter(
+    (u): u is string => Boolean(u),
+  );
+  const paths = urls.map((u) => storagePathFromUrl(u)).filter((p): p is string => Boolean(p));
   if (paths.length > 0) {
     await supabase.storage.from(PHOTO_BUCKET).remove(paths);
   }
@@ -253,6 +256,83 @@ export async function deletePhoto(
   if (error) return { ok: false, error: "Impossible de supprimer la photo." };
 
   const path = storagePathFromUrl(url);
+  if (path) await supabase.storage.from(PHOTO_BUCKET).remove([path]);
+
+  revalidatePath(`/admin/produits/${productId}`);
+  return { ok: true };
+}
+
+// Cutout (background-removed) photo — a single dedicated slot per color,
+// separate from the product_photos gallery above. Hero/catalog/boutique
+// listing cards prefer this when set (see src/lib/products.ts); the detail
+// page keeps showing the normal gallery untouched.
+export async function uploadCutoutPhoto(
+  colorId: number,
+  productId: number,
+  formData: FormData,
+): Promise<ActionResult> {
+  await requireAdminUser();
+
+  const file = formData.get("photo");
+  if (!(file instanceof File) || file.size === 0) {
+    return { ok: false, error: "Merci de choisir une image." };
+  }
+
+  const supabase = createAdminClient();
+
+  const { data: existing } = await supabase
+    .from("product_colors")
+    .select("cutout_photo_url")
+    .eq("id", colorId)
+    .maybeSingle();
+
+  const path = `${colorId}/cutout-${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, "_")}`;
+  const { error: uploadError } = await supabase.storage
+    .from(PHOTO_BUCKET)
+    .upload(path, file, { contentType: file.type });
+
+  if (uploadError) return { ok: false, error: "Impossible de téléverser la photo." };
+
+  const { data: publicUrl } = supabase.storage.from(PHOTO_BUCKET).getPublicUrl(path);
+
+  const { error: updateError } = await supabase
+    .from("product_colors")
+    .update({ cutout_photo_url: publicUrl.publicUrl })
+    .eq("id", colorId);
+
+  if (updateError) {
+    await supabase.storage.from(PHOTO_BUCKET).remove([path]);
+    return { ok: false, error: "Impossible d'enregistrer la photo." };
+  }
+
+  const previousPath = existing?.cutout_photo_url
+    ? storagePathFromUrl(existing.cutout_photo_url)
+    : null;
+  if (previousPath) await supabase.storage.from(PHOTO_BUCKET).remove([previousPath]);
+
+  revalidatePath(`/admin/produits/${productId}`);
+  return { ok: true };
+}
+
+export async function deleteCutoutPhoto(colorId: number, productId: number): Promise<ActionResult> {
+  await requireAdminUser();
+
+  const supabase = createAdminClient();
+
+  const { data: existing } = await supabase
+    .from("product_colors")
+    .select("cutout_photo_url")
+    .eq("id", colorId)
+    .maybeSingle();
+
+  const { error } = await supabase
+    .from("product_colors")
+    .update({ cutout_photo_url: null })
+    .eq("id", colorId);
+
+  if (error) return { ok: false, error: "Impossible de supprimer la photo." };
+
+  const path = existing?.cutout_photo_url ? storagePathFromUrl(existing.cutout_photo_url) : null;
   if (path) await supabase.storage.from(PHOTO_BUCKET).remove([path]);
 
   revalidatePath(`/admin/produits/${productId}`);
