@@ -35,6 +35,23 @@ const nextConfig: NextConfig = {
     // exactly where lossy artefacts (halos, banding) show up first. The
     // saving over 75 is small; the risk of visible fringing isn't worth it.
     qualities: [85],
+    // Next 16 added an SSRF guard that refuses to fetch an upstream image
+    // whose hostname resolves to a private IP. On a NAT64/DNS64 network —
+    // this dev machine's, and plenty of IPv6-only mobile networks —
+    // Supabase's perfectly public Cloudflare addresses come back in
+    // NAT64 form (64:ff9b::6812:260a is literally 104.18.38.10), and
+    // 64:ff9b::/96 gets classified as private. Every product photo then
+    // fails with a generic 400 '"url" parameter is not allowed', which
+    // points at remotePatterns and sends you hunting the wrong bug; the
+    // real reason only appears in the server log.
+    //
+    // Safe here specifically because remotePatterns above is tight: exact
+    // protocol, exact Supabase host, fixed path prefix, no query string.
+    // The optimizer therefore cannot be aimed at an internal address no
+    // matter what `url` a caller passes, so what this flag actually
+    // disables is second-guessing the resolved IP of one pinned public
+    // host. Revisit if remotePatterns is ever widened.
+    dangerouslyAllowLocalIP: true,
   },
   experimental: {
     serverActions: {
