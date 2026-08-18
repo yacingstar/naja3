@@ -18,7 +18,7 @@ export const CONTACT: {
   email: string | null;
 } = {
   whatsapp: null,
-  instagram: null,
+  instagram: "naja_dz",
   email: null,
 };
 

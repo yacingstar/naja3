@@ -1,5 +1,6 @@
 import type { SVGProps } from "react";
 import { Reveal } from "@/components/site/Reveal";
+import { instagramUrl, whatsappUrl } from "@/lib/contact";
 
 // Hand-rolled, not lucide-react (not a project dependency yet, and four
 // icons doesn't justify adding one). Same visual grammar throughout so
@@ -49,10 +50,17 @@ const ITEMS = [
   { Icon: CashIcon, text: "Paiement à la livraison" },
   { Icon: TruckIcon, text: "Livraison dans toute l'Algérie" },
   { Icon: HeartIcon, text: "Fait main en Algérie", hand: true },
-  // No WhatsApp number / contact link wired up anywhere in the project yet
-  // (checked Footer.tsx and everywhere else) — stays plain text per the
-  // brief until there's a real number or address to point at.
-  { Icon: ChatIcon, text: "Une question ? Écrivez-nous" },
+  // Links to whichever channel is configured, preferring WhatsApp once a
+  // number exists (a reply lands in a thread the customer already watches);
+  // Instagram DM until then. With neither it stays plain text rather than
+  // promising a reply we have no way to receive.
+  {
+    Icon: ChatIcon,
+    text: "Une question ? Écrivez-nous",
+    href:
+      whatsappUrl("Bonjour ! J'ai une question à propos de vos lampes.") ??
+      instagramUrl,
+  },
 ];
 
 // Sits in the plain --papier gap between Hero's rounded-bottom close and
@@ -68,23 +76,45 @@ export function TrustStrip() {
       <Reveal>
         <div className="mx-auto max-w-5xl rounded-[1.75rem] bg-blush/20 px-6 py-6 sm:rounded-full sm:px-8 sm:py-5">
           <ul className="grid grid-cols-2 gap-x-3 gap-y-6 sm:flex sm:grid-cols-none sm:items-stretch sm:justify-between sm:gap-0 sm:divide-x sm:divide-blush">
-            {ITEMS.map((item) => (
-              <li
-                key={item.text}
-                className="flex flex-col items-center gap-2 text-center sm:flex-1 sm:flex-row sm:justify-center sm:gap-2.5 sm:px-4"
-              >
-                <item.Icon className="h-5 w-5 shrink-0 text-encre" aria-hidden />
-                <span
-                  className={
-                    item.hand
-                      ? "font-hand text-base text-encre sm:whitespace-nowrap"
-                      : "text-sm text-encre sm:whitespace-nowrap"
-                  }
+            {ITEMS.map((item) => {
+              const label = (
+                <>
+                  <item.Icon className="h-5 w-5 shrink-0 text-encre" aria-hidden />
+                  <span
+                    className={
+                      item.hand
+                        ? "font-hand text-base text-encre sm:whitespace-nowrap"
+                        : "text-sm text-encre sm:whitespace-nowrap"
+                    }
+                  >
+                    {item.text}
+                  </span>
+                </>
+              );
+              // Only the contact item is ever a link, and only when a channel
+              // is configured — the other three are statements of fact with
+              // nowhere to go.
+              const inner = "flex flex-col items-center gap-2 text-center sm:flex-row sm:justify-center sm:gap-2.5";
+              return (
+                <li
+                  key={item.text}
+                  className={`flex sm:flex-1 sm:px-4 ${item.href ? "" : inner}`}
                 >
-                  {item.text}
-                </span>
-              </li>
-            ))}
+                  {item.href ? (
+                    <a
+                      href={item.href}
+                      target="_blank"
+                      rel="noreferrer"
+                      className={`${inner} w-full rounded-full transition hover:text-encre/60`}
+                    >
+                      {label}
+                    </a>
+                  ) : (
+                    label
+                  )}
+                </li>
+              );
+            })}
           </ul>
         </div>
       </Reveal>
