@@ -147,10 +147,6 @@ export async function Hero() {
                   href={`/boutique/${product.slug}`}
                   className="pointer-events-auto relative block transition-transform duration-300 hover:scale-110"
                 >
-                  <span
-                    aria-hidden
-                    className="absolute inset-3 -z-10 rounded-full bg-lueur/40 blur-2xl"
-                  />
                   <Image
                     src={lamp.photoUrl}
                     alt={

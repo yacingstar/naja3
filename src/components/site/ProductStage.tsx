@@ -1,18 +1,11 @@
 import Image from "next/image";
 import { LampIllustration } from "@/components/site/LampIllustration";
+import { LUEUR_RGB, hexToRgba } from "@/lib/color";
 
 export type StageView =
   | { kind: "cutout"; url: string }
   | { kind: "photo"; url: string };
 
-// Admin-entered hex, so treat anything unparseable as "no tint" rather than
-// letting a bad value produce an invalid gradient.
-function rgba(hex: string | null, alpha: number): string | null {
-  const raw = hex?.replace("#", "").trim() ?? "";
-  if (!/^[0-9a-fA-F]{6}$/.test(raw)) return null;
-  const [r, g, b] = [0, 2, 4].map((i) => parseInt(raw.slice(i, i + 2), 16));
-  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
-}
 
 // The product page used to drop a portrait studio shot into a square cream
 // panel, which gave you two competing backgrounds — the photo's own red
@@ -47,15 +40,15 @@ export function ProductStage({
   tintHex: string | null;
   sizes: string;
 }) {
-  const glow = rgba(tintHex, 0.55) ?? "var(--lueur)";
-  const pool = rgba(tintHex, 0.32);
+  const glow = hexToRgba(tintHex, 0.55) ?? "var(--lueur)";
+  const pool = hexToRgba(tintHex, 0.32);
   // --lueur, the brand's "switched on" warm. Always laid down underneath the
   // colour tint, because pale lamps tint at roughly the panel's own colour
   // (Capricorne's white is #fef8ef) and their pool would otherwise vanish —
   // leaving the light colours looking flat beside the saturated ones. With
   // this base every lamp sits in warm light and the colour just shifts its
   // hue.
-  const warmBase = "rgba(242, 166, 90, 0.26)";
+  const warmBase = `rgba(${LUEUR_RGB}, 0.26)`;
 
   return (
     <div className="relative">

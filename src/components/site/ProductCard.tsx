@@ -2,6 +2,7 @@ import type { CSSProperties } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Reveal } from "@/components/site/Reveal";
+import { hexToRgba } from "@/lib/color";
 import { formatPrice } from "@/lib/format";
 import type { FeaturedProduct } from "@/lib/products";
 
@@ -55,6 +56,11 @@ export function ProductCard({
     "--card-rotate": `${ROTATIONS[index % ROTATIONS.length]}deg`,
   } as CSSProperties;
 
+  // Mirrors cardPhotoUrl in lib/products.ts — first in-stock colour, else the
+  // first — so the glow is tinted to the colour whose photo is on the card.
+  const shownColor = product.colors.find((c) => c.inStock) ?? product.colors[0];
+  const glowTint = hexToRgba(shownColor?.colorHex, 0.38);
+
   return (
     <Reveal delay={(index % 5) * 80}>
       <Link
@@ -67,7 +73,35 @@ export function ProductCard({
         {/* Photo inset on top of the colour block, so the card colour
             frames it on all sides — the aardvark cover treatment. */}
         <div className="relative flex aspect-[4/5] items-center justify-center overflow-hidden rounded-2xl bg-papier p-6">
-          <div aria-hidden className="absolute inset-8 rounded-full bg-lueur/30 blur-2xl" />
+          {/* Glow tinted to the lamp actually shown on this card, so a teal
+              lamp sits in teal light rather than every card sharing one
+              orange wash. `cardPhotoUrl` picks the first in-stock colour, so
+              the same rule here keeps the glow and the photo in agreement.
+
+              The warm --lueur layer stays underneath: pale colours tint at
+              roughly the panel's own colour (Capricorne's white is #fef8ef)
+              and would otherwise have no visible glow at all, leaving those
+              cards flat next to the saturated ones. Colour shifts the hue;
+              it isn't the only light. Same treatment as ProductStage.
+
+              Only drawn when there's a photo to light — a product with no
+              image yet was otherwise showing a glow around nothing, which
+              reads as a rendering fault rather than a missing photo. */}
+          {product.photoUrl ? (
+            <>
+              <div
+                aria-hidden
+                className="absolute inset-8 rounded-full bg-lueur/25 blur-2xl"
+              />
+              {glowTint ? (
+                <div
+                  aria-hidden
+                  className="absolute inset-8 rounded-full blur-2xl"
+                  style={{ background: glowTint }}
+                />
+              ) : null}
+            </>
+          ) : null}
           {product.photoUrl ? (
             // `fill` resolves against the nearest positioned ancestor's
             // PADDING box, so pointing it at the panel above would push the
