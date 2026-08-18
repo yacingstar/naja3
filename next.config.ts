@@ -15,6 +15,17 @@ const supabaseHostname = process.env.NEXT_PUBLIC_SUPABASE_URL
   : "*.supabase.co";
 
 const nextConfig: NextConfig = {
+  // Testing on a real phone means loading the dev server over the LAN IP
+  // (http://192.168.x.x:3000), and `next dev` treats any origin other than
+  // the one it booted on as cross-origin — it answers 403 for everything
+  // under /_next/static. The HTML still renders, so the page looks like it
+  // half-works: hero and footer show, while every section wrapped in
+  // <Reveal> stays at opacity 0 forever, because the client JS that runs
+  // its IntersectionObserver never loaded.
+  //
+  // Private LAN ranges only, and dev-only — `next start` and any deployment
+  // ignore this setting entirely.
+  allowedDevOrigins: ["192.168.*.*", "10.*.*.*", "172.16.*.*", "172.17.*.*"],
   images: {
     remotePatterns: [
       {
