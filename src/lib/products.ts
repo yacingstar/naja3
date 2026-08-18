@@ -36,6 +36,10 @@ export type ProductColorDetail = {
   colorName: string;
   colorHex: string | null;
   inStock: boolean;
+  // The background-removed shot, when the admin has set one. The detail
+  // page leads with it (ProductStage lights it like a lamp that's on)
+  // and keeps the real backdrop photos as the shots behind it.
+  cutoutPhotoUrl: string | null;
   photos: ProductPhoto[];
 };
 
@@ -139,6 +143,7 @@ type ProductDetailRow = {
     color_name: string;
     color_hex: string | null;
     in_stock: boolean;
+    cutout_photo_url: string | null;
     product_photos: Array<{ url: string; position: number }>;
   }>;
 };
@@ -148,7 +153,7 @@ export async function getProductBySlug(slug: string): Promise<ProductDetail | nu
   const { data, error } = await supabase
     .from("products")
     .select(
-      "id, slug, name, description, price, product_colors ( id, color_name, color_hex, in_stock, product_photos ( url, position ) )",
+      "id, slug, name, description, price, product_colors ( id, color_name, color_hex, in_stock, cutout_photo_url, product_photos ( url, position ) )",
     )
     .eq("slug", slug)
     .maybeSingle()
@@ -167,6 +172,7 @@ export async function getProductBySlug(slug: string): Promise<ProductDetail | nu
         id: color.id,
         colorName: color.color_name,
         colorHex: color.color_hex,
+        cutoutPhotoUrl: color.cutout_photo_url,
         inStock: color.in_stock,
         photos: (color.product_photos ?? [])
           .slice()

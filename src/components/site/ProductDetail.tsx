@@ -3,8 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
-import { BlobPhoto } from "@/components/site/BlobPhoto";
-import { LampIllustration } from "@/components/site/LampIllustration";
+import { ProductStage, type StageView } from "@/components/site/ProductStage";
 import { useCart } from "@/lib/cart";
 import { formatPrice } from "@/lib/format";
 import type { ProductColorDetail } from "@/lib/products";
@@ -53,7 +52,21 @@ export function ProductDetail({
   // Colors come pre-sorted in-stock-first (see getProductBySlug), so the
   // default selection is always something a customer can actually buy.
   const selectedColor = colors.find((c) => c.id === selectedColorId) ?? colors[0];
-  const photo = selectedColor?.photos[photoIndex];
+
+  // The cutout leads, with the real backdrop shots behind it. Two reasons
+  // it goes first rather than replacing them: it's the view ProductStage
+  // can actually light (no background of its own to fight), and it shows
+  // the lamp's true silhouette, which is what someone is deciding on.
+  // The photographed-in-a-room shots are still one tap away.
+  const views: StageView[] = selectedColor
+    ? [
+        ...(selectedColor.cutoutPhotoUrl
+          ? [{ kind: "cutout" as const, url: selectedColor.cutoutPhotoUrl }]
+          : []),
+        ...selectedColor.photos.map((p) => ({ kind: "photo" as const, url: p.url })),
+      ]
+    : [];
+  const view = views[photoIndex] ?? views[0] ?? null;
 
   function selectColor(id: number) {
     setSelectedColorId(id);
@@ -71,7 +84,10 @@ export function ProductDetail({
         colorId: selectedColor.id,
         colorName: selectedColor.colorName,
         unitPrice: product.price,
-        photoUrl: selectedColor.photos[0]?.url ?? null,
+        // Cutout first: the cart shows an 80px thumbnail on a papier tile,
+        // where a background-removed lamp reads far better than a shrunken
+        // studio shot with its own backdrop.
+        photoUrl: selectedColor.cutoutPhotoUrl ?? selectedColor.photos[0]?.url ?? null,
       },
       quantity,
     );
@@ -83,38 +99,29 @@ export function ProductDetail({
     <div className="grid grid-cols-1 gap-10 lg:grid-cols-2 lg:items-start lg:gap-16">
       {/* ── Left: the photo ─────────────────────────────────────────── */}
       <div className="lg:sticky lg:top-28">
-        {photo?.url ? (
-          <BlobPhoto
-            src={photo.url}
+        <div className="mx-auto w-full max-w-lg">
+          <ProductStage
+            view={view}
             alt={
               selectedColor
                 ? `${product.name} — ${selectedColor.colorName}`
                 : product.name
             }
+            tintHex={selectedColor?.colorHex ?? null}
             // Capped at max-w-lg (512px) on desktop; full column width
             // below that, since the grid collapses to one column.
             sizes="(min-width: 640px) 512px, 100vw"
-            className="mx-auto w-full max-w-lg"
           />
-        ) : (
-          // A photo-less colour used to fall through to BlobPhoto's tinted
-          // card, which at this size is a 500px flat pink square — reads as
-          // a broken image, not as "coming soon". The house illustration
-          // says the same thing on purpose.
-          <div className="mx-auto flex aspect-square w-full max-w-lg flex-col items-center justify-center gap-4 rounded-[2rem] border-2 border-dashed border-encre/15 bg-papier">
-            <LampIllustration size="sm" />
-            <p className="font-hand text-lg text-encre/50">photo à venir</p>
-          </div>
-        )}
+        </div>
 
-        {selectedColor && selectedColor.photos.length > 1 ? (
+        {views.length > 1 ? (
           <div className="mt-5 flex justify-center gap-3">
-            {selectedColor.photos.map((p, index) => (
+            {views.map((v, index) => (
               <button
-                key={p.url}
+                key={v.url}
                 type="button"
                 onClick={() => setPhotoIndex(index)}
-                aria-label={`Photo ${index + 1}`}
+                aria-label={v.kind === "cutout" ? "La lampe seule" : `Photo ${index}`}
                 aria-current={index === photoIndex}
                 className={`h-16 w-16 overflow-hidden rounded-2xl border-2 bg-papier transition ${
                   index === photoIndex
@@ -123,13 +130,17 @@ export function ProductDetail({
                 }`}
               >
                 <Image
-                  src={p.url}
+                  src={v.url}
                   alt=""
                   width={64}
                   height={64}
                   sizes="64px"
                   quality={85}
-                  className="h-full w-full object-cover"
+                  // contain for the cutout (cover would crop the lamp out
+                  // of its own transparent margins), cover for real photos.
+                  className={`h-full w-full ${
+                    v.kind === "cutout" ? "object-contain p-1" : "object-cover"
+                  }`}
                 />
               </button>
             ))}
