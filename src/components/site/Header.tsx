@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { CartLink } from "@/components/site/CartLink";
+import { InstagramIcon } from "@/components/site/Icons";
+import { instagramUrl } from "@/lib/contact";
 
 // "Comment ça marche"/FAQ are homepage sections, so they're homepage-relative
 // hashes (works whether you're already on / or coming from elsewhere).
@@ -61,25 +63,38 @@ export function Header() {
         >
           Naja
         </Link>
-        <nav className="hidden items-center gap-3 text-sm font-medium sm:flex">
+        {/* "Découvrir" used to sit on the right as a second route to the same
+            page the first nav pill already goes to. Dropping it makes room
+            for the icons — but it was also the only shop entry point on a
+            phone, since the rest of the nav is desktop-only. So Boutique is
+            visible at every width now and the two wordier links stay
+            desktop-only. */}
+        <nav className="flex items-center gap-2 text-sm font-medium sm:gap-3">
           <Link href="/boutique" className={NAV_PILL}>
             Boutique
           </Link>
-          <Link href="/#comment-c-est-fait" className={NAV_PILL}>
+          <Link href="/#comment-c-est-fait" className={`hidden sm:inline-flex ${NAV_PILL}`}>
             Comment c&apos;est fait
           </Link>
-          <Link href="/#faq" className={NAV_PILL}>
+          <Link href="/#faq" className={`hidden sm:inline-flex ${NAV_PILL}`}>
             FAQ
           </Link>
         </nav>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3">
+          {/* Renders only once a real handle exists in src/lib/contact.ts —
+              an icon linking nowhere is worse than no icon. */}
+          {instagramUrl ? (
+            <a
+              href={instagramUrl}
+              target="_blank"
+              rel="noreferrer"
+              aria-label="Naja sur Instagram"
+              className="flex h-10 w-10 items-center justify-center rounded-full bg-papier/85 shadow-sm transition hover:bg-lueur/25"
+            >
+              <InstagramIcon className="h-5 w-5 text-encre" aria-hidden />
+            </a>
+          ) : null}
           <CartLink />
-          <Link
-            href="/boutique"
-            className="rounded-full bg-lueur px-5 py-2 text-sm font-medium text-encre shadow-sm transition hover:bg-lueur/90"
-          >
-            Découvrir
-          </Link>
         </div>
       </div>
     </header>

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { BagIcon } from "@/components/site/Icons";
 import { useCart } from "@/lib/cart";
 
 export function CartLink() {
@@ -9,11 +10,24 @@ export function CartLink() {
   return (
     <Link
       href="/panier"
-      className="flex items-center gap-2 rounded-full bg-papier/85 px-4 py-2 text-sm font-medium shadow-sm transition hover:bg-lueur/25"
+      // Icon-only, so the label moves to aria-label and the count goes with
+      // it — a bare "3" would be read out with no idea what it counts.
+      aria-label={
+        totalQuantity > 0
+          ? `Panier, ${totalQuantity} article${totalQuantity > 1 ? "s" : ""}`
+          : "Panier"
+      }
+      className="relative flex h-10 w-10 items-center justify-center rounded-full bg-papier/85 shadow-sm transition hover:bg-lueur/25"
     >
-      Panier
+      <BagIcon className="h-5 w-5 text-encre" aria-hidden />
       {totalQuantity > 0 ? (
-        <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-lueur px-1 text-xs text-encre">
+        <span
+          aria-hidden
+          // Sits on the bag's shoulder rather than inline, so the button
+          // stays a fixed circle whether the cart is empty or not and the
+          // header never shifts when something is added.
+          className="absolute -top-0.5 -right-0.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-lueur px-1 text-xs font-medium text-encre shadow-sm"
+        >
           {totalQuantity}
         </span>
       ) : null}

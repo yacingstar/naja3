@@ -1,30 +1,7 @@
 import Link from "next/link";
-
-// ─── EDIT ME ────────────────────────────────────────────────────────────
-// Real contact destinations. Every entry is `null` until we actually have
-// one — nothing here is invented, because a dead "Instagram" link in a
-// footer is worse than no Instagram link. Fill a value in and that row
-// turns into a real link on its own; leave it null and the row is simply
-// not rendered.
-//
-//   whatsapp: international format, no +/spaces  e.g. "213555123456"
-//   instagram: handle without the @             e.g. "naja.dz"
-//   email: plain address                        e.g. "bonjour@naja.dz"
-// ────────────────────────────────────────────────────────────────────────
-const CONTACT: { whatsapp: string | null; instagram: string | null; email: string | null } = {
-  whatsapp: null,
-  instagram: null,
-  email: null,
-};
-
-const CONTACT_LINKS = [
-  CONTACT.whatsapp && { label: "WhatsApp", href: `https://wa.me/${CONTACT.whatsapp}` },
-  CONTACT.instagram && {
-    label: "Instagram",
-    href: `https://instagram.com/${CONTACT.instagram}`,
-  },
-  CONTACT.email && { label: CONTACT.email, href: `mailto:${CONTACT.email}` },
-].filter(Boolean) as Array<{ label: string; href: string }>;
+// Contact destinations moved to src/lib/contact.ts — the header wants the
+// Instagram handle too, and two copies of that config would drift.
+import { CONTACT_LINKS } from "@/lib/contact";
 
 // Tiny lamps hung from the footer's top edge — the hero's signature device
 // at a much smaller scale, so the page closes with a callback to how it
@@ -151,7 +128,7 @@ export function Footer() {
                   </li>
                 ))
               ) : (
-                // No number/handle/address wired up yet — see CONTACT above.
+                // Nothing wired up yet — see CONTACT in src/lib/contact.ts.
                 <li className="text-encre/75">Une question ? Écrivez-nous</li>
               )}
             </FooterColumn>
