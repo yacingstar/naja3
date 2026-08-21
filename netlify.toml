@@ -1,0 +1,18 @@
+# Deliberately minimal. The build command, publish directory and the
+# @netlify/plugin-nextjs plugin are all configured in the Netlify UI, and
+# anything this file does not define keeps falling through to those settings.
+
+[build.environment]
+  # Netlify's secrets scanner fails the build when an env var's value turns up
+  # in build output. For these two that is the intended behaviour, not a leak:
+  # the NEXT_PUBLIC_ prefix is Next.js's explicit marker for "compile this into
+  # the browser bundle", and Supabase's publishable (anon) key is designed to
+  # ship to clients — access is controlled by row-level security on the
+  # database, not by hiding the key. Every Supabase-backed site publishes it.
+  #
+  # Scoped to these two keys on purpose rather than switching scanning off with
+  # SECRETS_SCAN_ENABLED. SUPABASE_SERVICE_ROLE_KEY bypasses RLS entirely and
+  # must never reach a bundle; it is currently held server-side by the
+  # `server-only` import in src/lib/supabase/admin.ts, and leaving the scanner
+  # armed means the build fails loudly if that ever stops being true.
+  SECRETS_SCAN_OMIT_KEYS = "NEXT_PUBLIC_SUPABASE_ANON_KEY,NEXT_PUBLIC_SUPABASE_URL"
