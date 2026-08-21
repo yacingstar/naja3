@@ -2,6 +2,10 @@ import { ProductCard } from "@/components/site/ProductCard";
 import { Reveal } from "@/components/site/Reveal";
 import { getProducts } from "@/lib/products";
 
+// See the note on the homepage: CDN-served, with admin edits pushing through
+// immediately via revalidatePath and this window as the backstop.
+export const revalidate = 300;
+
 export default async function BoutiquePage() {
   const products = await getProducts();
 

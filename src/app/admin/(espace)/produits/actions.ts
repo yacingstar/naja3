@@ -7,6 +7,22 @@ import { createAdminClient } from "@/lib/supabase/admin";
 
 const PHOTO_BUCKET = "product-photos";
 
+// The storefront pages are prerendered and CDN-served now (see the
+// `revalidate` exports on the (site) routes), so a change made in here is
+// invisible to customers until those caches are dropped. Every mutation
+// below touches something the shop displays — a product, a colour, its
+// stock flag, or a photo — so they all call this.
+//
+// The `[slug]` pattern with type "page" invalidates every product page at
+// once, which matters because most of these actions only know a productId,
+// not the slug. Invalidation is lazy: Next marks the paths and re-renders
+// on the next visit, so this is cheap even with a lot of products.
+function revalidateStorefront() {
+  revalidatePath("/");
+  revalidatePath("/boutique");
+  revalidatePath("/boutique/[slug]", "page");
+}
+
 export type ProductInput = {
   name: string;
   slug: string;
@@ -41,6 +57,7 @@ export async function createProduct(input: ProductInput): Promise<ActionResult<{
   }
 
   revalidatePath("/admin/produits");
+  revalidateStorefront();
   return { ok: true, data: { id: data.id } };
 }
 
@@ -67,6 +84,7 @@ export async function updateProduct(id: number, input: ProductInput): Promise<Ac
   revalidatePath("/admin/produits");
   revalidatePath(`/admin/produits/${id}`);
   revalidatePath(`/boutique/${slug}`);
+  revalidateStorefront();
   return { ok: true };
 }
 
@@ -87,6 +105,7 @@ export async function deleteProduct(id: number): Promise<ActionResult> {
   }
 
   revalidatePath("/admin/produits");
+  revalidateStorefront();
   return { ok: true };
 }
 
@@ -128,6 +147,7 @@ export async function addColor(
   }
 
   revalidatePath(`/admin/produits/${productId}`);
+  revalidateStorefront();
   return { ok: true, data: { id: data.id } };
 }
 
@@ -158,6 +178,7 @@ export async function updateColor(
   }
 
   revalidatePath(`/admin/produits/${productId}`);
+  revalidateStorefront();
   return { ok: true };
 }
 
@@ -192,6 +213,7 @@ export async function deleteColor(colorId: number, productId: number): Promise<A
   }
 
   revalidatePath(`/admin/produits/${productId}`);
+  revalidateStorefront();
   return { ok: true };
 }
 
@@ -241,6 +263,7 @@ export async function uploadPhoto(
   }
 
   revalidatePath(`/admin/produits/${productId}`);
+  revalidateStorefront();
   return { ok: true };
 }
 
@@ -259,6 +282,7 @@ export async function deletePhoto(
   if (path) await supabase.storage.from(PHOTO_BUCKET).remove([path]);
 
   revalidatePath(`/admin/produits/${productId}`);
+  revalidateStorefront();
   return { ok: true };
 }
 
@@ -311,6 +335,7 @@ export async function uploadCutoutPhoto(
   if (previousPath) await supabase.storage.from(PHOTO_BUCKET).remove([previousPath]);
 
   revalidatePath(`/admin/produits/${productId}`);
+  revalidateStorefront();
   return { ok: true };
 }
 
@@ -336,5 +361,6 @@ export async function deleteCutoutPhoto(colorId: number, productId: number): Pro
   if (path) await supabase.storage.from(PHOTO_BUCKET).remove([path]);
 
   revalidatePath(`/admin/produits/${productId}`);
+  revalidateStorefront();
   return { ok: true };
 }

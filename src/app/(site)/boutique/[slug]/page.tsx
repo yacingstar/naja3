@@ -7,6 +7,23 @@ import { getProductBySlug, getProducts } from "@/lib/products";
 
 const RELATED_COUNT = 3;
 
+// See the note on the homepage. This is the page Instagram ads will deep-link
+// to, so it's the one where a cold-start first byte would cost the most.
+export const revalidate = 300;
+
+// Without this the route stays dynamic however low `revalidate` is set:
+// Next can't prerender a dynamic segment whose values it doesn't know, so
+// every product page would still be a per-request function call. Listing the
+// slugs at build time lets all of them be prerendered and CDN-served.
+//
+// `dynamicParams` stays at its default of true, so a product added after the
+// build still renders on first request and is cached from then on — adding a
+// lamp in the admin never 404s while waiting for a deploy.
+export async function generateStaticParams() {
+  const products = await getProducts();
+  return products.map((product) => ({ slug: product.slug }));
+}
+
 export default async function ProductPage({
   params,
 }: PageProps<"/boutique/[slug]">) {

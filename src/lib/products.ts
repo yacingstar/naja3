@@ -1,5 +1,8 @@
 import { cache } from "react";
-import { createClient } from "@/lib/supabase/server";
+// The cookie-free client on purpose — see supabase/public.ts. The catalogue
+// is identical for every visitor, and reading cookies here would force every
+// storefront page to re-render per request, making `revalidate` a no-op.
+import { createPublicClient } from "@/lib/supabase/public";
 
 export type FeaturedProductColor = {
   id: number;
@@ -112,7 +115,7 @@ const CARD_SELECT =
 // that need fewer slice the result — the query CatalogPreview needs is a
 // superset of Hero's anyway, so there is nothing extra to fetch.
 export const getProducts = cache(async (): Promise<FeaturedProduct[]> => {
-  const supabase = await createClient();
+  const supabase = createPublicClient();
   const { data, error } = await supabase
     .from("products")
     .select(CARD_SELECT)
@@ -149,7 +152,7 @@ type ProductDetailRow = {
 };
 
 export async function getProductBySlug(slug: string): Promise<ProductDetail | null> {
-  const supabase = await createClient();
+  const supabase = createPublicClient();
   const { data, error } = await supabase
     .from("products")
     .select(
