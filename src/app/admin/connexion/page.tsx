@@ -47,7 +47,16 @@ function ConnexionForm() {
 
     setSubmitting(false);
     if (resetError) {
-      setError("Impossible d'envoyer l'email. Réessayez dans un instant.");
+      // Surface what actually failed. A generic "try again" message here cost
+      // real debugging time: the usual cause is Supabase's built-in email
+      // service rate-limiting (a handful of messages per hour, and it is not
+      // intended for production), which no amount of retrying fixes.
+      const status = (resetError as { status?: number }).status;
+      setError(
+        status === 429
+          ? "Trop de demandes d'email. Le service d'envoi de Supabase est limité à quelques messages par heure — réessayez plus tard, ou configurez un SMTP dédié."
+          : `Impossible d'envoyer l'email : ${resetError.message}`,
+      );
       return;
     }
     // Deliberately not revealing whether the address exists.
