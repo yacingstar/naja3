@@ -1,6 +1,5 @@
 import Link from "next/link";
-import { StatusBadge } from "@/components/admin/StatusBadge";
-import { formatPrice } from "@/lib/format";
+import { OrderRow } from "@/components/admin/OrderRow";
 import { getOrders, ORDER_STATUSES, type OrderStatus } from "@/lib/orders";
 
 function isOrderStatus(value: string): value is OrderStatus {
@@ -43,28 +42,12 @@ export default async function CommandesPage({
               <th className="py-2 pr-4 font-medium">Wilaya</th>
               <th className="py-2 pr-4 font-medium">Total</th>
               <th className="py-2 pr-4 font-medium">Statut</th>
+              <th className="py-2 pr-4"><span className="sr-only">Ouvrir</span></th>
             </tr>
           </thead>
           <tbody>
             {orders.map((order) => (
-              <tr key={order.id} className="border-b border-encre/5">
-                <td className="py-3 pr-4">
-                  <Link
-                    href={`/admin/commandes/${order.id}`}
-                    className="font-medium hover:text-lueur"
-                  >
-                    #{order.id}
-                  </Link>
-                </td>
-                <td className="py-3 pr-4">
-                  {order.customerFirstName} {order.customerLastName}
-                </td>
-                <td className="py-3 pr-4">{order.wilaya}</td>
-                <td className="py-3 pr-4">{formatPrice(order.orderTotal)}</td>
-                <td className="py-3 pr-4">
-                  <StatusBadge status={order.status} />
-                </td>
-              </tr>
+              <OrderRow key={order.id} order={order} />
             ))}
           </tbody>
         </table>

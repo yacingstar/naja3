@@ -3,15 +3,23 @@
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { addColor } from "@/app/admin/(espace)/produits/actions";
+import { AdminButton } from "@/components/admin/AdminButton";
 import { ColorRow } from "@/components/admin/ColorRow";
 import type { AdminProductColor } from "@/lib/adminProducts";
+
+type ColorDraft = { colorName: string; colorHex: string; inStock: boolean };
 
 export function ColorManager({
   productId,
   colors,
+  drafts,
+  onDraftChange,
 }: {
   productId: number;
   colors: AdminProductColor[];
+  // Field values live in ProductEditor so one save button covers them all.
+  drafts: Record<number, ColorDraft>;
+  onDraftChange: (id: number, next: ColorDraft) => void;
 }) {
   const router = useRouter();
   const [colorName, setColorName] = useState("");
@@ -41,7 +49,19 @@ export function ColorManager({
       ) : (
         <div className="space-y-4">
           {colors.map((color) => (
-            <ColorRow key={color.id} productId={productId} color={color} />
+            <ColorRow
+              key={color.id}
+              productId={productId}
+              color={color}
+              value={
+                drafts[color.id] ?? {
+                  colorName: color.colorName,
+                  colorHex: color.colorHex ?? "#e5d9cf",
+                  inStock: color.inStock,
+                }
+              }
+              onChange={(next) => onDraftChange(color.id, next)}
+            />
           ))}
         </div>
       )}
@@ -77,13 +97,9 @@ export function ColorManager({
           />
           En stock
         </label>
-        <button
-          type="submit"
-          disabled={isPending}
-          className="rounded-full bg-lueur px-5 py-2 text-sm font-medium text-encre transition hover:bg-lueur/90 disabled:opacity-60"
-        >
-          {isPending ? "Ajout…" : "Ajouter la couleur"}
-        </button>
+        <AdminButton type="submit" size="sm" pending={isPending} pendingLabel="Ajout…">
+          Ajouter la couleur
+        </AdminButton>
         {error ? <p className="w-full text-sm text-red-700">{error}</p> : null}
       </form>
     </div>

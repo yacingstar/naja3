@@ -151,6 +151,36 @@ export async function addColor(
   return { ok: true, data: { id: data.id } };
 }
 
+// Backs the single "Enregistrer" button on the product page: the product's
+// own fields plus every colour's name/hex/stock in one round-trip, so the
+// editor no longer needs a save button per colour row.
+//
+// Colour updates run in parallel and the first failure is reported, but
+// earlier ones have already been written — there are no transactions across
+// separate PostgREST calls. That's acceptable here because each write is a
+// small independent field update on a row the admin is looking at: a partial
+// save leaves visible, correctable state rather than a broken product. The
+// page refreshes afterwards either way, so what's on screen is the truth.
+export async function saveProductAndColors(
+  productId: number,
+  product: ProductInput,
+  colors: Array<{ id: number } & ColorInput>,
+): Promise<ActionResult> {
+  await requireAdminUser();
+
+  const productResult = await updateProduct(productId, product);
+  if (!productResult.ok) return productResult;
+
+  const results = await Promise.all(
+    colors.map((color) => updateColor(color.id, productId, color)),
+  );
+  const failure = results.find((r) => !r.ok);
+  if (failure && !failure.ok) return failure;
+
+  revalidateStorefront();
+  return { ok: true };
+}
+
 export async function updateColor(
   colorId: number,
   productId: number,

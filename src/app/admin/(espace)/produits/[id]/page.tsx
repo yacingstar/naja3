@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ColorManager } from "@/components/admin/ColorManager";
-import { ProductForm } from "@/components/admin/ProductForm";
+import { ProductEditor } from "@/components/admin/ProductEditor";
 import { getAdminProductById, getAdminProductColors } from "@/lib/adminProducts";
 
 export default async function ProduitDetailPage({
@@ -9,11 +8,17 @@ export default async function ProduitDetailPage({
 }: PageProps<"/admin/produits/[id]">) {
   const { id } = await params;
   const productId = Number(id);
-  const product = Number.isFinite(productId) ? await getAdminProductById(productId) : null;
+  if (!Number.isFinite(productId)) notFound();
+
+  // In parallel: the colours query only needs the id from the URL, so waiting
+  // for the product to come back first was costing a whole round-trip
+  // (~200ms) for nothing.
+  const [product, colors] = await Promise.all([
+    getAdminProductById(productId),
+    getAdminProductColors(productId),
+  ]);
 
   if (!product) notFound();
-
-  const colors = await getAdminProductColors(product.id);
 
   return (
     <div>
@@ -23,20 +28,8 @@ export default async function ProduitDetailPage({
 
       <h1 className="mt-4 font-heading text-2xl">{product.name}</h1>
 
-      <div className="mt-8 grid grid-cols-1 gap-12 lg:grid-cols-2">
-        <section>
-          <h2 className="font-heading text-lg">Détails</h2>
-          <div className="mt-4">
-            <ProductForm product={product} />
-          </div>
-        </section>
-
-        <section>
-          <h2 className="font-heading text-lg">Couleurs</h2>
-          <div className="mt-4">
-            <ColorManager productId={product.id} colors={colors} />
-          </div>
-        </section>
+      <div className="mt-8">
+        <ProductEditor product={product} colors={colors} />
       </div>
     </div>
   );

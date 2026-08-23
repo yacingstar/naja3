@@ -1,25 +1,32 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { useTransition } from "react";
+import { AdminButton } from "@/components/admin/AdminButton";
 import { createClient } from "@/lib/supabase/client";
 
 export function SignOutButton() {
   const router = useRouter();
+  const [isPending, startTransition] = useTransition();
 
-  async function handleSignOut() {
-    const supabase = createClient();
-    await supabase.auth.signOut();
-    router.push("/admin/connexion");
-    router.refresh();
+  function handleSignOut() {
+    startTransition(async () => {
+      const supabase = createClient();
+      await supabase.auth.signOut();
+      router.push("/admin/connexion");
+      router.refresh();
+    });
   }
 
   return (
-    <button
-      type="button"
+    <AdminButton
+      variant="ghost"
+      size="sm"
       onClick={handleSignOut}
-      className="text-encre/60 hover:text-encre"
+      pending={isPending}
+      pendingLabel="Déconnexion…"
     >
       Se déconnecter
-    </button>
+    </AdminButton>
   );
 }

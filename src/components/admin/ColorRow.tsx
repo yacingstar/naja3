@@ -1,5 +1,6 @@
 "use client";
 
+import { AdminButton, Spinner } from "@/components/admin/AdminButton";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useRef, useState, useTransition } from "react";
@@ -7,41 +8,34 @@ import {
   deleteColor,
   deleteCutoutPhoto,
   deletePhoto,
-  updateColor,
   uploadCutoutPhoto,
   uploadPhoto,
 } from "@/app/admin/(espace)/produits/actions";
 import type { AdminProductColor } from "@/lib/adminProducts";
 
+// Field values are owned by ProductEditor now, not by this row: the page has
+// one save button, so one place has to hold the whole draft. Photos and
+// deleting the colour stay immediate — picking a file IS the action, and a
+// delete needs its own confirmation either way.
 export function ColorRow({
   productId,
   color,
+  value,
+  onChange,
 }: {
   productId: number;
   color: AdminProductColor;
+  value: { colorName: string; colorHex: string; inStock: boolean };
+  onChange: (next: { colorName: string; colorHex: string; inStock: boolean }) => void;
 }) {
   const router = useRouter();
-  const [colorName, setColorName] = useState(color.colorName);
-  const [colorHex, setColorHex] = useState(color.colorHex ?? "#e5d9cf");
-  const [inStock, setInStock] = useState(color.inStock);
+  const { colorName, colorHex, inStock } = value;
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploadingCutout, setUploadingCutout] = useState(false);
   const cutoutFileInputRef = useRef<HTMLInputElement>(null);
-
-  function handleSave() {
-    setError(null);
-    startTransition(async () => {
-      const result = await updateColor(color.id, productId, { colorName, colorHex, inStock });
-      if (!result.ok) {
-        setError(result.error);
-        return;
-      }
-      router.refresh();
-    });
-  }
 
   function handleDelete() {
     if (!confirm(`Supprimer la couleur "${color.colorName}" ?`)) return;
@@ -137,7 +131,7 @@ export function ColorRow({
           <span className="mb-1 block text-xs font-medium text-encre/70">Nom</span>
           <input
             value={colorName}
-            onChange={(e) => setColorName(e.target.value)}
+            onChange={(e) => onChange({ ...value, colorName: e.target.value })}
             className="input w-40"
           />
         </label>
@@ -146,7 +140,7 @@ export function ColorRow({
           <input
             type="color"
             value={colorHex}
-            onChange={(e) => setColorHex(e.target.value)}
+            onChange={(e) => onChange({ ...value, colorHex: e.target.value })}
             className="h-10 w-14 rounded border border-encre/20"
           />
         </label>
@@ -154,26 +148,20 @@ export function ColorRow({
           <input
             type="checkbox"
             checked={inStock}
-            onChange={(e) => setInStock(e.target.checked)}
+            onChange={(e) => onChange({ ...value, inStock: e.target.checked })}
           />
           En stock
         </label>
-        <button
-          type="button"
-          onClick={handleSave}
-          disabled={isPending}
-          className="rounded-full border border-encre/20 px-4 py-1.5 text-xs hover:border-encre disabled:opacity-60"
-        >
-          Enregistrer
-        </button>
-        <button
+        <AdminButton
+          variant="ghost"
+          size="sm"
           type="button"
           onClick={handleDelete}
-          disabled={isPending}
-          className="text-xs text-encre/40 hover:text-encre"
+          pending={isPending}
+          pendingLabel="Suppression…"
         >
           Supprimer la couleur
-        </button>
+        </AdminButton>
       </div>
       {error ? <p className="mt-2 text-xs text-red-700">{error}</p> : null}
 
@@ -196,14 +184,15 @@ export function ColorRow({
               type="button"
               onClick={() => handleDeletePhoto(photo.id, photo.url)}
               aria-label="Supprimer la photo"
-              className="absolute -right-2 -top-2 flex h-6 w-6 items-center justify-center rounded-full bg-encre text-xs text-papier"
+              disabled={isPending}
+              className="absolute -right-2 -top-2 flex h-6 w-6 items-center justify-center rounded-full bg-encre text-xs text-papier transition-all duration-150 hover:bg-red-700 active:scale-90 disabled:opacity-50"
             >
               ✕
             </button>
           </div>
         ))}
         <label className="flex h-20 w-20 cursor-pointer items-center justify-center rounded-xl border border-dashed border-encre/30 text-center text-xs text-encre/50 hover:border-encre">
-          {uploading ? "…" : "+ Photo"}
+          {uploading ? <Spinner /> : "+ Photo"}
           <input
             ref={fileInputRef}
             type="file"
@@ -233,14 +222,15 @@ export function ColorRow({
               type="button"
               onClick={handleDeleteCutout}
               aria-label="Supprimer la photo sans fond"
-              className="absolute -right-2 -top-2 flex h-6 w-6 items-center justify-center rounded-full bg-encre text-xs text-papier"
+              disabled={isPending}
+              className="absolute -right-2 -top-2 flex h-6 w-6 items-center justify-center rounded-full bg-encre text-xs text-papier transition-all duration-150 hover:bg-red-700 active:scale-90 disabled:opacity-50"
             >
               ✕
             </button>
           </div>
         ) : (
           <label className="flex h-20 w-20 cursor-pointer items-center justify-center rounded-xl border border-dashed border-encre/30 text-center text-xs text-encre/50 hover:border-encre">
-            {uploadingCutout ? "…" : "+ Photo"}
+            {uploadingCutout ? <Spinner /> : "+ Photo"}
             <input
               ref={cutoutFileInputRef}
               type="file"

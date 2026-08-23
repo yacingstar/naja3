@@ -1,5 +1,6 @@
 "use client";
 
+import { AdminButton } from "@/components/admin/AdminButton";
 import { useState, useTransition } from "react";
 import { updateInternalNotes } from "@/app/admin/(espace)/commandes/actions";
 
@@ -33,14 +34,7 @@ export function InternalNotesForm({
         placeholder="Note interne, non visible par la cliente ou le client."
         className="input"
       />
-      <button
-        type="button"
-        onClick={handleSave}
-        disabled={isPending}
-        className="mt-2 rounded-full border border-encre/20 px-4 py-1.5 text-sm hover:border-encre disabled:opacity-60"
-      >
-        {isPending ? "Enregistrement…" : "Enregistrer la note"}
-      </button>
+      <AdminButton className="mt-2" variant="secondary" size="sm" type="button" onClick={handleSave} pending={isPending} pendingLabel="Enregistrement…">Enregistrer</AdminButton>
       {feedback?.ok ? (
         <span className="ml-3 text-sm text-sauge">Enregistré ✓</span>
       ) : feedback && !feedback.ok ? (

@@ -1,5 +1,6 @@
 "use client";
 
+import { AdminButton } from "@/components/admin/AdminButton";
 import { useState, useTransition } from "react";
 import {
   deleteDeliveryRate,
@@ -65,25 +66,11 @@ export function DeliveryRateRow({ rate }: { rate: DeliveryRate }) {
         />
       </td>
       <td className="py-2 pr-4 whitespace-nowrap">
-        <button
-          type="button"
-          onClick={handleSave}
-          disabled={isPending}
-          className="rounded-full border border-encre/20 px-3 py-1 text-xs hover:border-encre disabled:opacity-60"
-        >
-          {isPending ? "…" : "Enregistrer"}
-        </button>
+        <AdminButton variant="secondary" size="sm" type="button" onClick={handleSave} pending={isPending} pendingLabel="…">{isPending ? "…" : "Enregistrer"}</AdminButton>
         {feedback?.ok ? <span className="ml-2 text-xs text-sauge">✓</span> : null}
       </td>
       <td className="py-2">
-        <button
-          type="button"
-          onClick={handleDelete}
-          disabled={isPending}
-          className="text-xs text-encre/40 hover:text-encre"
-        >
-          Supprimer
-        </button>
+        <AdminButton variant="ghost" size="sm" type="button" onClick={handleDelete} disabled={isPending}>Supprimer</AdminButton>
         {feedback && !feedback.ok ? (
           <p className="mt-1 max-w-[16rem] text-xs text-red-700">{feedback.message}</p>
         ) : null}

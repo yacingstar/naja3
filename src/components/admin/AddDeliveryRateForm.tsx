@@ -1,5 +1,6 @@
 "use client";
 
+import { AdminButton } from "@/components/admin/AdminButton";
 import { useState, useTransition } from "react";
 import { upsertDeliveryRate } from "@/app/admin/(espace)/livraison/actions";
 
@@ -65,13 +66,7 @@ export function AddDeliveryRateForm() {
           className="input w-28"
         />
       </label>
-      <button
-        type="submit"
-        disabled={isPending || !wilaya.trim()}
-        className="rounded-full bg-lueur px-5 py-2 text-sm font-medium text-encre transition hover:bg-lueur/90 disabled:opacity-60"
-      >
-        {isPending ? "Ajout…" : "Ajouter"}
-      </button>
+      <AdminButton type="submit" size="sm" pending={isPending} disabled={isPending || !wilaya.trim()}>Ajouter</AdminButton>
       {error ? <p className="w-full text-sm text-red-700">{error}</p> : null}
     </form>
   );

@@ -8,6 +8,7 @@ import {
   updateProduct,
   type ProductInput,
 } from "@/app/admin/(espace)/produits/actions";
+import { AdminButton } from "@/components/admin/AdminButton";
 import { slugify } from "@/lib/slug";
 
 type ExistingProduct = {
@@ -118,22 +119,23 @@ export function ProductForm({ product }: { product?: ExistingProduct }) {
       </label>
       {error ? <p className="text-sm text-red-700">{error}</p> : null}
       <div className="flex items-center gap-4">
-        <button
+        <AdminButton
           type="submit"
-          disabled={submitting}
-          className="rounded-full bg-lueur px-6 py-2.5 text-sm font-medium text-encre transition hover:bg-lueur/90 disabled:cursor-not-allowed disabled:opacity-60"
+          pending={submitting}
+          pendingLabel={product ? "Enregistrement…" : "Création…"}
         >
-          {submitting ? "Enregistrement…" : product ? "Enregistrer" : "Créer le produit"}
-        </button>
+          {product ? "Enregistrer" : "Créer le produit"}
+        </AdminButton>
         {product ? (
-          <button
+          <AdminButton
+            variant="ghost"
+            size="sm"
             type="button"
             onClick={handleDelete}
             disabled={submitting}
-            className="text-sm text-encre/40 hover:text-encre"
           >
             Supprimer ce produit
-          </button>
+          </AdminButton>
         ) : null}
       </div>
     </form>

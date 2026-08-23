@@ -1,15 +1,14 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { SignOutButton } from "@/components/admin/SignOutButton";
-import { createClient } from "@/lib/supabase/server";
+import { getAdminUser } from "@/lib/adminAuth";
 
 // Backstop behind proxy.ts's redirect — belt and suspenders, not the only
 // guard (see src/proxy.ts and src/lib/adminAuth.ts for the other two).
+// Goes through the request-cached getAdminUser so this check and the Server
+// Actions' checks share one round-trip instead of each paying for their own.
 export default async function EspaceLayout({ children }: LayoutProps<"/admin">) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getAdminUser();
 
   if (!user) redirect("/admin/connexion");
 

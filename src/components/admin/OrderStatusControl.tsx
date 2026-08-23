@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { Spinner } from "@/components/admin/AdminButton";
 import { updateOrderStatus } from "@/app/admin/(espace)/commandes/actions";
 import { ORDER_STATUSES, type OrderStatus } from "@/lib/orderStatus";
 
@@ -45,7 +46,9 @@ export function OrderStatusControl({
         ))}
       </select>
       {isPending ? (
-        <span className="text-sm text-encre/50">Enregistrement…</span>
+        <span className="flex items-center gap-2 text-sm text-encre/50">
+          <Spinner /> Enregistrement…
+        </span>
       ) : feedback?.ok ? (
         <span className="text-sm text-sauge">Enregistré ✓</span>
       ) : feedback && !feedback.ok ? (
