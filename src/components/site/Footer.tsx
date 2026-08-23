@@ -13,10 +13,6 @@ function MiniLamp({ cord, width }: { cord: string; width: string }) {
     <span aria-hidden className="flex flex-col items-center" style={{ width }}>
       <span className="w-px bg-encre/25" style={{ height: cord }} />
       <span className="relative">
-        {/* Glow first in DOM order, and the svg below is `relative`, so the
-            lamp paints over it — no negative z-index needed (a -z-10 here
-            would risk dropping behind the footer's own tinted panel). */}
-        <span className="absolute inset-0 rounded-full bg-lueur/40 blur-md" />
         <svg viewBox="0 0 60 46" className="relative block h-auto w-full" style={{ width }}>
           <path
             d="M30,3 C20,3 12,22 9,34 A 30,9 0 0 0 51,34 C48,22 40,3 30,3 Z"

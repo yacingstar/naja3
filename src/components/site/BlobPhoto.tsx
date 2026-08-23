@@ -35,7 +35,6 @@ export function BlobPhoto({
 
   return (
     <div className={`relative ${className}`}>
-      <div aria-hidden className="blob-photo absolute inset-4 bg-lueur/50 blur-2xl" />
       <div className={`blob-photo relative aspect-square overflow-hidden ${panel}`}>
         {src ? (
           <Image

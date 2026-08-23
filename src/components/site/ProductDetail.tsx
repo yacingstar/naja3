@@ -107,7 +107,6 @@ export function ProductDetail({
                 ? `${product.name} — ${selectedColor.colorName}`
                 : product.name
             }
-            tintHex={selectedColor?.colorHex ?? null}
             // Capped at max-w-lg (512px) on desktop; full column width
             // below that, since the grid collapses to one column.
             sizes="(min-width: 640px) 512px, 100vw"

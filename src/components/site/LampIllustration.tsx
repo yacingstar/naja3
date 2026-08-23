@@ -18,10 +18,6 @@ export function LampIllustration({
 }) {
   return (
     <div className={`relative ${SIZE_CLASS[size]} ${className}`}>
-      <div
-        aria-hidden
-        className="absolute inset-x-4 top-1/3 bottom-2 -z-10 rounded-full bg-lueur/40 blur-2xl"
-      />
       <svg viewBox="0 0 200 260" className="relative h-auto w-full" aria-hidden>
         <line
           x1="100"
