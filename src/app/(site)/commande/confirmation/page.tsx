@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import type { OrderSummary } from "@/app/(site)/commande/actions";
+import { trackPurchase } from "@/lib/analytics";
 import { formatPrice } from "@/lib/format";
 
 const LAST_ORDER_KEY = "naja-last-order";
@@ -19,8 +20,21 @@ export default function ConfirmationPage() {
     try {
       const raw = sessionStorage.getItem(LAST_ORDER_KEY);
       if (raw) {
+        const parsed: OrderSummary = JSON.parse(raw);
         // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time hydration from a browser-only API unavailable during SSR; matching server/client first render, then syncing post-mount is the standard fix, not a smell here
-        setOrder(JSON.parse(raw));
+        setOrder(parsed);
+        // Real revenue, not just "a conversion happened" — this is what lets
+        // Meta optimise for money rather than for form submissions. Read
+        // before the key is cleared, and keyed by order id so a refresh
+        // cannot double-count.
+        trackPurchase({
+          orderId: parsed.id,
+          value: parsed.orderTotal,
+          contents: parsed.items.map((i) => ({
+            id: i.productSlug,
+            quantity: i.quantity,
+          })),
+        });
         sessionStorage.removeItem(LAST_ORDER_KEY);
       }
     } catch {

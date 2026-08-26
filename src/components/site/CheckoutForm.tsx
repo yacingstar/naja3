@@ -1,9 +1,10 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import Link from "next/link";
 import { placeOrder, type OrderSummary } from "@/app/(site)/commande/actions";
+import { trackInitiateCheckout } from "@/lib/analytics";
 import { useCart } from "@/lib/cart";
 import { formatPrice } from "@/lib/format";
 import type { DeliveryRate } from "@/lib/deliveryRates";
@@ -39,6 +40,15 @@ export function CheckoutForm({ rates }: { rates: DeliveryRate[] }) {
       setDeliveryMethod("domicile");
     }
   }
+
+  // Fires once the customer actually reaches checkout with something in the
+  // basket. Keyed on the cart being non-empty rather than on mount, so
+  // arriving with an empty cart is not reported as starting a checkout.
+  const startedCheckout = items.length > 0;
+  useEffect(() => {
+    if (startedCheckout) trackInitiateCheckout({ value: totalPrice, numItems: items.length });
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- deliberately once per arrival, not on every cart edit
+  }, [startedCheckout]);
 
   if (items.length === 0) {
     return (

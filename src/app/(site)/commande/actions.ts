@@ -23,6 +23,11 @@ export type OrderSummary = {
   orderTotal: number;
   items: Array<{
     productName: string;
+    // Carried through purely so the Purchase pixel event can report the
+    // same content_ids that ViewContent and AddToCart use. Meta matches
+    // those against a product catalogue, so slug-here / name-there would
+    // look like two different products to it.
+    productSlug: string;
     colorName: string;
     quantity: number;
     priceAtOrder: number;
@@ -76,7 +81,7 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
   const colorIds = [...new Set(input.items.map((i) => i.colorId))];
 
   const [{ data: products }, { data: colors }] = await Promise.all([
-    supabase.from("products").select("id, name, price").in("id", productIds),
+    supabase.from("products").select("id, slug, name, price").in("id", productIds),
     supabase
       .from("product_colors")
       .select("id, product_id, color_name, in_stock")
@@ -89,6 +94,7 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
     quantity: number;
     price_at_order: number;
     productName: string;
+    productSlug: string;
     colorName: string;
   }> = [];
 
@@ -116,6 +122,7 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
       quantity: item.quantity,
       price_at_order: product.price,
       productName: product.name,
+      productSlug: product.slug,
       colorName: color.color_name,
     });
   }
@@ -174,6 +181,7 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
       orderTotal: order.order_total,
       items: orderItems.map((item) => ({
         productName: item.productName,
+        productSlug: item.productSlug,
         colorName: item.colorName,
         quantity: item.quantity,
         priceAtOrder: item.price_at_order,

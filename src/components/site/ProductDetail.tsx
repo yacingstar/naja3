@@ -2,8 +2,9 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ProductStage, type StageView } from "@/components/site/ProductStage";
+import { trackAddToCart, trackViewContent } from "@/lib/analytics";
 import { useCart } from "@/lib/cart";
 import { formatPrice } from "@/lib/format";
 import type { ProductColorDetail } from "@/lib/products";
@@ -74,6 +75,12 @@ export function ProductDetail({
     setJustAdded(false);
   }
 
+  // ViewContent tells Meta which lamp was looked at and what it is worth —
+  // the signal it uses to find people interested in this kind of product.
+  useEffect(() => {
+    trackViewContent({ id: product.slug, name: product.name, value: product.price });
+  }, [product.slug, product.name, product.price]);
+
   function handleAddToCart() {
     if (!selectedColor?.inStock) return;
     addItem(
@@ -91,6 +98,14 @@ export function ProductDetail({
       },
       quantity,
     );
+    // Fired after the cart write, so a failed add never reports a phantom
+    // AddToCart to Meta.
+    trackAddToCart({
+      id: product.slug,
+      name: product.name,
+      value: product.price * quantity,
+      quantity,
+    });
     setJustAdded(true);
     setQuantity(1);
   }
