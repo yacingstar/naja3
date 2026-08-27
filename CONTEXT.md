@@ -1827,4 +1827,97 @@ What was built and then removed:
 
 **Worth knowing for a future attempt**: the reference's background could not be inspected — fetching aardvarkbookclub.com returns HTML/text only, and its backgrounds are `.webp` image assets with no inline SVG or CSS rules to read. The wave shapes were therefore guessed from the description, which is the likeliest reason the result missed. Any retry should start by getting actual visual reference from the client (a screenshot or a recording) rather than rebuilding blind.
 
-## Status: reverted to the twenty-first-round state — hero background is the three drifting blobs over a base fill; the homepage loading veil (pendant lamp lighting up over that same background) dissolves into it, with the hero's own animations running as before rather than being sequenced after it; catalogue cards are aardvark-style solid-colour blocks with inset photos, colour-name pills (label colour derived from each swatch's luminance), blurb and price; hero rail is five real-product lamps hanging on cords, swinging independently, over big centred type; font loading is static-weight after a confirmed Safari variable-font bug; catalog has 9 products (4 real + 5 `demo-`-prefixed placeholders); navbar is a permanently transparent bar with pill-style buttons; native scrollbar hidden site-wide — awaiting more frontend feedback before Phase 7
+## Twenty-third round: per-product ad landing pages at `/lampe/[slug]`
+
+Client asked for "a landing page for each product," pointing at a Claude Design
+mockup (`Naja Champignon.dc.html`, project `d04fbdcb`) built on that tool's
+**Modernist** design system. Pulled the mockup and its `styles.css` down with
+the DesignSync tool and built it against the live catalogue.
+
+**The design is deliberately not the storefront's.** Modernist is Archivo at
+weight 800, one hard red (`#ec3013`), zero border-radius, 2px rules everywhere,
+uppercase poster type on a cold grey ground — the exact opposite of Naja's warm
+papier/encre/lueur, Fredoka, 2rem-radius shop. That is the point: this is the
+far end of an Instagram ad click, not a shop shelf. Both looks now live in one
+app, which drove most of the structural decisions below.
+
+**New route, nothing replaced.** `/lampe/[slug]` sits beside `/boutique/[slug]`,
+which is untouched. Its own route segment with its own `layout.tsx`, a sibling
+of `(site)` rather than a page inside it — the mockup carries its own nav and
+its own footer as part of the poster, so inheriting the shop's fixed header and
+blush footer would stack two of each. The layout keeps `CartProvider` and
+`MetaPixel` from `(site)`. A second `CartProvider` is not a second cart: state
+lives in `localStorage` under one key, so adding a lamp here and clicking
+through to `/panier` reads back exactly what this tree wrote (verified).
+
+**Style isolation.** `src/app/lampe/landing.css`, imported by that layout only.
+Every token is scoped under `.lp` and every class prefixed `lp-`, because
+`globals.css` is shared with the shop *and* the admin and already owns `.input`
+— an unprefixed `.btn`/`.card` set would be a landmine. Turbopack emits it as
+its own 13KB chunk loaded only on these routes; the storefront's CSS is
+untouched (confirmed in the built chunks). Archivo is declared in the landing
+layout rather than the root one, so a shopper who never sees a landing page
+never downloads it.
+
+**Content is generated per product, not per page** — adding a lamp in the admin
+gets a landing page for free, with no second description field to keep in sync:
+- Headline is `{NAME}` + "qui s'allume" in the accent colour. The mockup's "Un
+  champignon qui s'allume" is a pun on that one product being a real object;
+  Akari/Nami/Origami aren't, so the generalised formula drops the article.
+- `lib/productCopy.ts` splits the one admin description on sentence boundaries:
+  first two sentences to the hero (its 34ch measure holds about that much),
+  the rest to the "Chez vous" card, and the "Imprimée à la main, pièce par
+  pièce…" tail — identical in all six descriptions — dropped outright, because
+  the "Petit grain / Un caractère à elle" promise directly above already says
+  it with its own heading. Short descriptions (Origami, Akari) leave nothing
+  over and fall back to a generic line.
+- "Lampe nº 3" is the lamp's index in `getProducts()` order, so the number
+  matches the order it's met in on `/boutique`.
+
+**Interactive bits are real, not mocked.** The colour picker drives the hero
+cutout, the state badge, the in-situ photo and what both add-to-cart buttons
+put in the cart; add-to-cart goes through the same `useCart` + `trackAddToCart`
+path as `ProductDetail`, and `trackViewContent` fires on mount. The mockup's
+lit/unlit toggle survives as one `data-lit` attribute on `.lp` that re-points
+four CSS custom properties — the whole light switch is CSS, no per-element
+inline styles.
+
+**Three real bugs caught by rendering it, not by reading it:**
+- `overflow-x: hidden` on `.lp` (as the mockup had it) makes that element a
+  scroll container, which silently kills `position: sticky` on the nav inside
+  it. `overflow-x: clip` contains the ticker and glow without doing that.
+- The column bands draw their 2px rules as grid **gaps** showing the
+  container's background, not as borders on the cells — borders leave a stray
+  rule hanging at the end of a short `auto-fit` row. Consequence caught later:
+  `opacity` on a disabled swatch let that dark ground through, so an
+  out-of-stock colour rendered as a grey block. Fixed by fading the chip and
+  greying the text instead of the whole button.
+- The hero's price/payment pair has a vertical rule between them that, once
+  the pair wrapped on a narrow phone, stood next to nothing and read as a
+  stray indent. Dropped below 40rem, where the flex gap already separates them.
+
+**Not a bug, worth recording**: the first full-page screenshot showed the
+in-situ photo broken, with `upstream image response timed out` in the server
+log. That file is multi-MB and Supabase exceeded Next's image-fetch timeout on
+a cold request; it serves 200 on retry, and `/boutique/[slug]` would do the
+same. Not introduced here.
+
+**Two judgement calls flagged rather than silently taken**: the nav is sticky
+(the mockup's is not) because the CTA is the page's only job and the shop's own
+header is already fixed; and the in-situ photograph keeps the design system's
+`grayscale` filter, which is faithful to the mockup but does desaturate the
+colour the customer just picked — both are one-line reversals.
+
+**Verified**: all six landing pages prerendered as static at build; copy split
+correct on a long description (Champignon → 2 sentences hero, 1 sentence room)
+and on a short one (Origami → fallback room copy); colours in-stock-first with
+the first selected and "Vert" showing "En rupture"; price rendering `2 800 DA`
+through the shared `formatPrice`; Archivo variable applied and the landing CSS
+in its own chunk; desktop 1440 and mobile 390 both clean with no horizontal
+overflow. `npx eslint src/`, `npx tsc --noEmit` and `next build` all clean.
+
+**Known gap**: the landing pages are intentionally unlinked from the storefront
+— they're ad destinations, so nothing on the shop points at them. Nothing to
+fix unless the client wants them discoverable.
+
+## Status: twenty-first-round storefront unchanged (see above), plus a new per-product ad landing page at `/lampe/[slug]` — Modernist poster styling (Archivo 800, red `#ec3013`, zero radius, 2px rules) fully scoped under `.lp` so it cannot reach the shop or the admin; headline, hero copy, "Chez vous" copy, colours, photos and catalogue number all generated from the existing product row; working colour picker, lit/unlit switch and add-to-cart sharing the storefront's cart and Meta pixel; `/boutique/[slug]` untouched and still the ad destination until the client says otherwise — awaiting review before Phase 7
