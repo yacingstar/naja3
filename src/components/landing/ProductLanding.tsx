@@ -250,13 +250,17 @@ export function ProductLanding({
         <section className="mx-auto max-w-6xl px-6 py-16">
           <div className="grid grid-cols-1 items-center gap-10 md:grid-cols-2 md:gap-14">
             <Reveal>
-              {/* Matted, not cropped. These photographs come out of the admin
-                  anywhere from 0.75 to 1.25 aspect, so any fixed crop box cuts
-                  something off somebody's picture — which is exactly what the
-                  full-bleed band this replaced did. `contain` on a tinted panel
-                  shows all of every one, the same treatment ProductStage gives
-                  a cutout. */}
-              <div className="relative aspect-square overflow-hidden rounded-[2rem] bg-blush/25">
+              {/* Shown whole, never cropped. These photographs come out of the
+                  admin anywhere from 0.75 to 1.25 aspect, so any fixed crop box
+                  cuts something off somebody's picture — which is exactly what
+                  the full-bleed band this replaced did. `contain` in a square
+                  box fits every shape.
+
+                  No panel behind it: the box is transparent, so a square photo
+                  (four of the six) fills it exactly and takes the rounded
+                  corners, while a portrait or landscape one simply sits on the
+                  page with nothing drawn around it. */}
+              <div className="relative aspect-square overflow-hidden rounded-[2rem]">
                 <Image
                   key={roomPhoto}
                   src={roomPhoto}
@@ -264,7 +268,7 @@ export function ProductLanding({
                   fill
                   sizes="(min-width: 768px) 512px, 90vw"
                   quality={85}
-                  className="object-contain p-3"
+                  className="object-contain"
                 />
               </div>
             </Reveal>

@@ -2133,6 +2133,26 @@ real order placed from the landing page on a phone viewport (order #11, 2 x
 Champignon Rouge, 6 100 DA) — **deleted afterwards**, with no orphaned
 `order_items` left behind. All six landing pages still prerender.
 
+**Follow-up in the same round — a floating Commander pill, and the mat came
+off.** Client asked for the Commander button to "hover as the user scrolls" and
+pop out cutely, and for the pink behind the in-situ photograph to go.
+
+The pill replaced `DirectOrderForm`'s mobile-only bottom bar rather than being
+built separately, so the shop's product page gets it too. It shows only once
+you have scrolled past 320px (there is already a Commander button on screen
+before that) and hides again the moment the real submit button is in view, so
+it never covers the form it points at. Tapping it scrolls to the fields — it
+never submits. It springs in with a slight overshoot (that past-the-mark bounce
+is what makes it read as "popped out" rather than faded in), then only the
+glow breathes; nothing moves while you read. A small papier dot pulses on it
+like a bulb. Under `prefers-reduced-motion` it still appears, just parked.
+
+The photograph's blush panel is gone. Its padding went with it, so a square
+source — four of the six — now fills the box exactly and takes the rounded
+corners, while a portrait or landscape one sits on the page with nothing drawn
+around it. Corners only round where the photo actually reaches them, which is
+the honest trade for never cropping.
+
 **Worth knowing for next time**: two earlier "bugs" in this round's testing were
 the test's own timing, not the app's — `Reveal` blocks and a lazy image both
 need ~2s of settle after scrolling before they can be asserted on. Screenshots

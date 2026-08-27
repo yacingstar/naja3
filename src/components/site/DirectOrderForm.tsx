@@ -47,6 +47,7 @@ export function DirectOrderForm({
 }) {
   const [noteOpen, setNoteOpen] = useState(false);
   const [ctaVisible, setCtaVisible] = useState(true);
+  const [scrolledIn, setScrolledIn] = useState(false);
 
   const submitRef = useRef<HTMLButtonElement>(null);
   const detailsRef = useRef<HTMLDivElement>(null);
@@ -54,11 +55,11 @@ export function DirectOrderForm({
   const selectedColor = colors.find((c) => c.id === selectedColorId) ?? colors[0];
   const order = useDirectOrder({ product, selectedColor, rates });
 
-  // On a phone the slip is a long way below the photo and the description, so
-  // the only call to action on the page can sit off-screen for most of the
-  // visit. A bar carrying the same total appears whenever the real button
-  // isn't in view; tapping it jumps to the fields rather than submitting, so
-  // nothing is ever ordered from a control the customer can't read in full.
+  // The slip sits a long way below the photograph and the description on both
+  // pages that use it, so the only call to action can be off-screen for most
+  // of a visit. A pill follows the scroll instead, carrying the same live
+  // total. Tapping it jumps to the fields rather than submitting, so nothing
+  // is ever ordered from a control the customer can't read in full.
   useEffect(() => {
     const target = submitRef.current;
     if (!target) return;
@@ -68,6 +69,16 @@ export function DirectOrderForm({
     );
     observer.observe(target);
     return () => observer.disconnect();
+  }, []);
+
+  // ...but not straight away. At the top of either page there is already a
+  // Commander button on screen, and popping a second one over the hero the
+  // moment it loads is noise. It arrives once you've started reading.
+  useEffect(() => {
+    const onScroll = () => setScrolledIn(window.scrollY > 320);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
   return (
@@ -358,25 +369,21 @@ export function DirectOrderForm({
         </p>
       </div>
 
-      {order.inStock && !ctaVisible ? (
-        <div className="fixed inset-x-0 bottom-0 z-40 border-t border-encre/10 bg-papier/95 px-4 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] backdrop-blur lg:hidden">
-          <div className="mx-auto flex max-w-lg items-center gap-3">
-            <div className="min-w-0">
-              <p className="truncate text-xs text-encre/55">{product.name}</p>
-              <p className="font-heading text-base leading-tight">
-                {formatPrice(order.total)}
-              </p>
-            </div>
-            <button
-              type="button"
-              onClick={() =>
-                detailsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
-              }
-              className="ml-auto shrink-0 rounded-full bg-lueur px-6 py-3 font-heading text-sm text-encre shadow-sm transition hover:bg-lueur/90"
-            >
-              Commander
-            </button>
-          </div>
+      {/* Floats over the page rather than pinning a full-width bar to the
+          bottom: it reads as a button someone put there for you, covers almost
+          nothing, and works the same on a phone and a desktop. */}
+      {order.inStock && scrolledIn && !ctaVisible ? (
+        <div className="pointer-events-none fixed inset-x-0 bottom-5 z-40 flex justify-center px-4 pb-[env(safe-area-inset-bottom)]">
+          <button
+            type="button"
+            onClick={() =>
+              detailsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
+            }
+            className="cta-float pointer-events-auto flex items-center gap-2.5 rounded-full bg-lueur px-7 py-3.5 font-heading text-sm text-encre transition-transform hover:scale-[1.03] active:scale-95"
+          >
+            <span aria-hidden className="cta-float-bulb" />
+            Commander · {formatPrice(order.total)}
+          </button>
         </div>
       ) : null}
     </form>

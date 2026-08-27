@@ -189,6 +189,62 @@ html::-webkit-scrollbar {
     opacity: 1;
   }
 
+  /* The Commander pill that follows the scroll (DirectOrderForm). It has to
+     be noticed without being a nuisance, so: it springs in once, then only
+     breathes. */
+  .cta-float {
+    box-shadow: 0 14px 38px -12px color-mix(in srgb, var(--lueur) 92%, transparent);
+    animation:
+      cta-pop 0.42s cubic-bezier(0.34, 1.56, 0.64, 1) both,
+      cta-breathe 3.2s ease-in-out 0.6s infinite;
+  }
+  /* Overshoots slightly on the way in — that little past-the-mark bounce is
+     the whole reason it reads as "popped out" rather than "faded in". */
+  @keyframes cta-pop {
+    0% {
+      opacity: 0;
+      transform: translateY(18px) scale(0.84);
+    }
+    60% {
+      opacity: 1;
+      transform: translateY(-3px) scale(1.05);
+    }
+    100% {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+  /* A slow swell of the glow, not of the button — nothing moves, so it never
+     tugs at the corner of your eye while you are reading. */
+  @keyframes cta-breathe {
+    0%,
+    100% {
+      box-shadow: 0 14px 38px -12px color-mix(in srgb, var(--lueur) 92%, transparent);
+    }
+    50% {
+      box-shadow: 0 18px 50px -10px color-mix(in srgb, var(--lueur) 100%, transparent);
+    }
+  }
+  /* The lit bulb on the pill: a small dot that pulses like something switched
+     on. It's a lamp shop. */
+  .cta-float-bulb {
+    width: 8px;
+    height: 8px;
+    border-radius: 9999px;
+    background: var(--papier);
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--papier) 80%, transparent);
+    animation: cta-bulb 2.2s ease-out infinite;
+  }
+  @keyframes cta-bulb {
+    0% {
+      box-shadow: 0 0 0 0 color-mix(in srgb, var(--papier) 85%, transparent);
+    }
+    70%,
+    100% {
+      box-shadow: 0 0 0 7px transparent;
+    }
+  }
+
   /* Scroll-triggered fade/slide-in (Reveal.tsx toggles data-reveal). */
   .reveal {
     opacity: 0;
@@ -413,5 +469,11 @@ html::-webkit-scrollbar {
   .craft-item:hover .craft-card {
     transform: rotate(var(--craft-rotate, 0deg)) translateY(var(--craft-offset, 0px)) !important;
     box-shadow: none !important;
+  }
+  /* The floating Commander pill still appears and still carries its glow —
+     it just arrives instead of bouncing, and stops breathing. */
+  .cta-float,
+  .cta-float-bulb {
+    animation: none !important;
   }
 }
