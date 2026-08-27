@@ -143,6 +143,52 @@ html::-webkit-scrollbar {
     right: -0.75rem;
   }
 
+  /* The landing page's hero stage — the one thing on /lampe/[slug] that isn't
+     shared with the shop. A lamp switching on only reads as light if there is
+     dark for it to push against, so this panel (and nothing else on the page)
+     goes to night when it's lit. Same 2rem shape as .blob-photo, so it sits in
+     the same family as the product page's stage. */
+  .lamp-stage {
+    position: relative;
+    overflow: hidden;
+    border-radius: 2rem;
+    background: color-mix(in srgb, var(--blush) 22%, var(--papier));
+    transition: background 0.7s ease;
+  }
+  .lamp-stage[data-lit="on"] {
+    /* Not black — a very dark warm ink, so it still belongs to the palette. */
+    background: #2a2028;
+  }
+
+  /* The light itself. Tinted by the selected colour, which ProductLanding
+     passes in as --lamp-color, but NOT the raw swatch: light through a
+     coloured shade stays bright, so it is mixed toward a warm bulb first or a
+     dark colour renders as a smudge rather than as a lamp that is on. */
+  .lamp-stage-glow {
+    --lamp-glow: color-mix(in srgb, var(--lamp-color, var(--lueur)) 62%, #ffdca8);
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 116%;
+    aspect-ratio: 1;
+    transform: translate(-50%, -54%);
+    border-radius: 50%;
+    background: radial-gradient(
+      closest-side,
+      color-mix(in srgb, var(--lamp-glow) 92%, transparent),
+      color-mix(in srgb, var(--lamp-glow) 28%, transparent) 45%,
+      transparent 72%
+    );
+    opacity: 0;
+    transition:
+      opacity 0.7s ease,
+      background 0.45s ease;
+    pointer-events: none;
+  }
+  .lamp-stage[data-lit="on"] .lamp-stage-glow {
+    opacity: 1;
+  }
+
   /* Scroll-triggered fade/slide-in (Reveal.tsx toggles data-reveal). */
   .reveal {
     opacity: 0;

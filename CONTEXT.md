@@ -2075,4 +2075,67 @@ both widths (719x560 desktop, 390x293 phone); no horizontal overflow; zero page
 errors. **All three test orders (#8, #9, #10) were deleted from the live
 database afterwards** and the absence of orphaned `order_items` confirmed.
 
-## Status: both buying surfaces now take the order inline — the storefront's order slip on `/boutique/[slug]` and a Modernist order block at `#commander` on `/lampe/[slug]`, sharing `useDirectOrder` for pricing, validation and pixel events while sharing no markup; the landing hero's glow is tinted by the selected colour (mixed toward a warm bulb so dark shades still read as lit) and its in-situ band is now photo-beside-copy rather than a square photo cropped to 2.3:1; the cart survives but nothing fills it and it is hidden while empty; every product and landing page still prerenders — awaiting review before Phase 7
+## Twenty-sixth round: the Modernist landing pages are gone — /lampe/[slug] is now the same shop
+
+Client asked for the landing pages to follow the main site's design principles
+"so its all consistent", and reported the in-situ photograph was *still* "a
+little out of the picture" after the previous round's fix.
+
+**Asked two questions before starting**, since this was a ~1000-line rewrite
+and both answers changed the work. Client chose: keep the lamp's on/off theatre
+as a dark stage panel inside an otherwise warm page (rather than going fully
+light and dropping the toggle), and reuse the homepage's real sections (rather
+than restyling landing-specific copies).
+
+**The whole Modernist system is deleted** — `landing.css` (~1100 lines),
+`LandingSections.tsx`, `LandingOrderForm.tsx`, `app/lampe/layout.tsx` and the
+Archivo font. Recorded plainly because it was three rounds of work: it was
+right for the mockup the client first pointed at, and wrong once the same app
+had to feel like one shop.
+
+**The route moved into the `(site)` group**, so it inherits the real Header,
+Footer, CartProvider and MetaPixel instead of drawing its own. That deletes the
+whole reason the separate layout existed.
+
+**The middle of the page is now the homepage's own components** — `TrustStrip`,
+`CraftSteps` (with its real SVG illustrations) and `Faq` — and the order block
+is literally the shop's `DirectOrderForm`. That removed the duplicated craft
+steps and the duplicated four FAQ answers, which were free to drift from the
+homepage's. Edit them once now and both pages change.
+
+**What stays bespoke is one thing**: `.lamp-stage` in `globals.css`, a dark
+rounded panel for the hero cutout. A lamp switching on only reads as light if
+there is dark for it to push against, so the stage — and nothing else on the
+page — goes to night. The colour-matched glow from last round moved across
+intact (`--lamp-color`, still mixed toward a warm bulb so a dark shade reads as
+lit rather than as a smudge).
+
+**The in-situ photograph is now matted, not cropped.** Measured the real files
+before touching it: the room photo each product actually shows ranges from 0.75
+to 1.25 aspect (portrait for Capricorne, landscape for Origami, square for the
+other four). *Any* fixed crop box therefore cuts something off somebody's
+picture, which is why the previous round's two-column fix still looked wrong —
+it had only reduced the crop from 2.3:1 to 1.28:1, not removed it. It is now
+`object-contain` on a square blush mat, the same treatment `ProductStage` gives
+a cutout, so every photograph is shown whole whatever shape it is. Checked
+against all three shapes.
+
+**Two colour pickers now, deliberately.** One under the hero stage (pick a
+colour to *look* at it) and one inside the order slip (confirm it at the point
+of ordering). Both drive the same state, so the hero glow re-tints when the
+colour is changed down in the form.
+
+**Verified**: one header and one footer (no doubling from the layout move); all
+four craft illustrations load; every `Reveal` block reaches opacity 1 after
+scrolling; the stage goes `#2a2028` lit / blush unlit with glow opacity 1/0;
+the glow re-tints from either picker; no horizontal overflow at 390px; and a
+real order placed from the landing page on a phone viewport (order #11, 2 x
+Champignon Rouge, 6 100 DA) — **deleted afterwards**, with no orphaned
+`order_items` left behind. All six landing pages still prerender.
+
+**Worth knowing for next time**: two earlier "bugs" in this round's testing were
+the test's own timing, not the app's — `Reveal` blocks and a lazy image both
+need ~2s of settle after scrolling before they can be asserted on. Screenshots
+taken at 900ms showed an empty section that is perfectly fine in a browser.
+
+## Status: one design system across the whole site — `/lampe/[slug]` is now a warm long-form page under the `(site)` layout (real header and footer), built from the homepage's own TrustStrip, CraftSteps and Faq plus the shop's DirectOrderForm, with a bespoke dark hero stage whose glow takes the selected lamp's colour; the in-situ photograph is matted with `object-contain` so no shape is ever cropped; the Modernist stylesheet, its sections, its order form, its layout and the Archivo font are all deleted; the cart survives but nothing fills it and it is hidden while empty — awaiting review before Phase 7
