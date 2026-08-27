@@ -181,23 +181,15 @@ export function DirectOrderForm({
 
   return (
     <form onSubmit={handleSubmit} onInput={handleFirstInput} className="order-slip mt-8">
-      {/* ── Slip header ─────────────────────────────────────────────── */}
-      <div className="flex items-baseline justify-between gap-3 px-6 pt-6 sm:px-8 sm:pt-7">
-        <div>
-          <p className="font-hand text-2xl leading-none text-crepuscule">
-            commande directe
-          </p>
-          <p className="mt-1.5 text-sm text-encre/60">
-            Pas de panier : vous remplissez, on vous rappelle.
-          </p>
-        </div>
-        <span className="hidden shrink-0 rounded-full bg-sauge/25 px-3 py-1 text-xs font-medium text-encre/75 sm:inline-block">
-          Sans paiement en ligne
-        </span>
-      </div>
+      {/* No title on the slip. It carried a "commande directe" heading, a line
+          explaining that there is no cart, and a "sans paiement en ligne"
+          badge — the badge repeated the line under the submit button, and the
+          other two spent the card's opening explaining a mechanism instead of
+          getting on with it. The numbered steps and a button naming the amount
+          payable already say what this is. */}
 
       {/* ── ① Colour ────────────────────────────────────────────────── */}
-      <div className="px-6 pt-6 sm:px-8">
+      <div className="px-6 pt-7 sm:px-8 sm:pt-8">
         <StepLabel n={1} tint="bg-lueur">
           Choisissez la couleur
           {selectedColor ? (

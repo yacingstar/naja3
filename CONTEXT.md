@@ -1998,6 +1998,15 @@ plus its items; the surrounding real orders were left alone) — worth knowing
 that there is no staging database, so any future end-to-end test does this to
 production and must clean up after itself.
 
+**Follow-up in the same round — the slip lost its title.** It opened with a
+"commande directe" heading, a line explaining that there is no cart, and a
+"sans paiement en ligne" badge. Client asked for all three gone. Removed
+rather than reworded: the badge repeated the line already under the submit
+button, the other two spent the card's opening explaining a mechanism, and a
+replacement hand-written line would have been the second Caveat/crepuscule
+line on a page that already has "fait main, à la commande" above the product
+name. The numbered steps and a button naming the amount payable carry it.
+
 **Not done**: the `/lampe/[slug]` ad landing pages still use add-to-cart, so
 they have exactly the confusion this round fixes. They need their own pass —
 their Modernist design system shares nothing with the storefront's, so the slip
