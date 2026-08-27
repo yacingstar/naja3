@@ -2012,4 +2012,67 @@ they have exactly the confusion this round fixes. They need their own pass —
 their Modernist design system shares nothing with the storefront's, so the slip
 cannot be dropped into them as-is.
 
-## Status: orders are now placed directly on the product page — an order-slip form (colour, quantity, coordinates, wilaya-priced delivery, live total, "Commander · {total}") replaces add-to-cart on `/boutique/[slug]`, submitting to the unchanged `placeOrder` action; the cart survives but is hidden while empty and nothing fills it; all six product pages and `/commande` are static; the Meta funnel fires InitiateCheckout on first input and AddToCart on a placed order; `/lampe/[slug]` landing pages still carry the old add-to-cart and are the next thing to convert — awaiting review before Phase 7
+## Twenty-fifth round: the landing pages take the order too, plus a colour-matched glow and a room band that fits its photograph
+
+Three asks on `/lampe/[slug]`: give it the same inline order form the shop now
+has, make the hero glow take the selected lamp's colour, and fix the in-situ
+photograph, which "seems to be not fitted right".
+
+**Shared logic, not shared markup — new `lib/useDirectOrder.ts`.** There are
+now two order forms that must look nothing alike (the shop's warm rounded slip,
+this page's square red Modernist block) and must never disagree about the part
+a customer can't see: wilaya pricing, that stopdesk isn't offered everywhere,
+what a valid Algerian phone number is, and which pixel events fire when. All of
+that moved into one hook; each component only decides how it looks.
+`DirectOrderForm` was refactored onto it in the same pass and lost ~90 lines.
+
+**New `LandingOrderForm.tsx`** sits at the foot of the page as `#commander`,
+directly under the red closing poster — which stops being a call to action of
+its own and becomes that form's headline. Every CTA above (nav, hero) is now an
+anchor to it rather than a button that does something, so the page has exactly
+one place where an order is placed. Cart references are gone from the file.
+
+**The glow now takes the lamp's colour**, via a `--lp-glow-color` custom
+property set inline from the selected swatch. Not the raw hex though: light
+through a coloured shade stays *bright*, so `--lp-glow-lit` mixes it 62/38 with
+a warm bulb colour before use. Straight `#002d5b` on a navy lamp would render
+as a dark smudge rather than as a lamp that is on. Falls back to the original
+amber for a colour with no hex in the admin, and is unaffected when the lamp is
+switched off (the opacity token already handles that).
+
+**The room band was cropping a square photo into a letterbox.** The in-situ
+shots are 1254x1254; the band was a full-width strip at
+`height: clamp(360px, 46vw, 620px)`, which at desktop width is 2.3:1 — `cover`
+was throwing away well over half the picture and guillotining whatever the lamp
+stood on. It is now two cells: photograph beside copy, with the card promoted
+from an absolute overlay to a real grid cell so it follows the same 2px-gap
+rule as every other band.
+
+**Two bugs of the same species, both worth remembering.** This layout draws its
+2px rules as grid GAPS showing the container's dark background, never as
+borders — so *any* cell that fails to fill its track exposes a slab of that
+background:
+- `align-self: start` on the sticky bill column left a grey block under it.
+  Fixed by letting the cell stretch and paint, and sticking only its contents.
+- `aspect-ratio: 1` plus `max-height` on the photo cell was worse and less
+  obvious: a grid item with an aspect ratio stops stretching in the axis the
+  ratio would violate, so clamping the height silently shrank the *width* too
+  and left grey beside it. Fixed with an explicit `height`. The single-column
+  phone layout can still use a ratio safely — nothing is being stretched there.
+
+This is the third time this stylesheet's gap-as-rule technique has produced a
+grey-block bug (the first was `opacity` on a disabled swatch). Anything added
+to a `.lp-` grid must fill its cell.
+
+**Verified end to end by placing real orders through the UI** at 390px: from
+the landing page (order #9, Origami, invalid phone blocked first) and from the
+storefront after the hook refactor (order #10, 2 x Nami, correct 6 700 DA
+total). Also checked: nav CTA jumps to the form without ordering; picking a
+colour in the form re-tints the hero glow; the glow reads teal/pink/red/cream
+across the four in-stock colours and drops to opacity 0 when switched off;
+Tindouf's stopdesk price appears correctly; the photo cell fills its column at
+both widths (719x560 desktop, 390x293 phone); no horizontal overflow; zero page
+errors. **All three test orders (#8, #9, #10) were deleted from the live
+database afterwards** and the absence of orphaned `order_items` confirmed.
+
+## Status: both buying surfaces now take the order inline — the storefront's order slip on `/boutique/[slug]` and a Modernist order block at `#commander` on `/lampe/[slug]`, sharing `useDirectOrder` for pricing, validation and pixel events while sharing no markup; the landing hero's glow is tinted by the selected colour (mixed toward a warm bulb so dark shades still read as lit) and its in-situ band is now photo-beside-copy rather than a square photo cropped to 2.3:1; the cart survives but nothing fills it and it is hidden while empty; every product and landing page still prerenders — awaiting review before Phase 7

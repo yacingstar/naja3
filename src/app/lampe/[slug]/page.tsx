@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { cache } from "react";
 import { ProductLanding } from "@/components/landing/ProductLanding";
+import { getDeliveryRates } from "@/lib/deliveryRates";
 import { formatPrice } from "@/lib/format";
 import { splitProductCopy } from "@/lib/productCopy";
 import { getProductBySlug, getProducts } from "@/lib/products";
@@ -56,7 +57,10 @@ export default async function LampLandingPage({
   params,
 }: PageProps<"/lampe/[slug]">) {
   const { slug } = await params;
-  const product = await loadProduct(slug);
+  // Both reads are cookie-free (see deliveryRates.ts), so the page still
+  // prerenders — which matters most here, of all places: this is where a cold
+  // ad click lands.
+  const [product, rates] = await Promise.all([loadProduct(slug), getDeliveryRates()]);
 
   if (!product) notFound();
 
@@ -83,6 +87,7 @@ export default async function LampLandingPage({
         roomCopy: room,
       }}
       colors={product.colors}
+      rates={rates}
     />
   );
 }

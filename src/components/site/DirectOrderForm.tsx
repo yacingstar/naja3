@@ -1,13 +1,14 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useRef, useState } from "react";
-import { placeOrder } from "@/app/(site)/commande/actions";
-import { trackAddToCart, trackInitiateCheckout } from "@/lib/analytics";
+import { useEffect, useRef, useState } from "react";
 import type { DeliveryRate } from "@/lib/deliveryRates";
 import { formatPrice } from "@/lib/format";
-import { stashOrder } from "@/lib/lastOrder";
 import type { ProductColorDetail } from "@/lib/products";
+import {
+  MAX_ORDER_QUANTITY,
+  useDirectOrder,
+  type DirectOrderProduct,
+} from "@/lib/useDirectOrder";
 
 // The whole order, on the product page, in one card — no cart, no basket
 // step, no separate checkout screen.
@@ -24,15 +25,10 @@ import type { ProductColorDetail } from "@/lib/products";
 // order slip, numbered steps, a perforated tear line, and a submit button
 // that always states the full amount payable. The button is the only call to
 // action on the page.
-
-const MAX_QUANTITY = 10;
-
-type OrderProduct = {
-  id: number;
-  slug: string;
-  name: string;
-  price: number;
-};
+//
+// Everything that isn't presentation — pricing, delivery fees, validation,
+// pixel events — lives in useDirectOrder, shared with the ad landing page's
+// very differently-styled version of the same form.
 
 export function DirectOrderForm({
   product,
@@ -41,7 +37,7 @@ export function DirectOrderForm({
   onSelectColor,
   rates,
 }: {
-  product: OrderProduct;
+  product: DirectOrderProduct;
   colors: ProductColorDetail[];
   // Colour lives in the parent because it also drives the photo alongside
   // this form — see ProductDetail.
@@ -49,59 +45,17 @@ export function DirectOrderForm({
   onSelectColor: (id: number) => void;
   rates: DeliveryRate[];
 }) {
-  const router = useRouter();
-
-  const [quantity, setQuantity] = useState(1);
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
-  const [phone, setPhone] = useState("");
-  const [wilaya, setWilaya] = useState("");
-  const [commune, setCommune] = useState("");
-  const [deliveryMethod, setDeliveryMethod] = useState<"domicile" | "stopdesk">(
-    "domicile",
-  );
-  const [note, setNote] = useState("");
   const [noteOpen, setNoteOpen] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [ctaVisible, setCtaVisible] = useState(true);
 
   const submitRef = useRef<HTMLButtonElement>(null);
   const detailsRef = useRef<HTMLDivElement>(null);
 
   const selectedColor = colors.find((c) => c.id === selectedColorId) ?? colors[0];
-  const inStock = Boolean(selectedColor?.inStock);
+  const order = useDirectOrder({ product, selectedColor, rates });
 
-  const selectedRate = useMemo(
-    () => rates.find((r) => r.wilaya === wilaya),
-    [rates, wilaya],
-  );
-  // Only *known* to be unavailable once a wilaya is picked. Treating "no
-  // wilaya yet" as unavailable greyed the option out on arrival, which reads
-  // as "we don't do stopdesk" rather than "tell us where you are first".
-  const stopdeskUnavailable = selectedRate != null && selectedRate.stopdeskPrice == null;
-  const deliveryFee = selectedRate
-    ? deliveryMethod === "domicile"
-      ? selectedRate.domicilePrice
-      : (selectedRate.stopdeskPrice ?? 0)
-    : null;
-
-  const subtotal = product.price * quantity;
-  const total = subtotal + (deliveryFee ?? 0);
-
-  // InitiateCheckout used to fire on arriving at /commande with a full cart.
-  // There is no such moment any more, so the equivalent signal is the first
-  // time someone actually starts filling this in — a ref rather than state
-  // because it must fire exactly once and must not re-render anything.
-  const startedCheckout = useRef(false);
-  function handleFirstInput() {
-    if (startedCheckout.current) return;
-    startedCheckout.current = true;
-    trackInitiateCheckout({ value: subtotal, numItems: 1 });
-  }
-
-  // On a phone the slip is a long way below the photo and the description,
-  // so the only call to action on the page can sit off-screen for most of the
+  // On a phone the slip is a long way below the photo and the description, so
+  // the only call to action on the page can sit off-screen for most of the
   // visit. A bar carrying the same total appears whenever the real button
   // isn't in view; tapping it jumps to the fields rather than submitting, so
   // nothing is ever ordered from a control the customer can't read in full.
@@ -116,71 +70,12 @@ export function DirectOrderForm({
     return () => observer.disconnect();
   }, []);
 
-  function handleWilayaChange(next: string) {
-    setWilaya(next);
-    // Stopdesk isn't offered in every wilaya. Silently leaving it selected
-    // would send an order the Server Action then rejects.
-    const nextRate = rates.find((r) => r.wilaya === next);
-    if (deliveryMethod === "stopdesk" && nextRate?.stopdeskPrice == null) {
-      setDeliveryMethod("domicile");
-    }
-  }
-
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    if (submitting) return;
-
-    if (!selectedColor) return;
-    if (!wilaya) {
-      setError("Merci de choisir votre wilaya.");
-      return;
-    }
-    // Mirrors the Server Action's own check so a typo is caught here, next to
-    // the field, instead of after a round trip. The server still re-validates:
-    // this is a convenience, never the guarantee.
-    if (!/^0[0-9]{8,9}$/.test(phone.replace(/[\s.-]/g, ""))) {
-      setError("Merci d'indiquer un numéro de téléphone valide (ex. 0555 12 34 56).");
-      return;
-    }
-
-    setSubmitting(true);
-    setError(null);
-
-    const result = await placeOrder({
-      firstName,
-      lastName,
-      phone,
-      wilaya,
-      commune,
-      deliveryMethod,
-      note,
-      items: [
-        { productId: product.id, colorId: selectedColor.id, quantity },
-      ],
-    });
-
-    if (!result.ok) {
-      setError(result.error);
-      setSubmitting(false);
-      return;
-    }
-
-    // Reported here rather than on a cart write, which no longer happens on
-    // this page. Meta's funnel still wants the step, and without it every
-    // order would look like a Purchase with no AddToCart before it.
-    trackAddToCart({
-      id: product.slug,
-      name: product.name,
-      value: subtotal,
-      quantity,
-    });
-
-    stashOrder(result.order);
-    router.push("/commande/confirmation");
-  }
-
   return (
-    <form onSubmit={handleSubmit} onInput={handleFirstInput} className="order-slip mt-8">
+    <form
+      onSubmit={order.handleSubmit}
+      onInput={order.handleFirstInput}
+      className="order-slip mt-8"
+    >
       {/* No title on the slip. It carried a "commande directe" heading, a line
           explaining that there is no cart, and a "sans paiement en ligne"
           badge — the badge repeated the line under the submit button, and the
@@ -215,9 +110,7 @@ export function DirectOrderForm({
                     ? "border-encre bg-papier shadow-sm"
                     : "border-encre/15 bg-papier/60"
                 } ${
-                  color.inStock
-                    ? "hover:border-encre"
-                    : "cursor-not-allowed opacity-45"
+                  color.inStock ? "hover:border-encre" : "cursor-not-allowed opacity-45"
                 }`}
               >
                 <span
@@ -259,23 +152,23 @@ export function DirectOrderForm({
           <div className="flex items-center gap-1 rounded-full border border-encre/15 bg-papier p-1">
             <StepperButton
               label="Diminuer la quantité"
-              onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-              disabled={quantity <= 1}
+              onClick={order.decrement}
+              disabled={order.quantity <= 1}
             >
               −
             </StepperButton>
             <span aria-live="polite" className="w-8 text-center font-heading text-lg">
-              {quantity}
+              {order.quantity}
             </span>
             <StepperButton
               label="Augmenter la quantité"
-              onClick={() => setQuantity((q) => Math.min(MAX_QUANTITY, q + 1))}
-              disabled={quantity >= MAX_QUANTITY}
+              onClick={order.increment}
+              disabled={order.quantity >= MAX_ORDER_QUANTITY}
             >
               +
             </StepperButton>
           </div>
-          <p className="font-heading text-xl">{formatPrice(subtotal)}</p>
+          <p className="font-heading text-xl">{formatPrice(order.subtotal)}</p>
         </div>
       </div>
 
@@ -294,8 +187,8 @@ export function DirectOrderForm({
             <Field label="Prénom">
               <input
                 required
-                value={firstName}
-                onChange={(e) => setFirstName(e.target.value)}
+                value={order.firstName}
+                onChange={(e) => order.setFirstName(e.target.value)}
                 autoComplete="given-name"
                 className="input"
               />
@@ -303,8 +196,8 @@ export function DirectOrderForm({
             <Field label="Nom">
               <input
                 required
-                value={lastName}
-                onChange={(e) => setLastName(e.target.value)}
+                value={order.lastName}
+                onChange={(e) => order.setLastName(e.target.value)}
                 autoComplete="family-name"
                 className="input"
               />
@@ -316,8 +209,8 @@ export function DirectOrderForm({
               required
               type="tel"
               inputMode="tel"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
+              value={order.phone}
+              onChange={(e) => order.setPhone(e.target.value)}
               autoComplete="tel"
               placeholder="0555 12 34 56"
               className="input"
@@ -328,10 +221,10 @@ export function DirectOrderForm({
             <Field label="Wilaya">
               <select
                 required
-                value={wilaya}
+                value={order.wilaya}
                 onChange={(e) => {
-                  handleWilayaChange(e.target.value);
-                  handleFirstInput();
+                  order.changeWilaya(e.target.value);
+                  order.handleFirstInput();
                 }}
                 autoComplete="address-level1"
                 className="input"
@@ -349,8 +242,8 @@ export function DirectOrderForm({
             <Field label="Commune">
               <input
                 required
-                value={commune}
-                onChange={(e) => setCommune(e.target.value)}
+                value={order.commune}
+                onChange={(e) => order.setCommune(e.target.value)}
                 autoComplete="address-level2"
                 className="input"
               />
@@ -363,29 +256,27 @@ export function DirectOrderForm({
             </legend>
             <div className="grid grid-cols-2 gap-3">
               <DeliveryChoice
-                checked={deliveryMethod === "domicile"}
-                onChange={() => setDeliveryMethod("domicile")}
+                checked={order.deliveryMethod === "domicile"}
+                onChange={() => order.setDeliveryMethod("domicile")}
                 title="À domicile"
-                price={selectedRate ? formatPrice(selectedRate.domicilePrice) : null}
-                icon={
-                  <path d="M3 10.5 12 3l9 7.5M5.5 9.5V20h13V9.5" />
+                price={
+                  order.selectedRate ? formatPrice(order.selectedRate.domicilePrice) : null
                 }
+                icon={<path d="M3 10.5 12 3l9 7.5M5.5 9.5V20h13V9.5" />}
               />
               <DeliveryChoice
-                checked={deliveryMethod === "stopdesk"}
-                onChange={() => setDeliveryMethod("stopdesk")}
-                disabled={stopdeskUnavailable}
+                checked={order.deliveryMethod === "stopdesk"}
+                onChange={() => order.setDeliveryMethod("stopdesk")}
+                disabled={order.stopdeskUnavailable}
                 title="Stopdesk"
                 price={
-                  selectedRate?.stopdeskPrice != null
-                    ? formatPrice(selectedRate.stopdeskPrice)
-                    : selectedRate
+                  order.selectedRate?.stopdeskPrice != null
+                    ? formatPrice(order.selectedRate.stopdeskPrice)
+                    : order.selectedRate
                       ? "Indisponible"
                       : null
                 }
-                icon={
-                  <path d="M4 8h16l-1 12H5L4 8Zm4 0V6a4 4 0 0 1 8 0v2" />
-                }
+                icon={<path d="M4 8h16l-1 12H5L4 8Zm4 0V6a4 4 0 0 1 8 0v2" />}
               />
             </div>
           </fieldset>
@@ -395,8 +286,8 @@ export function DirectOrderForm({
           {noteOpen ? (
             <Field label="Note pour la livraison">
               <textarea
-                value={note}
-                onChange={(e) => setNote(e.target.value)}
+                value={order.note}
+                onChange={(e) => order.setNote(e.target.value)}
                 rows={2}
                 autoFocus
                 className="input"
@@ -420,15 +311,15 @@ export function DirectOrderForm({
         <dl className="space-y-1.5 text-sm">
           <div className="flex justify-between">
             <dt className="text-encre/65">
-              {quantity} × {product.name}
+              {order.quantity} × {product.name}
             </dt>
-            <dd>{formatPrice(subtotal)}</dd>
+            <dd>{formatPrice(order.subtotal)}</dd>
           </div>
           <div className="flex justify-between">
             <dt className="text-encre/65">Livraison</dt>
             <dd>
-              {deliveryFee != null ? (
-                formatPrice(deliveryFee)
+              {order.deliveryFee != null ? (
+                formatPrice(order.deliveryFee)
               ) : (
                 <span className="text-encre/45">choisissez la wilaya</span>
               )}
@@ -436,30 +327,30 @@ export function DirectOrderForm({
           </div>
           <div className="flex justify-between border-t border-encre/10 pt-2 font-heading text-lg">
             <dt>À payer à la livraison</dt>
-            <dd>{formatPrice(total)}</dd>
+            <dd>{formatPrice(order.total)}</dd>
           </div>
         </dl>
 
-        {error ? (
+        {order.error ? (
           <p
             role="alert"
             className="mt-4 rounded-xl bg-blush/40 px-4 py-2.5 text-sm text-encre"
           >
-            {error}
+            {order.error}
           </p>
         ) : null}
 
         <button
           ref={submitRef}
           type="submit"
-          disabled={submitting || !inStock}
+          disabled={order.submitting || !order.inStock}
           className="mt-5 w-full rounded-full bg-lueur px-6 py-4 font-heading text-base text-encre shadow-[0_10px_30px_-12px_var(--lueur)] transition hover:bg-lueur/90 disabled:cursor-not-allowed disabled:opacity-55 disabled:shadow-none"
         >
-          {!inStock
+          {!order.inStock
             ? "Rupture de stock"
-            : submitting
+            : order.submitting
               ? "Envoi en cours…"
-              : `Commander · ${formatPrice(total)}`}
+              : `Commander · ${formatPrice(order.total)}`}
         </button>
 
         <p className="mt-3 text-center text-xs text-encre/55">
@@ -467,14 +358,14 @@ export function DirectOrderForm({
         </p>
       </div>
 
-      {inStock && !ctaVisible ? (
-        <div
-          className="fixed inset-x-0 bottom-0 z-40 border-t border-encre/10 bg-papier/95 px-4 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] backdrop-blur lg:hidden"
-        >
+      {order.inStock && !ctaVisible ? (
+        <div className="fixed inset-x-0 bottom-0 z-40 border-t border-encre/10 bg-papier/95 px-4 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] backdrop-blur lg:hidden">
           <div className="mx-auto flex max-w-lg items-center gap-3">
             <div className="min-w-0">
               <p className="truncate text-xs text-encre/55">{product.name}</p>
-              <p className="font-heading text-base leading-tight">{formatPrice(total)}</p>
+              <p className="font-heading text-base leading-tight">
+                {formatPrice(order.total)}
+              </p>
             </div>
             <button
               type="button"
