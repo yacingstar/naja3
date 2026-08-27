@@ -5,8 +5,7 @@ import { useEffect, useState } from "react";
 import type { OrderSummary } from "@/app/(site)/commande/actions";
 import { trackPurchase } from "@/lib/analytics";
 import { formatPrice } from "@/lib/format";
-
-const LAST_ORDER_KEY = "naja-last-order";
+import { takeOrder } from "@/lib/lastOrder";
 
 // Reads the order summary the checkout Server Action returned, stashed in
 // sessionStorage — never fetched by order ID/reference, so a shared or
@@ -17,28 +16,21 @@ export default function ConfirmationPage() {
   const [checked, setChecked] = useState(false);
 
   useEffect(() => {
-    try {
-      const raw = sessionStorage.getItem(LAST_ORDER_KEY);
-      if (raw) {
-        const parsed: OrderSummary = JSON.parse(raw);
-        // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time hydration from a browser-only API unavailable during SSR; matching server/client first render, then syncing post-mount is the standard fix, not a smell here
-        setOrder(parsed);
-        // Real revenue, not just "a conversion happened" — this is what lets
-        // Meta optimise for money rather than for form submissions. Read
-        // before the key is cleared, and keyed by order id so a refresh
-        // cannot double-count.
-        trackPurchase({
-          orderId: parsed.id,
-          value: parsed.orderTotal,
-          contents: parsed.items.map((i) => ({
-            id: i.productSlug,
-            quantity: i.quantity,
-          })),
-        });
-        sessionStorage.removeItem(LAST_ORDER_KEY);
-      }
-    } catch {
-      // sessionStorage unavailable — fall back to the generic message below
+    const parsed = takeOrder();
+    if (parsed) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time hydration from a browser-only API unavailable during SSR; matching server/client first render, then syncing post-mount is the standard fix, not a smell here
+      setOrder(parsed);
+      // Real revenue, not just "a conversion happened" — this is what lets
+      // Meta optimise for money rather than for form submissions. Keyed by
+      // order id so a refresh cannot double-count.
+      trackPurchase({
+        orderId: parsed.id,
+        value: parsed.orderTotal,
+        contents: parsed.items.map((i) => ({
+          id: i.productSlug,
+          quantity: i.quantity,
+        })),
+      });
     }
     setChecked(true);
   }, []);

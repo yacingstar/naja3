@@ -1920,4 +1920,87 @@ overflow. `npx eslint src/`, `npx tsc --noEmit` and `next build` all clean.
 — they're ad destinations, so nothing on the shop points at them. Nothing to
 fix unless the client wants them discoverable.
 
-## Status: twenty-first-round storefront unchanged (see above), plus a new per-product ad landing page at `/lampe/[slug]` — Modernist poster styling (Archivo 800, red `#ec3013`, zero radius, 2px rules) fully scoped under `.lp` so it cannot reach the shop or the admin; headline, hero copy, "Chez vous" copy, colours, photos and catalogue number all generated from the existing product row; working colour picker, lit/unlit switch and add-to-cart sharing the storefront's cart and Meta pixel; `/boutique/[slug]` untouched and still the ad destination until the client says otherwise — awaiting review before Phase 7
+## Twenty-fourth round: the cart is gone from the product page — orders are taken inline
+
+Client reported the actual reason conversions were being lost: customers add a
+lamp to the cart and leave, **believing they have already bought it**. There is
+no payment step in cash-on-delivery to signal "you are finished", so a filled
+basket reads as a confirmation. She pointed at casedz.store, which — like most
+Algerian COD stores — takes the whole order on the product page.
+
+**New `DirectOrderForm.tsx`.** Colour, quantity, name, phone, wilaya, commune,
+delivery method and an optional note, all on `/boutique/[slug]`, submitting
+straight to the existing `placeOrder` Server Action. No cart, no `/panier`
+stop, no `/commande` screen.
+
+**No server-side change was needed**, which is worth recording: `placeOrder`
+already took `items[]` and re-priced every line from the live catalogue, so a
+single-product direct order is just a one-element array. The Phase 1 decision
+to make the write path re-fetch everything rather than trust the client is what
+made a whole new buying flow a client-only change.
+
+**Design — an order slip, deliberately not a checkout panel.** Since the
+complaint is that people can't tell whether they've finished, the form is
+styled as something you visibly fill in and send: numbered steps (① colour ②
+quantité ③ où on vous livre) in the three brand colours, a dashed **tear line
+with a notch bitten out of each edge** like a ticket stub, and a submit button
+that always names the full amount payable — "Commander · 6 100 DA". Two CSS
+notes in `globals.css`: `.order-slip` is opaque (blush mixed *into* papier, not
+laid over it) because the notches are painted in the page background and only
+read as holes if the card isn't see-through; `.order-perf` is zero-height so
+the tear line costs no vertical rhythm.
+
+**Kept `/boutique/[slug]` static.** `getDeliveryRates` used the cookie-aware
+Supabase client, which was harmless while its only caller was the dynamic
+`/commande` page — but a wilaya picker on every product page would have made
+all six dynamic and turned their `revalidate` into a no-op, exactly the trap
+`supabase/public.ts` was written about. Switched it to the cookie-free client
+(verified anon can read all 58 rows) and wrapped it in `cache()`. All six pages
+still prerender, and `/commande` became static as a side effect.
+
+**Cart kept, not deleted.** Nothing in the normal flow fills it any more, so
+`CartLink` returns null while empty and the footer's "Mon panier" is gone —
+both were about to become permanently dead UI. `/panier`, `/commande` and
+`CheckoutForm` are untouched and still work; the path reappears by itself if
+multi-item ordering is ever wanted.
+
+**Pixel funnel re-pointed.** `InitiateCheckout` used to fire on arriving at
+`/commande` with a full cart, a moment that no longer exists — it now fires on
+first input into the slip. `AddToCart` fires on a successful order rather than
+on a basket write, so Meta still sees the step and every Purchase isn't
+preceded by nothing. `Purchase` on the confirmation page is unchanged.
+
+**New `lib/lastOrder.ts`.** The `"naja-last-order"` sessionStorage key was
+about to exist in three files (two writers, one reader); it is now one module
+with `stashOrder`/`takeOrder`, and `takeOrder` reads-and-clears in one call so
+a refresh cannot re-report the sale.
+
+**Two fixes found by rendering, one by driving it:**
+- Stopdesk was greyed out before any wilaya was picked, because "unknown" and
+  "unavailable" were the same expression. It now only disables once a chosen
+  wilaya is known not to offer it.
+- On a phone the slip sits far below the photo and the description, so the
+  page's only call to action was off-screen for most of the visit. A sticky bar
+  carrying the same live total appears when the real button isn't in view;
+  tapping it **scrolls to the fields rather than submitting**, so nothing is
+  ordered from a control the customer can't read in full.
+- The footer still linked to "Mon panier" long after the header bag was hidden.
+
+**Verified by actually placing an order** through the UI at a 390px viewport
+(Playwright, real Chromium): sticky bar present on load and non-submitting;
+photo follows the colour; out-of-stock colour not selectable; quantity reaching
+the summary; delivery fee going live on wilaya choice (3 × 2 800 + 500 Alger =
+8 900 DA); an invalid phone caught client-side before any round trip; the real
+submit landing on the confirmation page with the right lines and total; and a
+refresh clearing the summary so Purchase can't double-report. Zero page errors.
+**The test order was written to the live Supabase and then deleted** (order #8
+plus its items; the surrounding real orders were left alone) — worth knowing
+that there is no staging database, so any future end-to-end test does this to
+production and must clean up after itself.
+
+**Not done**: the `/lampe/[slug]` ad landing pages still use add-to-cart, so
+they have exactly the confusion this round fixes. They need their own pass —
+their Modernist design system shares nothing with the storefront's, so the slip
+cannot be dropped into them as-is.
+
+## Status: orders are now placed directly on the product page — an order-slip form (colour, quantity, coordinates, wilaya-priced delivery, live total, "Commander · {total}") replaces add-to-cart on `/boutique/[slug]`, submitting to the unchanged `placeOrder` action; the cart survives but is hidden while empty and nothing fills it; all six product pages and `/commande` are static; the Meta funnel fires InitiateCheckout on first input and AddToCart on a placed order; `/lampe/[slug]` landing pages still carry the old add-to-cart and are the next thing to convert — awaiting review before Phase 7

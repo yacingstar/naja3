@@ -7,6 +7,13 @@ import { useCart } from "@/lib/cart";
 export function CartLink() {
   const { totalQuantity } = useCart();
 
+  // Product pages take the order inline now (see DirectOrderForm), so nothing
+  // in the normal flow ever fills the cart and this bag would sit empty in
+  // the header of every page, linking to an empty basket. Hiding it while
+  // empty rather than deleting the component keeps the cart path intact — it
+  // reappears by itself if multi-item ordering is ever turned back on.
+  if (totalQuantity === 0) return null;
+
   return (
     <Link
       href="/panier"

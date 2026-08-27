@@ -99,9 +99,12 @@ export function Footer() {
               </p>
             </div>
 
+            {/* No "Mon panier" here any more: orders are placed on the
+                product page itself (see DirectOrderForm), so the basket is
+                never filled and that link led to a permanently empty page. */}
             <FooterColumn title="La boutique">
               <FooterLink href="/boutique">Toutes les lampes</FooterLink>
-              <FooterLink href="/panier">Mon panier</FooterLink>
+              <FooterLink href="/">Accueil</FooterLink>
             </FooterColumn>
 
             <FooterColumn title="Aide">

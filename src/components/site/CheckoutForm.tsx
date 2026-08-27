@@ -3,13 +3,12 @@
 import { useRouter } from "next/navigation";
 import { useMemo, useState, useEffect } from "react";
 import Link from "next/link";
-import { placeOrder, type OrderSummary } from "@/app/(site)/commande/actions";
+import { placeOrder } from "@/app/(site)/commande/actions";
 import { trackInitiateCheckout } from "@/lib/analytics";
 import { useCart } from "@/lib/cart";
 import { formatPrice } from "@/lib/format";
+import { stashOrder } from "@/lib/lastOrder";
 import type { DeliveryRate } from "@/lib/deliveryRates";
-
-const LAST_ORDER_KEY = "naja-last-order";
 
 export function CheckoutForm({ rates }: { rates: DeliveryRate[] }) {
   const router = useRouter();
@@ -92,12 +91,7 @@ export function CheckoutForm({ rates }: { rates: DeliveryRate[] }) {
       return;
     }
 
-    const summary: OrderSummary = result.order;
-    try {
-      sessionStorage.setItem(LAST_ORDER_KEY, JSON.stringify(summary));
-    } catch {
-      // sessionStorage unavailable — confirmation page falls back to a generic message
-    }
+    stashOrder(result.order);
     clear();
     router.push("/commande/confirmation");
   }

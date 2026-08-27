@@ -100,6 +100,49 @@ html::-webkit-scrollbar {
     outline-offset: 1px;
   }
 
+  /* The direct order form on a product page, styled as a paper order slip —
+     see DirectOrderForm.tsx for why it needs to read as a form you send
+     rather than as a basket you fill.
+
+     Opaque on purpose (a blush tint mixed into papier rather than a
+     translucent blush over it): the tear line below punches holes in the
+     card's edge that are painted in the page background, and they only read
+     as holes if the card itself isn't see-through. */
+  .order-slip {
+    position: relative;
+    border-radius: 2rem;
+    border: 1px solid color-mix(in srgb, var(--encre) 10%, transparent);
+    background: color-mix(in srgb, var(--blush) 14%, var(--papier));
+    box-shadow: 0 24px 60px -40px color-mix(in srgb, var(--encre) 55%, transparent);
+  }
+
+  /* Tear line: a dashed rule with a notch bitten out of each edge, the way a
+     ticket stub separates. Zero-height so it costs no vertical rhythm — the
+     sections above and below own their own padding. */
+  .order-perf {
+    position: relative;
+    height: 0;
+    border-top: 2px dashed color-mix(in srgb, var(--encre) 14%, transparent);
+  }
+  .order-perf::before,
+  .order-perf::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    height: 1.5rem;
+    width: 1.5rem;
+    transform: translateY(-50%);
+    border-radius: 9999px;
+    /* Matches the page, not the card — that's what makes it a hole. */
+    background: var(--papier);
+  }
+  .order-perf::before {
+    left: -0.75rem;
+  }
+  .order-perf::after {
+    right: -0.75rem;
+  }
+
   /* Scroll-triggered fade/slide-in (Reveal.tsx toggles data-reveal). */
   .reveal {
     opacity: 0;

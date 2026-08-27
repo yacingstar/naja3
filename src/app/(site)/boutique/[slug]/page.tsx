@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { ProductCard } from "@/components/site/ProductCard";
 import { ProductDetail } from "@/components/site/ProductDetail";
 import { Reveal } from "@/components/site/Reveal";
+import { getDeliveryRates } from "@/lib/deliveryRates";
 import { getProductBySlug, getProducts } from "@/lib/products";
 
 const RELATED_COUNT = 3;
@@ -28,7 +29,13 @@ export default async function ProductPage({
   params,
 }: PageProps<"/boutique/[slug]">) {
   const { slug } = await params;
-  const product = await getProductBySlug(slug);
+  // The order form on this page needs the wilaya list and its prices. Both
+  // reads are cookie-free (see deliveryRates.ts), so the page still
+  // prerenders and is served from the CDN.
+  const [product, rates] = await Promise.all([
+    getProductBySlug(slug),
+    getDeliveryRates(),
+  ]);
 
   if (!product) notFound();
 
@@ -52,6 +59,7 @@ export default async function ProductPage({
             description: product.description,
           }}
           colors={product.colors}
+          rates={rates}
         />
       </div>
 
