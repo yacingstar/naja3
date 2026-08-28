@@ -2211,4 +2211,69 @@ the live Supabase for this and **deleted afterwards** — only the client's own
 account remains. Worth knowing: there is no `admin_users` table, so any auth
 user is an admin, which is why that account could not be left lying around.
 
-## Status: as the twenty-sixth round, plus the admin proxy rewritten as an optimistic cookie check (no per-request Auth round-trip, local ES256 verification via getClaims, bounded timeout, fails open to the server-side guards) — which is what was throwing Netlify edge-function 500s in the admin; authorization is unchanged and still enforced by the (espace) layout and every Server Action — awaiting review before Phase 7
+## Twenty-eighth round: making the admin load faster
+
+Client asked why the admin is slow. Measured rather than guessed, and there
+were four separate costs. Three are now fixed; the fourth is inherent.
+
+**What it was.** Every admin route is dynamic and has to be (private,
+per-request data — no CDN cache, no prerender), so each visit is a live
+function invocation, and on a panel visited a handful of times a day that
+function is nearly always cold. On top of that, each render made two Supabase
+round-trips — the auth check and the data query, 165-490ms each measured — and
+`/admin` was a `redirect()` inside a Server Component, so the URL everybody
+bookmarks paid two cold boots to show one page. And there was no `loading.tsx`
+anywhere under `/admin`, so with no Suspense boundary nothing streamed: the
+browser sat on the previous screen showing no sign of life until the whole
+render finished.
+
+**1. `loading.tsx` for the whole `(espace)` group.** Biggest perceived win and
+the least risky — it makes nothing faster, it just means the shell paints
+immediately and a skeleton stands in for the table. Shaped like the table it
+replaces on purpose: a spinner in an empty page reads as broken, a greyed-out
+table reads as coming.
+
+**2. `/admin` moved to a `next.config.ts` redirect** and its page deleted.
+Config redirects resolve at step 2 of Next's routing order, *before* the Proxy
+runs (the Execution order table in the proxy docs) — so no edge hop, no
+function, no Supabase call. Went from a full cold invocation to **3ms**.
+
+**3. The auth check was split in two, and the reasoning matters more than the
+speed.** `getAdminUser` (page gate) now verifies the JWT locally with
+WebCrypto via `getClaims()`; `requireAdminUser` (write gate) still asks the
+Auth server. That is not one optimisation applied inconsistently — it follows
+what each path can reach:
+- Pages read through the anon-key client, so every query is subject to RLS,
+  and `orders`/`order_items` are denied to anonymous callers outright
+  (verified: PostgREST answers 401, and anon INSERT on orders is 401 too).
+  RLS validates the JWT's signature and expiry and **does not consult
+  revocation either** — a revoked-but-unexpired token could read those rows
+  straight from PostgREST regardless of what our layout does. Paying a
+  round-trip per render to check revocation buys nothing the database is not
+  already conceding.
+- Server Actions write through the **service-role** client, which bypasses RLS
+  entirely, so there the check is the only thing in front of the data and
+  stays authoritative. Actions run on submit, not per render.
+
+`getClaims` falls back to `getUser()` if it errors, since it only errors on a
+network/key-discovery problem and never as a verdict — so a JWKS blip degrades
+to the old behaviour instead of locking the owner out.
+
+**Checked, not assumed**: auth-js caches the JWKS in a module-scope
+`GLOBAL_JWKS` keyed by storage key, so creating a fresh client per request
+(which `supabase/server.ts` does) reuses the cached keys. Only a cold isolate
+pays one JWKS fetch, and Supabase edge-caches that endpoint. Had the cache been
+per-instance this whole change would have made things worse.
+
+**Result**, warm local server, signed in: `/admin/commandes` 1429ms -> ~1000ms,
+`/admin/livraison` 948ms -> ~665ms, `/admin/produits` 1098ms -> ~975ms, `/admin`
+a full invocation -> 3ms, and the skeleton confirmed rendering during
+navigation. A throwaway admin account was created in the live Supabase to test
+the signed-in path and **deleted afterwards**; only the client's own account
+remains.
+
+**Not fixed, and largely unfixable here**: cold starts. A low-traffic admin on
+serverless will always pay a boot on the first visit after a quiet spell. The
+remaining ~600ms-1s is the data query plus render, not auth.
+
+## Status: as the twenty-seventh round, plus an admin that loads meaningfully faster — a skeleton via loading.tsx so navigation responds instantly, `/admin` redirecting at the routing layer instead of burning a cold function, and the per-render auth round-trip replaced by local ES256 verification (writes still verified against the Auth server, because service-role bypasses the RLS that makes local verification sufficient for reads) — awaiting review before Phase 7
