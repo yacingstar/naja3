@@ -2158,4 +2158,57 @@ the test's own timing, not the app's — `Reveal` blocks and a lazy image both
 need ~2s of settle after scrolling before they can be asserted on. Screenshots
 taken at 900ms showed an empty section that is perfectly fine in a browser.
 
-## Status: one design system across the whole site — `/lampe/[slug]` is now a warm long-form page under the `(site)` layout (real header and footer), built from the homepage's own TrustStrip, CraftSteps and Faq plus the shop's DirectOrderForm, with a bespoke dark hero stage whose glow takes the selected lamp's colour; the in-situ photograph is matted with `object-contain` so no shape is ever cropped; the Modernist stylesheet, its sections, its order form, its layout and the Archivo font are all deleted; the cart survives but nothing fills it and it is hidden while empty — awaiting review before Phase 7
+## Twenty-seventh round: the admin's Netlify edge-function errors
+
+Client hit "There was an internal error while processing your request" in the
+admin. Netlify's edge logs showed the invocation being killed
+(`FunctionChain.fetchPassthrough` -> `handleMiddleware`), caused by
+`AbortError: The signal has been aborted`, with
+`AuthRetryableFetchError ... status: 0` underneath.
+
+**Not caused by the landing-page work** — `src/proxy.ts` had not been touched
+since the original admin commit, and all three logged failures predated that
+deploy. Recorded because the timing invited the wrong conclusion.
+
+**Cause.** `proxy.ts` called `supabase.auth.getUser()` on *every* `/admin`
+request. That is a network round-trip to the Auth server (measured 220-690ms
+from here, and supabase-js retries on failure, doubling it). Netlify runs the
+proxy as an edge function with a request deadline; when Supabase answered
+slowly the whole invocation was aborted and the client got a 500. Next's own
+docs name this exact anti-pattern: proxy "is not intended for slow data
+fetching", should "avoid database checks", and runs on every matched request
+**including prefetches** — and the admin nav prefetches Commandes / Produits /
+Livraison constantly, so one page visit fired several of these.
+
+**Fix — the proxy is now an optimistic check, which is all it was ever allowed
+to be.** Authorization was already enforced twice for real server-side (the
+`(espace)` layout's `getAdminUser()`, and `requireAdminUser()` in every Server
+Action), so the proxy is a UX redirect, not the security boundary. Three
+changes:
+1. No session cookie -> redirect immediately, zero network. That covers every
+   bot and every signed-out hit. Cookie matching is exact-or-numbered-chunk
+   against `sb-<ref>-auth-token`, deliberately not a prefix match, because
+   `<key>-code-verifier` cookies exist during a sign-in flow and must not
+   count as a session.
+2. `getClaims()` instead of `getUser()`. **This project signs JWTs with an
+   asymmetric key** — confirmed ES256/P-256 at
+   `/auth/v1/.well-known/jwks.json` — so getClaims verifies locally with
+   WebCrypto and never asks the Auth server. It still refreshes the session
+   near expiry, which matters: Server Components cannot write cookies, so the
+   proxy is the only place that *can* refresh.
+3. Whatever still touches the network (JWKS on a cold isolate, the hourly
+   refresh) is bounded by our own 3s timeout and wrapped in a catch that fails
+   **open**. Failing open is safe because the layout re-checks; failing closed
+   would sign the admin out every time Supabase hiccuped.
+
+**Verified** against a real signed-in session: signed-out hits redirect in
+5-22ms with no network at all; a forged cookie and a lone code-verifier cookie
+both still redirect; sign-in through the real form lands on `/admin`; all four
+admin pages render 200; twelve rapid proxy hits completed in 623ms total
+(~52ms each, against a former floor of one auth round-trip apiece) with no
+5xx and no `AuthRetryableFetchError`. A throwaway admin account was created in
+the live Supabase for this and **deleted afterwards** — only the client's own
+account remains. Worth knowing: there is no `admin_users` table, so any auth
+user is an admin, which is why that account could not be left lying around.
+
+## Status: as the twenty-sixth round, plus the admin proxy rewritten as an optimistic cookie check (no per-request Auth round-trip, local ES256 verification via getClaims, bounded timeout, fails open to the server-side guards) — which is what was throwing Netlify edge-function 500s in the admin; authorization is unchanged and still enforced by the (espace) layout and every Server Action — awaiting review before Phase 7
