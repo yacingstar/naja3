@@ -23,10 +23,16 @@ inventory/stock-count system beyond a per-color in-stock toggle).
 
 - Next.js 16 (App Router, Turbopack) + TypeScript + Tailwind CSS v4
 - Supabase: Postgres + Auth (`@supabase/ssr`) + Storage (product photos)
-- Hosting: Netlify, connected to GitHub for auto-deploy (not set up yet — Phase 7)
+- Hosting: Netlify, connected to GitHub for auto-deploy
 - Package manager: npm
-- Project lives at `D:/CODE/naja3`, not yet pushed to a GitHub remote (local git
-  repo only, initialized by `create-next-app`)
+- Project lives at `/home/yacingstar/CODE/naja3` on Linux (it was `D:/CODE/naja3`
+  on Windows for most of the project's life — older notes below still say so),
+  pushed to `github.com/yacingstar/naja3`, branch `master`
+- `.env.local` is gitignored and did **not** survive the move between machines.
+  A new checkout needs it recreated from `.env.local.example` with values from
+  the Supabase dashboard (Project Settings -> API Keys); without it every page
+  fails with a missing-Supabase-URL error, because all four clients in
+  `src/lib/supabase/` read the env var with a non-null assertion
 
 ## Prior attempts — read this before reusing anything
 
@@ -2276,4 +2282,88 @@ remains.
 serverless will always pay a boot on the first visit after a quiet spell. The
 remaining ~600ms-1s is the data query plus render, not auth.
 
-## Status: as the twenty-seventh round, plus an admin that loads meaningfully faster — a skeleton via loading.tsx so navigation responds instantly, `/admin` redirecting at the routing layer instead of burning a cold function, and the per-render auth round-trip replaced by local ES256 verification (writes still verified against the Auth server, because service-role bypasses the RLS that makes local verification sufficient for reads) — awaiting review before Phase 7
+## Twenty-ninth round: order dates, and the Supabase egress bill
+
+Two unrelated things in one session, plus a one-off data migration.
+
+**Order dates.** The orders list and detail screen showed who ordered and what,
+never when — and the data was already there, since `getOrders` and
+`getOrderById` both already selected `created_at` and mapped it to `createdAt`.
+Only the rendering was missing. `formatDateTime` / `formatDateTimeShort` in
+`src/lib/format.ts` pin both the locale (`fr-FR`) and the time zone
+(`Africa/Algiers`) rather than leaving either to the host: Netlify's functions
+run in UTC, so an order placed at 00:30 Algiers time would otherwise be dated to
+the previous day. Pinning also makes server and client renders produce the same
+string, which matters because `OrderRow` is a Client Component and would
+otherwise hydration-mismatch. The extra column made the table seven wide, past
+what fits on a phone, so it now scrolls inside its own `overflow-x-auto` box.
+Verified: 23:30 UTC renders as "13 février 2026 à 00:30".
+
+**Cached egress at ~2x the free tier's 5GB.** Everything else (storage, database,
+auth) was nowhere near its limit. The catalogue is only 84MB of photos, so the
+bytes were being served repeatedly rather than once.
+
+Root cause, found by reading the code rather than the dashboard: neither
+`upload()` call in `produits/actions.ts` passed `cacheControl`, so all 64 objects
+carried Supabase's default `max-age=3600`. Next takes the larger of the upstream
+max-age and `minimumCacheTTL` (default four hours, confirmed at
+`image-config.js:57` and in `node_modules/next/dist/docs/.../image.md`), so the
+optimizer dropped its resized variants and re-pulled the full multi-megabyte
+original from Storage about six times a day, per image, per width. 84MB at that
+rate is tens of GB a month, and because those refetches hit Supabase's CDN they
+bill as *cached* egress, which is why that one line item was the only one over.
+
+Fixed in two lines: a one-year `cacheControl` on both upload sites, and
+`minimumCacheTTL: 2678400` (31 days). Both are safe specifically because every
+Storage path carries a `Date.now()` stamp — objects are never overwritten, so a
+stale cache entry is unreachable rather than wrong. Roughly 180x fewer origin
+fetches.
+
+**One-off migration (data, not code).** All 64 objects were re-encoded from 2MB+
+lossless PNGs to WebP, capped at 1920px at quality 85 — 1920 being the largest
+variant `next/image` would ever request here, given the widest `sizes` on the
+site is 512 CSS px. Referenced set went **83.9MB -> 4.95MB (-94%)**, all 50
+referenced objects now WebP with `max-age=31536000`. The script wrote to new
+paths and repointed `product_photos.url` / `product_colors.cutout_photo_url`;
+**the original PNGs were left in the bucket as a rollback**, so it is 89MB across
+116 objects now, of which only 4.95MB is referenced and therefore billable.
+
+Checked before migrating, not assumed: alpha survives on the cutouts (`ch=4`),
+and the extra encode generation costs nothing visible — storing *lossless*
+instead of q85 moved PSNR by 1dB, which says the small measured difference is
+resampling and bit depth rather than compression. Raising quality buys nothing,
+so q85 is correct.
+
+**A mistake worth recording**: the migration was run once with `--only=25/` as a
+quality test and then again over everything, and the script had no guard against
+re-converting — so Capricorne Rouge's two files went through three lossy
+generations and landed at `-w1920-w1920.webp`. Repaired by rebuilding both from
+the untouched originals, and the script now skips anything already converted.
+The general lesson is the one this project keeps relearning: verify the actual
+state afterwards rather than trusting the run log. A `state.mjs` check is what
+surfaced it, by counting referenced objects whose path contained `-w1920-w1920`.
+
+**Left open on purpose** (agreed as a follow-up, not forgotten):
+
+- Uploads are still stored at whatever size they arrive. The `cacheControl` fix
+  means a big original is fetched rarely, so this is no longer an egress problem,
+  but new photos will again be multi-MB objects.
+- `generateMetadata` in `(site)/lampe/[slug]/page.tsx` puts the **raw Storage
+  URL** in `openGraph.images`. Meta/WhatsApp crawlers bypass `next/image`
+  entirely, so they pull the full original — currently harmless since everything
+  is a ~100KB WebP, but it reintroduces itself with the next upload.
+- Compressing at upload time (sharp, in both upload actions) closes both. It
+  would make `sharp` a real dependency rather than the transitive one Next
+  provides, needs SVG passed through rather than rasterized, and can only be
+  verified on a deploy since Server Actions run in Netlify's Lambda runtime.
+
+**Also spotted, unrelated**: the cutout for **Japandi / Bleu** (colour id 48) is
+99.3% transparent — almost certainly a bad upload. It is also the only colour
+whose photo is a real camera shot (`IMG_6617.jpeg`, 5712x4284) rather than an AI
+render. Worth re-uploading.
+
+**Housekeeping**: git identity was never configured on the Linux machine; it is
+now set repo-locally (not globally). The Stack section above has been corrected —
+the project is on Linux and pushed to GitHub, both of which it had been denying.
+
+## Status: as the twenty-eighth round, plus dates on the admin orders screens and a fixed Supabase egress leak — photo uploads now carry a one-year cacheControl, `minimumCacheTTL` is 31 days, and the existing 64 photos were re-encoded to WebP (83.9MB -> 4.95MB referenced). Upload-time compression and the raw openGraph URL are known follow-ups. Awaiting review before Phase 7
