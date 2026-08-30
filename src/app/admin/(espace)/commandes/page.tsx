@@ -34,23 +34,29 @@ export default async function CommandesPage({
       {orders.length === 0 ? (
         <p className="mt-10 text-encre/60">Aucune commande pour le moment.</p>
       ) : (
-        <table className="mt-8 w-full border-collapse text-sm">
-          <thead>
-            <tr className="border-b border-encre/10 text-left text-encre/50">
-              <th className="py-2 pr-4 font-medium">N°</th>
-              <th className="py-2 pr-4 font-medium">Client</th>
-              <th className="py-2 pr-4 font-medium">Wilaya</th>
-              <th className="py-2 pr-4 font-medium">Total</th>
-              <th className="py-2 pr-4 font-medium">Statut</th>
-              <th className="py-2 pr-4"><span className="sr-only">Ouvrir</span></th>
-            </tr>
-          </thead>
-          <tbody>
-            {orders.map((order) => (
-              <OrderRow key={order.id} order={order} />
-            ))}
-          </tbody>
-        </table>
+        // The date column pushed this to seven columns, past what fits on a
+        // phone — the table scrolls sideways inside its own box now instead of
+        // dragging the whole page with it.
+        <div className="mt-8 overflow-x-auto">
+          <table className="w-full border-collapse text-sm">
+            <thead>
+              <tr className="border-b border-encre/10 text-left text-encre/50">
+                <th className="py-2 pr-4 font-medium">N°</th>
+                <th className="py-2 pr-4 font-medium">Date</th>
+                <th className="py-2 pr-4 font-medium">Client</th>
+                <th className="py-2 pr-4 font-medium">Wilaya</th>
+                <th className="py-2 pr-4 font-medium">Total</th>
+                <th className="py-2 pr-4 font-medium">Statut</th>
+                <th className="py-2 pr-4"><span className="sr-only">Ouvrir</span></th>
+              </tr>
+            </thead>
+            <tbody>
+              {orders.map((order) => (
+                <OrderRow key={order.id} order={order} />
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
     </div>
   );

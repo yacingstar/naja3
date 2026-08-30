@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { StatusBadge } from "@/components/admin/StatusBadge";
-import { formatPrice } from "@/lib/format";
+import { formatDateTimeShort, formatPrice } from "@/lib/format";
 import type { OrderStatus } from "@/lib/orders";
 
 // Opening an order used to mean clicking the "#12" — the one bit of the row a
@@ -19,6 +19,7 @@ export function OrderRow({
 }: {
   order: {
     id: number;
+    createdAt: string;
     customerFirstName: string;
     customerLastName: string;
     wilaya: string;
@@ -43,6 +44,9 @@ export function OrderRow({
         >
           #{order.id}
         </Link>
+      </td>
+      <td className="py-3 pr-4 whitespace-nowrap text-encre/70">
+        <time dateTime={order.createdAt}>{formatDateTimeShort(order.createdAt)}</time>
       </td>
       <td className="py-3 pr-4">
         {order.customerFirstName} {order.customerLastName}

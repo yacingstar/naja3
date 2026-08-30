@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { InternalNotesForm } from "@/components/admin/InternalNotesForm";
 import { OrderStatusControl } from "@/components/admin/OrderStatusControl";
-import { formatPrice } from "@/lib/format";
+import { formatDateTime, formatPrice } from "@/lib/format";
 import { getOrderById } from "@/lib/orders";
 
 export default async function CommandeDetailPage({
@@ -29,6 +29,9 @@ export default async function CommandeDetailPage({
         <section>
           <h2 className="font-heading text-lg">Client</h2>
           <dl className="mt-3 space-y-1 text-sm">
+            <Row label="Reçue le">
+              <time dateTime={order.createdAt}>{formatDateTime(order.createdAt)}</time>
+            </Row>
             <Row label="Nom">
               {order.customerFirstName} {order.customerLastName}
             </Row>
