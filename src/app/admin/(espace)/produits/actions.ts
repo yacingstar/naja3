@@ -7,6 +7,18 @@ import { createAdminClient } from "@/lib/supabase/admin";
 
 const PHOTO_BUCKET = "product-photos";
 
+// Every photo path carries a `Date.now()` stamp, so an object is never
+// overwritten — a replacement is always a new URL. That makes the bytes
+// immutable, and a year-long max-age the honest description of them.
+//
+// Supabase defaults an upload to `max-age=3600`. Next's optimizer takes the
+// larger of that and `minimumCacheTTL`, so its cached variants expired every
+// four hours and it re-pulled the full original from Storage to rebuild them —
+// roughly six times a day, per image. Against ~84MB of originals that turned
+// into tens of GB of egress a month and exhausted the free tier's cached-egress
+// allowance on its own. See the matching `minimumCacheTTL` in next.config.ts.
+const PHOTO_CACHE_CONTROL = "31536000"; // one year
+
 // The storefront pages are prerendered and CDN-served now (see the
 // `revalidate` exports on the (site) routes), so a change made in here is
 // invisible to customers until those caches are dropped. Every mutation
@@ -275,7 +287,7 @@ export async function uploadPhoto(
   const path = `${colorId}/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, "_")}`;
   const { error: uploadError } = await supabase.storage
     .from(PHOTO_BUCKET)
-    .upload(path, file, { contentType: file.type });
+    .upload(path, file, { contentType: file.type, cacheControl: PHOTO_CACHE_CONTROL });
 
   if (uploadError) return { ok: false, error: "Impossible de téléverser la photo." };
 
@@ -343,7 +355,7 @@ export async function uploadCutoutPhoto(
   const path = `${colorId}/cutout-${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, "_")}`;
   const { error: uploadError } = await supabase.storage
     .from(PHOTO_BUCKET)
-    .upload(path, file, { contentType: file.type });
+    .upload(path, file, { contentType: file.type, cacheControl: PHOTO_CACHE_CONTROL });
 
   if (uploadError) return { ok: false, error: "Impossible de téléverser la photo." };
 

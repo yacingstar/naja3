@@ -57,6 +57,13 @@ const nextConfig: NextConfig = {
     // exactly where lossy artefacts (halos, banding) show up first. The
     // saving over 75 is small; the risk of visible fringing isn't worth it.
     qualities: [85],
+    // The docs warn to keep this low because there is no way to invalidate the
+    // optimizer's cache. That warning doesn't apply here: every Storage path is
+    // stamped with `Date.now()`, so editing a photo produces a new `src` rather
+    // than new bytes behind an old one — the stale entry is unreachable, not
+    // wrong. Left at the 4-hour default, each expiry made the optimizer re-fetch
+    // a multi-megabyte original from Supabase; 31 days cuts that ~180x.
+    minimumCacheTTL: 2678400, // 31 days
     // Next 16 added an SSRF guard that refuses to fetch an upstream image
     // whose hostname resolves to a private IP. On a NAT64/DNS64 network —
     // this dev machine's, and plenty of IPv6-only mobile networks —
