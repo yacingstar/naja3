@@ -2366,4 +2366,34 @@ render. Worth re-uploading.
 now set repo-locally (not globally). The Stack section above has been corrected —
 the project is on Linux and pushed to GitHub, both of which it had been denying.
 
-## Status: as the twenty-eighth round, plus dates on the admin orders screens and a fixed Supabase egress leak — photo uploads now carry a one-year cacheControl, `minimumCacheTTL` is 31 days, and the existing 64 photos were re-encoded to WebP (83.9MB -> 4.95MB referenced). Upload-time compression and the raw openGraph URL are known follow-ups. Awaiting review before Phase 7
+**Verified end to end after deploying** (all four layers, not just the code):
+
+| layer | confirmed |
+|---|---|
+| Storage response headers | `public, max-age=31536000` on the new WebP objects |
+| Database rows | 50/50 referenced objects are WebP, 4.95MB total |
+| Netlify build | succeeded, so `minimumCacheTTL: 2678400` is live |
+| Live page HTML | `/_next/image` sources resolve to `-w1920.webp`, not `.png` |
+
+The orphaned originals still answer with `max-age=3600`, which is correct and
+harmless — nothing references them.
+
+**Two traps worth recording, because both cost time and both will recur.**
+
+First: **cached egress is a cumulative billing-period total, not a rate.** The
+dashboard read "over 200%" *after* the fix was fully deployed and verified, which
+looks exactly like a failed fix and is not one. The GB already spent stay on the
+books until the period resets; a fix can only stop further accrual. The view that
+actually answers "did this work" is Reports -> Egress, comparing daily bars
+before and after — never the billing-page percentage. Do not re-fix a working fix
+because that number has not moved.
+
+Second: **`curl -I` lies about Supabase Storage cache headers.** A HEAD request to
+`/storage/v1/object/public/...` comes back `cache-control: no-cache` regardless of
+what the object actually stores, which briefly looked like the `cacheControl`
+upload parameter had silently failed. A plain GET on the same URL returns the real
+`public, max-age=31536000`. Always check these with GET (`curl -s -o /dev/null -D -`),
+never `-I`. Same shape as the earlier false alarms in this file: the app was fine,
+the measurement was wrong.
+
+## Status: as the twenty-eighth round, plus dates on the admin orders screens and a Supabase egress leak fixed and **verified live** — photo uploads carry a one-year cacheControl, `minimumCacheTTL` is 31 days, the existing 64 photos were re-encoded to WebP (83.9MB -> 4.95MB referenced), and the deployed site is confirmed serving them. The billing figure stays over budget until the period resets; that is expected, not a regression. Upload-time compression and the raw openGraph URL are known follow-ups. Awaiting review before Phase 7
