@@ -16,3 +16,18 @@
   # `server-only` import in src/lib/supabase/admin.ts, and leaving the scanner
   # armed means the build fails loudly if that ever stops being true.
   SECRETS_SCAN_OMIT_KEYS = "NEXT_PUBLIC_SUPABASE_ANON_KEY,NEXT_PUBLIC_SUPABASE_URL"
+
+  # Turbopack's persistent build cache records the env it was built with, so
+  # META_CAPI_ACCESS_TOKEN's value turns up inside .next/cache/turbopack/*.sst
+  # and fails the scan. Netlify restores and re-saves that cache between builds
+  # ("Next.js cache restored" / "saved" in the log), so it is not a one-off.
+  #
+  # Omitting by PATH rather than adding the key to SECRETS_SCAN_OMIT_KEYS
+  # above, and the distinction is the whole point: the cache is a build
+  # artifact that is never deployed or served, while the key-based override
+  # would stop the scanner noticing this token in a real client bundle too.
+  # It is a write-capable credential for the ad account, so that check stays
+  # armed — src/lib/meta/capi.ts imports `server-only` precisely so a Client
+  # Component importing it fails the build, and this keeps a second net under
+  # that guarantee. Only the two cache directories are exempt.
+  SECRETS_SCAN_OMIT_PATHS = ".next/cache/**,.netlify/.next/cache/**"
