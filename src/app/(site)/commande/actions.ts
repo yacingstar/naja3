@@ -1,5 +1,8 @@
 "use server";
 
+import { after } from "next/server";
+
+import { sendPurchaseEvent } from "@/lib/meta/capi";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 export type PlaceOrderInput = {
@@ -168,6 +171,29 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
     await supabase.from("orders").delete().eq("id", order.id);
     return { ok: false, error: "Une erreur est survenue, merci de réessayer." };
   }
+
+  // Server-side Purchase, after the sale is safely in the database and only
+  // on the success path — an abandoned or rejected order must never be
+  // reported. `after` runs it once the response has already gone out, so the
+  // customer reaches the confirmation page without waiting on Meta; request
+  // APIs (cookies/headers) are still readable inside the callback because
+  // this is a Server Function. See next/dist/docs .../functions/after.md.
+  after(() =>
+    sendPurchaseEvent({
+      orderId: order.id,
+      orderTotal: order.order_total,
+      firstName,
+      lastName,
+      phone,
+      wilaya: input.wilaya,
+      commune,
+      items: orderItems.map((item) => ({
+        productSlug: item.productSlug,
+        quantity: item.quantity,
+        priceAtOrder: item.price_at_order,
+      })),
+    }),
+  );
 
   return {
     ok: true,
