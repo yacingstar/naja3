@@ -3,6 +3,7 @@
 import { after } from "next/server";
 
 import { sendPurchaseEvent } from "@/lib/meta/capi";
+import { notifyNewOrder } from "@/lib/notify/telegram";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 export type PlaceOrderInput = {
@@ -172,28 +173,56 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
     return { ok: false, error: "Une erreur est survenue, merci de réessayer." };
   }
 
-  // Server-side Purchase, after the sale is safely in the database and only
-  // on the success path — an abandoned or rejected order must never be
-  // reported. `after` runs it once the response has already gone out, so the
-  // customer reaches the confirmation page without waiting on Meta; request
-  // APIs (cookies/headers) are still readable inside the callback because
-  // this is a Server Function. See next/dist/docs .../functions/after.md.
-  after(() =>
-    sendPurchaseEvent({
-      orderId: order.id,
-      orderTotal: order.order_total,
-      firstName,
-      lastName,
-      phone,
-      wilaya: input.wilaya,
-      commune,
-      items: orderItems.map((item) => ({
-        productSlug: item.productSlug,
-        quantity: item.quantity,
-        priceAtOrder: item.price_at_order,
-      })),
-    }),
-  );
+  // Both side effects of a completed sale, after it is safely in the database
+  // and only on the success path — an abandoned or rejected order must never
+  // be reported to Meta or announced to the owner. `after` runs them once the
+  // response has already gone out, so the customer reaches the confirmation
+  // page without waiting on either; request APIs (cookies/headers) are still
+  // readable inside the callback because this is a Server Function. See
+  // next/dist/docs .../functions/after.md.
+  //
+  // One callback running both concurrently, rather than two `after` calls:
+  // the docs say `after` runs within the route's max duration, which on
+  // Netlify defaults to 10s, and two sequential 5s timeouts would sit exactly
+  // on that edge. `Promise.all` is safe here because neither function ever
+  // rejects — both swallow their own failures by contract.
+  after(async () => {
+    await Promise.all([
+      sendPurchaseEvent({
+        orderId: order.id,
+        orderTotal: order.order_total,
+        firstName,
+        lastName,
+        phone,
+        wilaya: input.wilaya,
+        commune,
+        items: orderItems.map((item) => ({
+          productSlug: item.productSlug,
+          quantity: item.quantity,
+          priceAtOrder: item.price_at_order,
+        })),
+      }),
+      notifyNewOrder({
+        orderId: order.id,
+        firstName,
+        lastName,
+        phone,
+        wilaya: input.wilaya,
+        commune,
+        deliveryMethod: input.deliveryMethod,
+        note,
+        deliveryFee,
+        productsTotal,
+        orderTotal: order.order_total,
+        items: orderItems.map((item) => ({
+          productName: item.productName,
+          colorName: item.colorName,
+          quantity: item.quantity,
+          price_at_order: item.price_at_order,
+        })),
+      }),
+    ]);
+  });
 
   return {
     ok: true,

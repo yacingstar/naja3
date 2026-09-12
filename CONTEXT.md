@@ -2475,4 +2475,185 @@ end-to-end event has been sent yet; that needs a test event code from the
 client. The token was pasted into a chat transcript, so it should be rotated
 once this is confirmed working.
 
-## Status: as the twenty-ninth round, plus server-side Purchase events through the Meta Conversions API — `lib/meta/capi.ts`, fired from `placeOrder` via `after()`, de-duplicated against the browser pixel on `order-<id>`. Builds clean and the token is confirmed write-capable against the right dataset, but **no event has been sent end to end yet**: that needs `META_CAPI_ACCESS_TOKEN` set in Netlify and a test event code from the client. Awaiting review before Phase 7
+## Thirty-first round: new-order notifications to the owner's phone (Telegram)
+
+Client asked to be notified when an order arrives. Until now orders landed in
+Supabase and sat in `/admin/commandes` as `nouvelle` until she happened to look
+— and in a COD shop the step that turns an order into a sale is her phoning the
+customer to confirm, so that gap is a gap before the sale is real.
+
+**Telegram, chosen over email and WhatsApp, and the reasoning matters because
+the obvious answer is wrong.** WhatsApp is what she and her customers actually
+use, but the Cloud API needs a Meta Business account, a dedicated number *not
+already registered on WhatsApp*, and pre-approved templates for
+business-initiated messages — a lot of setup and a lot to break. Email needs a
+sending provider, a verified domain for a real from-address, and lands somewhere
+she may not check for hours. Telegram is free with no per-message cost, pushes
+in about a second, needs no new dependency and no approval, and her whole setup
+is five minutes with @BotFather.
+
+**`src/lib/notify/telegram.ts`, written as a deliberate sibling of
+`lib/meta/capi.ts`** — same `server-only` + top-level env consts + silent
+no-op guard + `try/catch` + `AbortSignal.timeout(5000)` + bracketed-prefix
+logging, so the two read as one pattern rather than two inventions. Same
+contract too: **never throws, never returns a failure the caller must handle.**
+The order is already written by the time it runs.
+
+**Folded into the existing `after()` block rather than added as a second one.**
+The bundled docs say `after` runs within the route's max duration
+(`next/dist/docs/.../functions/after.md`), and Netlify's default is 10s — two
+separate callbacks each with a 5s timeout would sit exactly on that edge if the
+runtime ran them in sequence. One callback with `Promise.all` bounds the wall
+time at the slower of the two instead of depending on scheduling. Safe because
+neither function ever rejects.
+
+**No schema change and no extra query** — every field the message needs is
+already in scope at the insert. `created_at` is deliberately not added to the
+`.select()`: Telegram stamps its own arrival time.
+
+**`normalizePhone` extracted to `src/lib/phone.ts`.** The notification needs the
+identical `0555 12 34 56 -> 213555123456` transform for its `wa.me` link that
+CAPI needs for hashing. Two copies would have been free to drift, and *neither*
+failure announces itself — a wrong normalisation gives Meta a 0% match rate and
+gives the owner a dead link, never an error. Verified as a pure move by running
+the old and new implementations over twelve inputs and diffing: identical.
+
+**The message is designed around the confirmation call**, not around
+completeness: name, tap-to-call phone, wilaya/commune, delivery method, lines
+with colour and quantity, the three totals, the client note, a one-tap `wa.me`
+link, and a link straight to the order in the admin. That admin link's origin is
+derived from `headers()` inside the callback rather than a seventh env var, in
+its own `try/catch` so that a missing request scope costs the link and not the
+whole message.
+
+**Escaping is load-bearing, not cosmetic.** The customer's free-text note is
+untrusted input arriving in the owner's private chat; unescaped, a note
+containing an anchor tag renders as a live link she might tap. `parse_mode:
+"HTML"` was chosen over MarkdownV2 for exactly this reason — HTML needs three
+characters escaped, MarkdownV2 needs about eighteen and rejects the entire
+message on a single miss.
+
+**Another measurement-not-app false alarm, the same species as the ones already
+recorded in this file.** Two assertions failed claiming the totals were wrong,
+while the rendered message visibly showed the right numbers. Cause:
+`formatPrice` goes through `Intl.NumberFormat("fr-FR")`, whose thousands
+separator is a **narrow no-break space (U+202F)**, not the ASCII space the test
+literal contained. The fix was to derive the expected strings from `formatPrice`
+itself — which is the correct assertion anyway, since the point is that the
+message agrees with the admin screen. Worth knowing before "fixing" any future
+price-string comparison.
+
+**Verified without touching the live database or the client's phone**: the
+message renders correctly with hostile input (an anchor tag and a bare `&` in
+the note, an apostrophe in the commune) and every tag comes out escaped with
+only `<b>` surviving as markup; unconfigured, it makes no network call at all
+and logs nothing; a throwing `headers()` omits the admin link rather than
+faking a URL or losing the message; a 1000-character note truncates to 300 with
+an ellipsis; stopdesk and empty-note branches render correctly. `npx tsc
+--noEmit`, `npx eslint src/` and `next build` all clean, with the route table
+unchanged — `/commande` is still static, so the new import pulled nothing into
+dynamic rendering.
+
+**Verified live against a real bot**: the owner's bot is `@yacingstarBOT`
+("Naja"); a message sent through the real module returned HTTP 200 and landed in
+the target chat with correct totals, working `wa.me` and admin links. Currently
+pointed at the project owner's own private chat (`TELEGRAM_CHAT_ID`
+`5355710117`) rather than the client's, so notifications can be watched without
+pinging her phone — switching recipient is one env var, no code change.
+
+**The escaping guarantee was proved by A/B, and the result is subtler than it
+looks.** Sending the escaped form (what the code does) versus the unescaped form
+(the bug being guarded against), and reading back Telegram's own `entities`:
+
+| | visible text | entity | hidden destination |
+|---|---|---|---|
+| escaped | `<a href="…">cliquez ici</a>` | `url` | no |
+| unescaped | `cliquez ici` | `text_link` | yes -> evil.test |
+
+The escaped version still produces a **`url`** entity, which looks alarming and
+is not: that is Telegram auto-linkifying a URL *visible in the plain text*,
+which it does to any message, and the destination is exactly what the reader can
+see. The dangerous entity is **`text_link`** — innocuous visible text with a
+concealed href — and only the unescaped version produces it. Any future
+assertion here must test for `text_link` specifically; checking for `url` too
+reports a failure that isn't one.
+
+**Setup, for the record** (the sequence that actually worked): @BotFather ->
+`/newbot` -> token into `.env.local`; **then press Start in the bot's own private
+chat** — a bot cannot message someone who has never messaged it, and skipping
+this gives `403 Forbidden: bot can't initiate conversation with a user`. Read the
+chat id from `https://api.telegram.org/bot<TOKEN>/getUpdates`. Two traps hit
+during setup: `getWebhookInfo` showing `pending_update_count: 0` with no webhook
+proves Telegram delivered *nothing*, so the problem is where the message was
+sent, not the polling; and in a **group** the bot's privacy mode is on by default
+(`getMe` -> `can_read_all_group_messages: false`), so a plain message never
+reaches it — either send `/start@<botname>` or rely on the `my_chat_member`
+update that fires when the bot is added.
+
+`TELEGRAM_BOT_TOKEN` and `TELEGRAM_CHAT_ID` still need setting in Netlify; both
+blank = feature off, matching the Meta convention.
+
+**Proven end to end locally, through the real UI.** Two orders were placed on the
+dev server against the live Supabase (Origami x2 to Tissemsilt, 6 000 + 700 =
+6 700 DA — the submit button's own total, the confirmation page and the written
+row all agreed), and **both orders were deleted afterwards**, with no orphaned
+`order_items` and the real orders either side untouched. Recipient is now the
+**`Commanders - Naja` group** (`TELEGRAM_CHAT_ID` `-5026420464`; group ids are
+negative, which is normal). The client is not in the group yet — deliberately,
+until this is signed off.
+
+**This also settles a question this file has been carrying since the thirtieth
+round: `after()` genuinely fires and can make outbound calls.** The Meta CAPI has
+never demonstrated that, and the notification shares its `after()` block, so the
+successful send proves the mechanism for both.
+
+**The real find: a 5s timeout is not safe, because the budget has to cover DNS.**
+The first live order logged
+`[telegram] Order #45 notification failed: TimeoutError`. The cause was not the
+code, `after()`, or Telegram — it was DNS. Timing `api.telegram.org` three times
+in a row gave `dns=0.03s`, **`dns=5.02s`**, `dns=0.00s`: a cold lookup hit the
+classic `resolv.conf` `timeout:5` stall, where the first nameserver doesn't answer
+and the resolver waits a full five seconds before trying the next. The request had
+not left the machine when the 5s deadline fired. Re-running the identical order on
+a warm cache sent with no error, which isolated it precisely.
+
+Fixed by raising the Telegram timeout to **8s**. Safe to be that generous because
+it runs inside `after()` (no customer waits on it) and concurrently with the CAPI
+call rather than after it, so the pair still lands inside Netlify's 10s default
+instead of needing 16s. **`capi.ts` is still at 5s and is now arguably exposed to
+the same stall** — left alone rather than changed opportunistically, but worth
+raising if Events Manager ever shows gaps that nothing else explains.
+
+Two smaller traps from the same session. IPv6 to `api.telegram.org` fails on this
+machine but fails *fast* (0.03s), so it is not a hang source — worth ruling out
+rather than assuming. And `pkill -f 'next-server'` kills the shell running it,
+because the pattern matches that shell's own command line; use a character class
+(`'nex[t]-server'`) so the literal string differs.
+
+Deliberately **not** added to `SECRETS_SCAN_OMIT_KEYS` — if that token ever
+reaches a browser bundle the build should fail loudly. No `netlify.toml` change
+was needed at all: `SECRETS_SCAN_OMIT_PATHS` is path-based and already covers
+the Turbopack-cache case that forced that entry for the Meta token.
+
+Unlike the CAPI round, this is **fully testable end to end before it matters** —
+sending to her own chat is harmless and reversible, with no ad account and no
+staging-database problem. The first real order after deploy also becomes the
+first proof that `after()` actually fires on Netlify, which the CAPI has still
+never demonstrated.
+
+**Worth telling her plainly**: the message carries the customer's name, phone
+and commune, so that data passes through Telegram's servers. It is her own
+private chat and it is exactly what she needs to fulfil the order, but regular
+Telegram chats are cloud-stored, not end-to-end encrypted. Email would carry the
+same caveat.
+
+**Deliberately not built**: no delivery guarantee — no `notified_at` column, no
+retry, no queue. A failed send is logged and lost, which is acceptable because
+it is recoverable by design: the order is already safe in the database and shows
+as `nouvelle` in the admin either way. The notification is a convenience on top
+of the record, never the record itself. If she ever reports a genuinely missed
+order, a `notified_at` column plus a sweep is the follow-up. Also not built: any
+admin-panel badge, sound, polling or realtime subscription; notifications on
+status changes or low stock; anything customer-facing.
+
+## Status: as the twenty-ninth round, plus two things that are both built, both clean through `tsc`/`eslint`/`next build`, and both still waiting on one external step. (1) Server-side Purchase events through the Meta Conversions API — `lib/meta/capi.ts`, fired from `placeOrder` via `after()`, de-duplicated against the browser pixel on `order-<id>`; the token is confirmed write-capable against the right dataset, but **no event has been sent end to end**, which needs `META_CAPI_ACCESS_TOKEN` in Netlify and a test event code. (2) New-order Telegram notifications — `lib/notify/telegram.ts`, fired from the same `after()` block; every path that can be tested without credentials is verified, but **no real message has been sent**, which needs the client to create the bot (@BotFather, then press Start) and `TELEGRAM_BOT_TOKEN`/`TELEGRAM_CHAT_ID` set in Netlify. The first live order will exercise both at once. Awaiting review before Phase 7

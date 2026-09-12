@@ -3,6 +3,10 @@ import "server-only";
 import { createHash } from "node:crypto";
 import { cookies, headers } from "next/headers";
 
+// Meta wants country code + subscriber number, digits only — shared with the
+// Telegram notifier, which needs the identical transform for its wa.me link.
+import { normalizePhone } from "@/lib/phone";
+
 // Server-side Purchase events (Meta's Conversions API).
 //
 // The browser pixel in `lib/analytics.ts` already reports Purchase. This is
@@ -51,19 +55,6 @@ function sha256(value: string): string {
 // "sidi mhamed" must land on the same hash).
 function normalizeText(raw: string): string {
   return raw.normalize("NFKC").toLowerCase().replace(/[^\p{L}\p{N}]/gu, "");
-}
-
-// Meta wants country code + subscriber number, digits only, no leading zero
-// and no punctuation: 0555 12 34 56 -> 213555123456.
-//
-// The order form already enforces /^0[0-9]{8,9}$/, so the 00-prefix and
-// already-has-213 branches are defensive — a phone typed as +213... or
-// 00213... would otherwise hash as 21300213... and match nobody.
-function normalizePhone(raw: string): string {
-  const digits = raw.replace(/\D/g, "").replace(/^00/, "");
-  if (!digits) return "";
-  if (digits.startsWith("213")) return digits;
-  return `213${digits.replace(/^0+/, "")}`;
 }
 
 function hashField(raw: string, normalize: (value: string) => string): string[] | undefined {
