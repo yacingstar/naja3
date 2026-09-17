@@ -1,0 +1,12 @@
+-- A second hue per colour, so a variant can be bicolour ("Bleu & Blanc")
+-- without changing how an order records what was chosen: the duo stays ONE
+-- product_colors row, so order_items.product_color_id keeps working untouched
+-- and the variant carries its own photos and cutout like any other colour.
+-- That is the whole point of doing it this way rather than letting a customer
+-- combine two arbitrary colours, which would have needed a second FK on
+-- order_items plus admin, confirmation and Telegram changes.
+--
+-- Nullable, and null is the normal case: a colour with no second hue is
+-- plain, and every existing row stays exactly as it is. The storefront draws
+-- a split swatch only when this is set.
+alter table public.product_colors add column color_hex_2 text;

@@ -1,6 +1,7 @@
 "use client";
 
 import type { ProductColorDetail } from "@/lib/products";
+import { swatchStyle } from "@/lib/swatch";
 
 // The colour picker, pulled out of DirectOrderForm so the detail page can
 // render it up beside the photo instead — the client's point being that you
@@ -64,7 +65,7 @@ export function ColorSwatches({
                   ? "hover:ring-2 hover:ring-encre/30 hover:ring-offset-2 hover:ring-offset-papier"
                   : "cursor-not-allowed opacity-40"
               }`}
-              style={{ backgroundColor: color.colorHex ?? "#e5d9cf" }}
+              style={swatchStyle(color.colorHex, color.colorHex2)}
             >
               {isSelected ? (
                 <svg

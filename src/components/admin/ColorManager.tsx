@@ -4,10 +4,18 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { addColor } from "@/app/admin/(espace)/produits/actions";
 import { AdminButton } from "@/components/admin/AdminButton";
+import { HuePair } from "@/components/admin/HuePair";
 import { ColorRow } from "@/components/admin/ColorRow";
 import type { AdminProductColor } from "@/lib/adminProducts";
 
-type ColorDraft = { colorName: string; colorHex: string; inStock: boolean };
+type ColorDraft = {
+  colorName: string;
+  colorHex: string;
+  // null = plain colour. A string turns the variant bicolour and the
+  // storefront draws its swatch split in two.
+  colorHex2: string | null;
+  inStock: boolean;
+};
 
 export function ColorManager({
   productId,
@@ -24,6 +32,7 @@ export function ColorManager({
   const router = useRouter();
   const [colorName, setColorName] = useState("");
   const [colorHex, setColorHex] = useState("#f2a65a");
+  const [colorHex2, setColorHex2] = useState<string | null>(null);
   const [inStock, setInStock] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -32,12 +41,13 @@ export function ColorManager({
     e.preventDefault();
     setError(null);
     startTransition(async () => {
-      const result = await addColor(productId, { colorName, colorHex, inStock });
+      const result = await addColor(productId, { colorName, colorHex, colorHex2, inStock });
       if (!result.ok) {
         setError(result.error);
         return;
       }
       setColorName("");
+      setColorHex2(null);
       router.refresh();
     });
   }
@@ -57,6 +67,7 @@ export function ColorManager({
                 drafts[color.id] ?? {
                   colorName: color.colorName,
                   colorHex: color.colorHex ?? "#e5d9cf",
+                  colorHex2: color.colorHex2,
                   inStock: color.inStock,
                 }
               }
@@ -80,15 +91,15 @@ export function ColorManager({
             className="input w-40"
           />
         </label>
-        <label className="block">
-          <span className="mb-1 block text-xs font-medium text-encre/70">Teinte</span>
-          <input
-            type="color"
-            value={colorHex}
-            onChange={(e) => setColorHex(e.target.value)}
-            className="h-10 w-14 rounded border border-encre/20"
-          />
-        </label>
+        <HuePair
+          hex={colorHex}
+          hex2={colorHex2}
+          idPrefix="nouvelle-couleur"
+          onChange={(next) => {
+            setColorHex(next.colorHex);
+            setColorHex2(next.colorHex2);
+          }}
+        />
         <label className="flex items-center gap-2 pb-2 text-sm">
           <input
             type="checkbox"

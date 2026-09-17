@@ -4,6 +4,7 @@ import Image from "next/image";
 import { type CSSProperties, useEffect, useMemo, useState } from "react";
 import { CraftSteps } from "@/components/site/CraftSteps";
 import { DirectOrderForm } from "@/components/site/DirectOrderForm";
+import { swatchStyle } from "@/lib/swatch";
 import { Faq } from "@/components/site/Faq";
 import { Reveal } from "@/components/site/Reveal";
 import { TrustStrip } from "@/components/site/TrustStrip";
@@ -207,7 +208,7 @@ export function ProductLanding({
                     <span
                       aria-hidden
                       className="h-3.5 w-3.5 rounded-full border border-encre/20"
-                      style={{ backgroundColor: option.colorHex ?? "#e5d9cf" }}
+                      style={swatchStyle(option.colorHex, option.colorHex2)}
                     />
                     {option.colorName}
                   </button>

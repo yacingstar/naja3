@@ -124,6 +124,10 @@ export async function deleteProduct(id: number): Promise<ActionResult> {
 export type ColorInput = {
   colorName: string;
   colorHex: string | null;
+  // The second hue of a bicolour variant, null on a plain colour.
+  // The duo stays one product_colors row, so nothing about how an
+  // order records its colour changes.
+  colorHex2: string | null;
   inStock: boolean;
 };
 
@@ -143,6 +147,7 @@ export async function addColor(
       product_id: productId,
       color_name: colorName,
       color_hex: input.colorHex,
+      color_hex_2: input.colorHex2,
       in_stock: input.inStock,
     })
     .select("id")
@@ -206,7 +211,12 @@ export async function updateColor(
   const supabase = createAdminClient();
   const { error } = await supabase
     .from("product_colors")
-    .update({ color_name: colorName, color_hex: input.colorHex, in_stock: input.inStock })
+    .update({
+      color_name: colorName,
+      color_hex: input.colorHex,
+      color_hex_2: input.colorHex2,
+      in_stock: input.inStock,
+    })
     .eq("id", colorId);
 
   if (error) {

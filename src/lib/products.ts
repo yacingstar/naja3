@@ -8,6 +8,14 @@ export type FeaturedProductColor = {
   id: number;
   colorName: string;
   colorHex: string | null;
+
+  // The second hue of a bicolour variant, null on a plain colour. The
+
+  // duo stays one row, so nothing about how an order stores its colour
+
+  // changes — see the 20260917200001 migration.
+
+  colorHex2: string | null;
   inStock: boolean;
   // This specific colour's card photo (cutout preferred, first gallery
   // shot as fallback) — same rule as the product-level `photoUrl` below,
@@ -38,6 +46,14 @@ export type ProductColorDetail = {
   id: number;
   colorName: string;
   colorHex: string | null;
+
+  // The second hue of a bicolour variant, null on a plain colour. The
+
+  // duo stays one row, so nothing about how an order stores its colour
+
+  // changes — see the 20260917200001 migration.
+
+  colorHex2: string | null;
   inStock: boolean;
   // The background-removed shot, when the admin has set one. The detail
   // page leads with it (ProductStage lights it like a lamp that's on)
@@ -65,6 +81,8 @@ type ProductRow = {
     id: number;
     color_name: string;
     color_hex: string | null;
+
+    color_hex_2: string | null;
     in_stock: boolean;
     cutout_photo_url: string | null;
     product_photos: Array<{ url: string; position: number }>;
@@ -96,13 +114,15 @@ function cardColors(colors: ProductRow["product_colors"]): FeaturedProductColor[
     id: color.id,
     colorName: color.color_name,
     colorHex: color.color_hex,
+
+    colorHex2: color.color_hex_2,
     inStock: color.in_stock,
     photoUrl: colorPhotoUrl(color),
   }));
 }
 
 const CARD_SELECT =
-  "id, slug, name, description, price, product_colors ( id, color_name, color_hex, in_stock, cutout_photo_url, product_photos ( url, position ) )";
+  "id, slug, name, description, price, product_colors ( id, color_name, color_hex, color_hex_2, in_stock, cutout_photo_url, product_photos ( url, position ) )";
 
 // Real data from day one — no mock catalog. Returns an empty list until
 // products exist (Phase 5 admin panel), and callers handle that gracefully
@@ -145,6 +165,8 @@ type ProductDetailRow = {
     id: number;
     color_name: string;
     color_hex: string | null;
+
+    color_hex_2: string | null;
     in_stock: boolean;
     cutout_photo_url: string | null;
     product_photos: Array<{ url: string; position: number }>;
@@ -156,7 +178,7 @@ export async function getProductBySlug(slug: string): Promise<ProductDetail | nu
   const { data, error } = await supabase
     .from("products")
     .select(
-      "id, slug, name, description, price, product_colors ( id, color_name, color_hex, in_stock, cutout_photo_url, product_photos ( url, position ) )",
+      "id, slug, name, description, price, product_colors ( id, color_name, color_hex, color_hex_2, in_stock, cutout_photo_url, product_photos ( url, position ) )",
     )
     .eq("slug", slug)
     .maybeSingle()
@@ -175,6 +197,8 @@ export async function getProductBySlug(slug: string): Promise<ProductDetail | nu
         id: color.id,
         colorName: color.color_name,
         colorHex: color.color_hex,
+
+        colorHex2: color.color_hex_2,
         cutoutPhotoUrl: color.cutout_photo_url,
         inStock: color.in_stock,
         photos: (color.product_photos ?? [])

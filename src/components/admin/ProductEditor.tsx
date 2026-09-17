@@ -19,7 +19,14 @@ type ExistingProduct = {
   price: number;
 };
 
-type ColorDraft = { colorName: string; colorHex: string; inStock: boolean };
+type ColorDraft = {
+  colorName: string;
+  colorHex: string;
+  // null = plain colour. A string turns the variant bicolour and the
+  // storefront draws its swatch split in two.
+  colorHex2: string | null;
+  inStock: boolean;
+};
 
 // Owns the whole edit page as one draft with one save button.
 //
@@ -53,7 +60,12 @@ export function ProductEditor({
     Object.fromEntries(
       colors.map((c) => [
         c.id,
-        { colorName: c.colorName, colorHex: c.colorHex ?? "#e5d9cf", inStock: c.inStock },
+        {
+          colorName: c.colorName,
+          colorHex: c.colorHex ?? "#e5d9cf",
+          colorHex2: c.colorHex2,
+          inStock: c.inStock,
+        },
       ]),
     ),
   );
@@ -72,6 +84,7 @@ export function ProductEditor({
     return (
       d.colorName !== c.colorName ||
       d.colorHex !== (c.colorHex ?? "#e5d9cf") ||
+      d.colorHex2 !== c.colorHex2 ||
       d.inStock !== c.inStock
     );
   });

@@ -55,6 +55,14 @@ export type AdminProductColor = {
   id: number;
   colorName: string;
   colorHex: string | null;
+
+  // The second hue of a bicolour variant, null on a plain colour. The
+
+  // duo stays one row, so nothing about how an order stores its colour
+
+  // changes — see the 20260917200001 migration.
+
+  colorHex2: string | null;
   inStock: boolean;
   cutoutPhotoUrl: string | null;
   photos: Array<{ id: number; url: string; position: number }>;
@@ -65,7 +73,7 @@ export async function getAdminProductColors(productId: number): Promise<AdminPro
   const { data, error } = await supabase
     .from("product_colors")
     .select(
-      "id, color_name, color_hex, in_stock, cutout_photo_url, product_photos ( id, url, position )",
+      "id, color_name, color_hex, color_hex_2, in_stock, cutout_photo_url, product_photos ( id, url, position )",
     )
     .eq("product_id", productId)
     .order("id", { ascending: true });
@@ -76,6 +84,8 @@ export async function getAdminProductColors(productId: number): Promise<AdminPro
     id: color.id,
     colorName: color.color_name,
     colorHex: color.color_hex,
+
+    colorHex2: color.color_hex_2,
     inStock: color.in_stock,
     cutoutPhotoUrl: color.cutout_photo_url,
     photos: (color.product_photos ?? [])

@@ -1,6 +1,7 @@
 "use client";
 
 import { AdminButton, Spinner } from "@/components/admin/AdminButton";
+import { HuePair } from "@/components/admin/HuePair";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useRef, useState, useTransition } from "react";
@@ -25,11 +26,16 @@ export function ColorRow({
 }: {
   productId: number;
   color: AdminProductColor;
-  value: { colorName: string; colorHex: string; inStock: boolean };
-  onChange: (next: { colorName: string; colorHex: string; inStock: boolean }) => void;
+  value: { colorName: string; colorHex: string; colorHex2: string | null; inStock: boolean };
+  onChange: (next: {
+    colorName: string;
+    colorHex: string;
+    colorHex2: string | null;
+    inStock: boolean;
+  }) => void;
 }) {
   const router = useRouter();
-  const { colorName, colorHex, inStock } = value;
+  const { colorName, colorHex, colorHex2, inStock } = value;
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const [uploading, setUploading] = useState(false);
@@ -135,15 +141,12 @@ export function ColorRow({
             className="input w-40"
           />
         </label>
-        <label className="block">
-          <span className="mb-1 block text-xs font-medium text-encre/70">Teinte</span>
-          <input
-            type="color"
-            value={colorHex}
-            onChange={(e) => onChange({ ...value, colorHex: e.target.value })}
-            className="h-10 w-14 rounded border border-encre/20"
-          />
-        </label>
+        <HuePair
+          hex={colorHex}
+          hex2={colorHex2}
+          idPrefix={`couleur-${color.id}`}
+          onChange={(next) => onChange({ ...value, ...next })}
+        />
         <label className="flex items-center gap-2 pb-2 text-sm">
           <input
             type="checkbox"
