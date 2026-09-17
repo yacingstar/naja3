@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import type { DeliveryRate } from "@/lib/deliveryRates";
 import { formatPrice } from "@/lib/format";
 import type { ProductColorDetail } from "@/lib/products";
+import { ColorSwatches } from "@/components/site/ColorSwatches";
 import {
   MAX_ORDER_QUANTITY,
   useDirectOrder,
@@ -35,6 +36,7 @@ export function DirectOrderForm({
   colors,
   selectedColorId,
   onSelectColor,
+  showColorStep = true,
   rates,
 }: {
   product: DirectOrderProduct;
@@ -43,6 +45,9 @@ export function DirectOrderForm({
   // this form — see ProductDetail.
   selectedColorId: number | undefined;
   onSelectColor: (id: number) => void;
+  // The detail page renders the swatches beside the photo instead, so it
+  // turns this step off here and the two remaining steps renumber.
+  showColorStep?: boolean;
   rates: DeliveryRate[];
 }) {
   const [noteOpen, setNoteOpen] = useState(false);
@@ -95,67 +100,23 @@ export function DirectOrderForm({
           payable already say what this is. */}
 
       {/* ── ① Colour ────────────────────────────────────────────────── */}
-      <div className="px-6 pt-7 sm:px-8 sm:pt-8">
-        <StepLabel n={1} tint="bg-lueur">
-          Choisissez la couleur
-          {selectedColor ? (
-            <span className="ml-1.5 font-body text-sm font-normal text-encre/55">
-              — {selectedColor.colorName}
-            </span>
-          ) : null}
-        </StepLabel>
-
-        <div role="radiogroup" aria-label="Couleur" className="mt-3 flex flex-wrap gap-2">
-          {colors.map((color) => {
-            const isSelected = color.id === selectedColor?.id;
-            return (
-              <button
-                key={color.id}
-                type="button"
-                role="radio"
-                aria-checked={isSelected}
-                disabled={!color.inStock}
-                onClick={() => onSelectColor(color.id)}
-                className={`flex items-center gap-2 rounded-full border px-3.5 py-2 text-sm transition ${
-                  isSelected
-                    ? "border-encre bg-papier shadow-sm"
-                    : "border-encre/15 bg-papier/60"
-                } ${
-                  color.inStock ? "hover:border-encre" : "cursor-not-allowed opacity-45"
-                }`}
-              >
-                <span
-                  aria-hidden
-                  className="flex h-4 w-4 items-center justify-center rounded-full border border-encre/20"
-                  style={{ backgroundColor: color.colorHex ?? "#e5d9cf" }}
-                >
-                  {isSelected ? (
-                    <svg
-                      viewBox="0 0 24 24"
-                      className="h-3 w-3 text-papier drop-shadow-[0_0_1px_rgba(58,46,54,0.9)]"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <path d="M4 12.5l5 5L20 6.5" />
-                    </svg>
-                  ) : null}
-                </span>
-                {color.colorName}
-                {!color.inStock ? (
-                  <span className="text-xs text-encre/50">(rupture)</span>
-                ) : null}
-              </button>
-            );
-          })}
+      {showColorStep ? (
+        <div className="px-6 pt-7 sm:px-8 sm:pt-8">
+          <StepLabel n={1} tint="bg-lueur">
+            Choisissez la couleur
+          </StepLabel>
+          <ColorSwatches
+            colors={colors}
+            selectedColorId={selectedColor?.id}
+            onSelectColor={onSelectColor}
+            className="mt-3"
+          />
         </div>
-      </div>
+      ) : null}
 
       {/* ── ② Quantity ──────────────────────────────────────────────── */}
       <div className="px-6 pt-6 pb-7 sm:px-8">
-        <StepLabel n={2} tint="bg-crepuscule">
+        <StepLabel n={showColorStep ? 2 : 1} tint="bg-crepuscule">
           Combien en voulez-vous ?
         </StepLabel>
 
@@ -189,7 +150,7 @@ export function DirectOrderForm({
 
       {/* ── ③ Where to deliver ──────────────────────────────────────── */}
       <div ref={detailsRef} className="px-6 pt-7 sm:px-8">
-        <StepLabel n={3} tint="bg-sauge">
+        <StepLabel n={showColorStep ? 3 : 2} tint="bg-sauge">
           Où on vous livre ?
         </StepLabel>
 

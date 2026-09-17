@@ -2656,4 +2656,57 @@ order, a `notified_at` column plus a sweep is the follow-up. Also not built: any
 admin-panel badge, sound, polling or realtime subscription; notifications on
 status changes or low stock; anything customer-facing.
 
-## Status: as the twenty-ninth round, plus two things that are both built, both clean through `tsc`/`eslint`/`next build`, and both still waiting on one external step. (1) Server-side Purchase events through the Meta Conversions API — `lib/meta/capi.ts`, fired from `placeOrder` via `after()`, de-duplicated against the browser pixel on `order-<id>`; the token is confirmed write-capable against the right dataset, but **no event has been sent end to end**, which needs `META_CAPI_ACCESS_TOKEN` in Netlify and a test event code. (2) New-order Telegram notifications — `lib/notify/telegram.ts`, fired from the same `after()` block; every path that can be tested without credentials is verified, but **no real message has been sent**, which needs the client to create the bot (@BotFather, then press Start) and `TELEGRAM_BOT_TOKEN`/`TELEGRAM_CHAT_ID` set in Netlify. The first live order will exercise both at once. Awaiting review before Phase 7
+## Thirty-second round: colour swatches lose their names and move up beside the photo
+
+Her ask, in her words: the colours should not carry names but small pastilles,
+and they should sit near the images so looking is easy. Both done, plus one
+thing she asked for that is deliberately **not** built yet — see below.
+
+The picker was step ① of `DirectOrderForm`, a row of pill buttons each
+carrying a 16px dot and the colour's name, sitting in the order slip well
+below the fold. Since every colour also swaps the photo above, you were
+choosing a colour a screen away from the thing it changed.
+
+Pulled out into `components/site/ColorSwatches.tsx` and rendered by
+`ProductDetail` under the photo and its thumbnails, centred. Swatches are now
+bare 40px circles — no visible label — with a ring + tick for the selected one
+and a struck-through, disabled dot for a colour out of stock.
+
+`DirectOrderForm` keeps the step behind a new `showColorStep` prop (default
+true) because the **ad landing page still uses it**: `ProductLanding` puts the
+form in its own section with no photo beside it, so moving the swatches there
+would have separated them from the lamp rather than joining them. The detail
+page passes `showColorStep={false}` and the two remaining steps renumber
+(quantity becomes ①, delivery ②).
+
+**The name is gone from sight, not from the page**, and that was deliberate:
+it survives as `aria-label`, as `title` on hover, and spelled out under the
+row for the selected colour. A bare dot tells someone who cannot separate the
+colours nothing, and "(rupture)" would have vanished entirely.
+
+**Worth telling her plainly**: `color_hex` is nullable, and a colour without
+one falls back to `#e5d9cf`. The name used to cover for that; now two
+un-hexed colours are two identical beige dots. Akari's six are all set — the
+other lamps were not audited.
+
+Verified in `netlify dev` at desktop and 375px: swatches fit one row on a
+phone, clicking one moves the tick and swaps the photo, the slip no longer
+repeats the step, console clean, `tsc` and `eslint` clean.
+
+**Not built: the bicolour lamp.** She also asked to be able to pick one *or
+two* colours for a single lamp. That is not cosmetic — `order_items`
+.product_color_id is a single NOT NULL FK, so it needs a migration plus the
+admin, the confirmation page and the Telegram message. Blocked on three
+answers only she has: whether bicolour costs more, what photo to show for a
+combination that has never been photographed, and whether every lamp can be
+made that way. Nothing was written against it.
+
+**Local-tooling note, not a site bug**: `netlify build` on Windows fails at
+`next.config.ts`'s `new URL(NEXT_PUBLIC_SUPABASE_URL)` with `Invalid URL`,
+and a plain `npm run build` fails earlier with `supabaseUrl is required`
+(no `.env.local` on this machine — `netlify dev` supplies the env instead).
+Confirmed pre-existing by stashing this round's changes and reproducing the
+identical failure on untouched `master`. The Netlify build itself is
+unaffected.
+
+## Status: as the thirty-second round. The colour picker is now nameless pastilles sitting under the photo on `/boutique/[slug]`, verified on desktop and phone and deployed. The landing pages at `/lampe/[slug]` keep the old in-form step on purpose. Still outstanding from before, both built and both waiting on one external step each: Meta CAPI Purchase events (needs `META_CAPI_ACCESS_TOKEN` in Netlify + a test event code) and Telegram new-order notifications (needs the client to create the bot via @BotFather, press Start, and `TELEGRAM_BOT_TOKEN`/`TELEGRAM_CHAT_ID` set in Netlify). Newly outstanding: the bicolour lamp, blocked on price/photo/scope decisions, and an admin audit that every `color_hex` is filled now that names are hidden. Awaiting review before Phase 7

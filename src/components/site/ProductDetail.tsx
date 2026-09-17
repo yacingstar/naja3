@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { DirectOrderForm } from "@/components/site/DirectOrderForm";
+import { ColorSwatches } from "@/components/site/ColorSwatches";
 import { ProductStage, type StageView } from "@/components/site/ProductStage";
 import { trackViewContent } from "@/lib/analytics";
 import type { DeliveryRate } from "@/lib/deliveryRates";
@@ -130,6 +131,25 @@ export function ProductDetail({
             ))}
           </div>
         ) : null}
+        {/* Colour sits here, under the photo, rather than down in the order
+            slip: you pick a colour by looking at the lamp, and each colour
+            swaps the photo above. Keeping the two a screen apart made you
+            choose blind. The form is told not to repeat the step. */}
+        {colors.length > 0 ? (
+          <div className="mt-7">
+            <p className="text-center font-heading text-base">
+              Choisissez la couleur
+            </p>
+            <ColorSwatches
+              colors={colors}
+              selectedColorId={selectedColor?.id}
+              onSelectColor={selectColor}
+              centered
+              className="mt-3"
+            />
+          </div>
+        ) : null}
+
       </div>
 
       {/* ── Right: everything you decide with ───────────────────────── */}
@@ -169,6 +189,7 @@ export function ProductDetail({
             colors={colors}
             selectedColorId={selectedColor.id}
             onSelectColor={selectColor}
+            showColorStep={false}
             rates={rates}
           />
         ) : (
