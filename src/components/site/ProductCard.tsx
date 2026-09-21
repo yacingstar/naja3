@@ -107,11 +107,24 @@ export function ProductCard({
                     backgroundColor: color.colorHex ?? "#e5d9cf",
                     color: labelColorOn(color.colorHex),
                   }}
-                  className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                  className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium ${
                     color.inStock ? "" : "opacity-40"
                   }`}
                 >
                   {color.colorName}
+                  {/* A bicolour variant shows its second hue as a dot rather than
+                      splitting the chip's fill. The fill is what the name is printed
+                      on, and labelColorOn can only pick a readable ink for ONE hue —
+                      a duo like "Bleu & Blanc" is exactly the case where half the
+                      text would vanish. The dot borders in the chip's own ink, so it
+                      separates from the fill on light and dark chips alike. */}
+                  {color.colorHex2 ? (
+                    <span
+                      aria-hidden
+                      className="h-2.5 w-2.5 shrink-0 rounded-full border border-current"
+                      style={{ backgroundColor: color.colorHex2 }}
+                    />
+                  ) : null}
                 </span>
               ))}
             </div>
