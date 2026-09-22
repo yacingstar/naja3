@@ -485,3 +485,30 @@ html::-webkit-scrollbar {
 @keyframes naja-defile {
   to { transform: translateX(-50%); }
 }
+
+/* Entrées de la page d'accueil. Volontairement en CSS et non en GSAP : une
+   animation JS qui ne se termine pas laisse l'élément dans son état de DÉPART
+   — trois fois de suite, des boutons sont restés invisibles ou minuscules.
+   Ici l'état de repos est l'état final, donc le pire cas est une page qui ne
+   bouge pas. GSAP reste pour ce qu'il fait mieux que tout : le glisser des
+   cartes et les boucles. */
+@keyframes naja-monte {
+  from { transform: translateY(18px); opacity: 0; }
+}
+@keyframes naja-pop {
+  from { transform: scale(.4); }
+}
+@keyframes naja-photo {
+  from { transform: scale(.88); }
+}
+
+/* `backwards` et non `both` : l'état de départ ne s'applique que pendant le
+   délai, et l'état APRÈS l'animation reste l'état normal de l'élément. Rien ne
+   peut rester coincé. */
+.naja-monte { animation: naja-monte .5s cubic-bezier(.2, .8, .2, 1) backwards; }
+.naja-pop   { animation: naja-pop .42s cubic-bezier(.2, .9, .3, 1.6) backwards; }
+.naja-photo { animation: naja-photo .6s cubic-bezier(.2, .9, .3, 1.4) backwards; }
+
+@media (prefers-reduced-motion: reduce) {
+  .naja-monte, .naja-pop, .naja-photo { animation: none; }
+}
