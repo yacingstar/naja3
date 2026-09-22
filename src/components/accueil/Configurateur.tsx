@@ -3,6 +3,7 @@
 import Image from "next/image";
 import type { FeaturedProduct } from "@/lib/products";
 import { LampMark } from "@/components/LampMark";
+import { inkOn } from "@/lib/accueil";
 
 // The hero IS the choice: shape, then coloris, then the price and the button.
 // The old hero showed a lamp and sent you elsewhere to pick one; this one lets
@@ -82,10 +83,13 @@ export function Configurateur({
             en{" "}
             <span
               key={`${p}-${c}`}
-              className="naja-pop inline-block"
+              className="naja-pop inline-block rounded-2xl border-2 px-3 py-0.5"
               style={{
-                color: coloris.colorHex ?? "#e5d9cf",
-                WebkitTextStroke: `2.5px ${nuit ? "#fffdf7" : "#241c21"}`,
+                background: coloris.colorHex ?? "#e5d9cf",
+                // L'encre suit la teinte : noire sur un jaune, crème sur un
+                // bleu nuit. Aucun coloris ne peut devenir illisible.
+                color: inkOn(coloris.colorHex ?? "#e5d9cf"),
+                borderColor: nuit ? "rgba(255,253,247,.35)" : "rgba(36,28,33,.22)",
               }}
             >
               {coloris.colorName.toLowerCase()}

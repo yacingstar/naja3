@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import type { FeaturedProduct } from "@/lib/products";
-import { hue } from "@/lib/accueil";
+import { hue, inkOn } from "@/lib/accueil";
 
 const QUESTIONS = [
   { t: "Elle ira dans quelle pièce ?", r: ["Une chambre", "Un salon", "Un bureau"] },
@@ -176,8 +176,12 @@ export function Test({
                 <p className="mt-0.5 font-heading text-[25px] font-semibold sm:text-3xl">
                   en{" "}
                   <span
-                    className="inline-block"
-                    style={{ color: coloris.colorHex ?? "#e5d9cf", WebkitTextStroke: "2px #241c21" }}
+                    className="inline-block rounded-2xl border-2 px-3 py-0.5"
+                    style={{
+                      background: coloris.colorHex ?? "#e5d9cf",
+                      color: inkOn(coloris.colorHex ?? "#e5d9cf"),
+                      borderColor: "rgba(36,28,33,.22)",
+                    }}
                   >
                     {coloris.colorName.toLowerCase()}
                   </span>
