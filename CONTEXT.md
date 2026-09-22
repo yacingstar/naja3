@@ -2926,3 +2926,42 @@ photos may be published — and those photos are now live on the homepage, so
 this is no longer a pre-launch question. Two handles are blurred. The catalogue
 order is still two swapped `created_at` values. The old homepage components are
 still in the tree as the revert path.
+
+## Thirty-seventh round: the phone opens on a lamp, not on a form
+
+*"La partie téléphone est trop laide quand tu ouvres le site."* She was right,
+and the cause was structural rather than decorative.
+
+The hero stacks the left column then the photo. On a 375×812 screen that first
+screen read: two pills, the title, **seven shape buttons over four rows**,
+**fifteen coloris over three rows**, and the lamp started below the fold. The
+buy button began at **808px of an 812px viewport** — off screen. Someone
+opening a lamp shop was shown a form.
+
+- The hero is a **grid** now. Narrow: title, **lamp**, choices. From `lg`: the
+  lamp returns to the right column and nothing about the desktop changes.
+- Both lists became **one-line horizontal scrollers** (`scrollbar-hidden`,
+  negative margins so the last item is not cut by the page edge). Seven rows
+  saved, and dragging with a thumb is the gesture already in hand.
+- **The trap that cost the layout:** a grid item defaults to `min-width: auto`,
+  so the scrollers did not scroll — they widened their column to **920px** in a
+  375px viewport and pushed the lamp off screen. `min-w-0` on the three grid
+  children is the whole fix.
+- Sizes trimmed (lamp 330→286, gaps 4→3) so **the buy button now sits at 740px,
+  above the fold**.
+
+GSAP, in the register the earlier rounds settled on — interaction and loops
+only, transforms only, and never a resting state that is invisible unless the
+element is decorative and invisible *is* its resting state:
+
+- the lamp **floats** (y, 2.8s, infinite) inside a scene that **drifts on
+  scroll** — two nested elements so the two tweens never fight over `y`;
+- a **ring of the chosen hue expands out of the lamp** on every coloris change;
+- shape and coloris buttons **bounce under the thumb** on tap;
+- five small `LampMark` lamps in brand colours **drift in the background**, each
+  on its own period so they never sync into a pulse. They carry the colour the
+  hero background cannot: that background has to stay pale enough to read text
+  on.
+
+Everything stops under `prefers-reduced-motion`. Verified at 375 and at 1280,
+day and night, with no horizontal page scroll.
