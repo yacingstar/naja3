@@ -124,9 +124,9 @@ export function ProductEditor({
 
   return (
     <div className="pb-28">
-      <div className="grid grid-cols-1 gap-12 lg:grid-cols-2">
-        <section>
-          <h2 className="font-heading text-lg">Détails</h2>
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-2 lg:items-start">
+        <section className="rounded-[1.75rem] border-[3px] border-encre p-5 sm:p-6">
+          <h2 className="font-heading text-xl font-semibold">Détails</h2>
           <div className="mt-4 max-w-lg space-y-4">
             <label className="block">
               <span className="mb-1 block text-sm font-medium text-encre/70">Nom</span>
@@ -178,9 +178,9 @@ export function ProductEditor({
           </div>
         </section>
 
-        <section>
-          <h2 className="font-heading text-lg">Couleurs</h2>
-          <p className="mt-1 text-xs text-encre/50">
+        <section className="rounded-[1.75rem] border-[3px] border-encre p-5 sm:p-6">
+          <h2 className="font-heading text-xl font-semibold">Couleurs</h2>
+          <p className="mt-1 text-[13px] font-medium text-encre/55">
             Les photos s&apos;enregistrent tout de suite. Le reste part avec le bouton
             « Enregistrer ».
           </p>
@@ -199,8 +199,8 @@ export function ProductEditor({
 
       {/* Sticky so the save button is reachable without scrolling back up —
           a product with several colours makes for a long page. */}
-      <div className="fixed inset-x-0 bottom-0 z-30 border-t border-encre/10 bg-papier/95 backdrop-blur">
-        <div className="mx-auto flex max-w-5xl flex-wrap items-center gap-4 px-6 py-4">
+      <div className="fixed inset-x-0 bottom-0 z-30 border-t-2 border-encre/15 bg-papier/95 backdrop-blur">
+        <div className="mx-auto flex max-w-5xl flex-wrap items-center gap-x-4 gap-y-2 px-5 py-3.5 sm:px-8">
           <AdminButton
             onClick={handleSave}
             pending={isPending}

@@ -22,13 +22,15 @@ export default async function ProduitDetailPage({
 
   return (
     <div>
-      <Link href="/admin/produits" className="text-sm text-encre/60 hover:text-encre">
+      <Link href="/admin/produits" className="text-sm font-semibold text-encre/60 transition hover:text-encre">
         ← Tous les produits
       </Link>
 
-      <h1 className="mt-4 font-heading text-2xl">{product.name}</h1>
+      <h1 className="mt-4 font-heading text-[38px] leading-none font-bold tracking-[-.03em] sm:text-[44px]">
+        {product.name}
+      </h1>
 
-      <div className="mt-8">
+      <div className="mt-7">
         <ProductEditor product={product} colors={colors} />
       </div>
     </div>

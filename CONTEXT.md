@@ -2880,3 +2880,14 @@ else.
 
 `getAdminProducts` gained `photoUrl` and `colors`; nothing else in the data
 layer moved, and no Server Action was touched.
+
+**The product editor** got the same treatment — Détails and Couleurs become
+bordered cards, the product name is set at the size the other admin titles use,
+the sticky save bar takes a thicker rule. No draft logic, no Server Action and
+no upload path was touched.
+
+**`HuePair` has now been seen working**, which the thirty-third round's note
+said had never happened. Ticking "Bicolore" on Akari's "Bleu Nuit" splits
+"Teinte" into "Abat-jour" and "Pied", the preview lamp redraws with a navy
+shade over a white base, and the bar correctly reports "Modifications non
+enregistrées". The tick was undone and nothing was saved.
