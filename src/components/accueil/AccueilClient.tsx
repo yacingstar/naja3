@@ -5,6 +5,7 @@ import type { FeaturedProduct } from "@/lib/products";
 import { inkOn, pale } from "@/lib/accueil";
 import { Configurateur } from "@/components/accueil/Configurateur";
 import { Etapes } from "@/components/accueil/Etapes";
+import { Faq } from "@/components/site/Faq";
 import { FondDoux } from "@/components/accueil/FondDoux";
 import { Retours } from "@/components/accueil/Retours";
 import { Test } from "@/components/accueil/Test";
@@ -91,6 +92,10 @@ export function AccueilClient({ produits }: { produits: FeaturedProduct[] }) {
       />
 
       <Retours encre={encre} encreDouce={encreDouce} bord={bord} />
+
+        <div data-apparait>
+          <Faq />
+        </div>
 
         <div
           data-apparait

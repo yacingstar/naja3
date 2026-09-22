@@ -73,7 +73,7 @@ export function Header() {
           <Link href="/boutique" className={NAV_PILL}>
             Boutique
           </Link>
-          <Link href="/#comment-c-est-fait" className={`hidden sm:inline-flex ${NAV_PILL}`}>
+          <Link href="/#comment" className={`hidden sm:inline-flex ${NAV_PILL}`}>
             Comment c&apos;est fait
           </Link>
           <Link href="/#faq" className={`hidden sm:inline-flex ${NAV_PILL}`}>
