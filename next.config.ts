@@ -15,17 +15,17 @@ const supabaseHostname = process.env.NEXT_PUBLIC_SUPABASE_URL
   : "*.supabase.co";
 
 const nextConfig: NextConfig = {
-  // /admin is just a doorway to the orders list. As a `redirect()` inside a
-  // Server Component it cost a full function invocation — and on a panel this
-  // quiet that invocation is almost always a cold start, so the entry point
-  // everybody bookmarks paid two cold boots to show one page.
+  // /admin used to be nothing but a doorway to the orders list, and the
+  // redirect lived here rather than in a Server Component so it cost no
+  // function invocation at all — on a panel this quiet, that invocation was
+  // almost always a cold start, so the bookmarked entry point paid two cold
+  // boots to show one page.
   //
-  // Declared here instead, it resolves at step 2 of Next's routing order,
-  // before the Proxy even runs (see the Execution order table in the proxy
-  // docs). No edge hop, no function, no Supabase call — just a 308.
-  async redirects() {
-    return [{ source: "/admin", destination: "/admin/commandes", permanent: false }];
-  },
+  // It now has a page of its own (src/app/admin/(espace)/page.tsx): the counts
+  // that decide what to do first, the last six orders, and whatever is broken
+  // in the catalogue. That is worth one invocation. Putting the redirect back
+  // is a two-line change if landing straight on the orders is preferred.
+
   // Testing on a real phone means loading the dev server over the LAN IP
   // (http://192.168.x.x:3000), and `next dev` treats any origin other than
   // the one it booted on as cross-origin — it answers 403 for everything

@@ -13,18 +13,27 @@ export default async function CommandesPage({
   const statusParam = typeof params.status === "string" ? params.status : undefined;
   const status = statusParam && isOrderStatus(statusParam) ? statusParam : undefined;
 
-  const orders = await getOrders(status);
+  // Une seule lecture, filtrée ensuite en mémoire, au lieu d'une requête par
+  // statut : c'est ce qui permet d'écrire le nombre sur chaque onglet. Sans ce
+  // nombre, il fallait cliquer sur « expédiée » pour découvrir qu'il n'y avait
+  // rien dedans. Naïf mais honnête à cette échelle — voir la note de
+  // /admin/page.tsx.
+  const toutes = await getOrders();
+  const orders = status ? toutes.filter((o) => o.status === status) : toutes;
 
   return (
     <div>
-      <h1 className="font-heading text-2xl">Commandes</h1>
+      <h1 className="font-heading text-[40px] leading-[.95] font-bold tracking-[-.03em] sm:text-[48px]">
+        Commandes
+      </h1>
 
       <div className="mt-6 flex flex-wrap gap-2">
-        <FilterTab label="Toutes" href="/admin/commandes" active={!status} />
+        <FilterTab label="Toutes" nombre={toutes.length} href="/admin/commandes" active={!status} />
         {ORDER_STATUSES.map((s) => (
           <FilterTab
             key={s}
             label={s}
+            nombre={toutes.filter((o) => o.status === s).length}
             href={`/admin/commandes?status=${encodeURIComponent(s)}`}
             active={status === s}
           />
@@ -32,31 +41,15 @@ export default async function CommandesPage({
       </div>
 
       {orders.length === 0 ? (
-        <p className="mt-10 text-encre/60">Aucune commande pour le moment.</p>
+        <p className="mt-10 font-medium text-encre/60">
+          {status ? `Aucune commande « ${status} ».` : "Aucune commande pour le moment."}
+        </p>
       ) : (
-        // The date column pushed this to seven columns, past what fits on a
-        // phone — the table scrolls sideways inside its own box now instead of
-        // dragging the whole page with it.
-        <div className="mt-8 overflow-x-auto">
-          <table className="w-full border-collapse text-sm">
-            <thead>
-              <tr className="border-b border-encre/10 text-left text-encre/50">
-                <th className="py-2 pr-4 font-medium">N°</th>
-                <th className="py-2 pr-4 font-medium">Date</th>
-                <th className="py-2 pr-4 font-medium">Client</th>
-                <th className="py-2 pr-4 font-medium">Wilaya</th>
-                <th className="py-2 pr-4 font-medium">Total</th>
-                <th className="py-2 pr-4 font-medium">Statut</th>
-                <th className="py-2 pr-4"><span className="sr-only">Ouvrir</span></th>
-              </tr>
-            </thead>
-            <tbody>
-              {orders.map((order) => (
-                <OrderRow key={order.id} order={order} />
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <ul className="mt-6 space-y-2">
+          {orders.map((order) => (
+            <OrderRow key={order.id} order={order} />
+          ))}
+        </ul>
       )}
     </div>
   );
@@ -64,23 +57,33 @@ export default async function CommandesPage({
 
 function FilterTab({
   label,
+  nombre,
   href,
   active,
 }: {
   label: string;
+  nombre: number;
   href: string;
   active: boolean;
 }) {
   return (
     <Link
       href={href}
-      className={`rounded-full border px-4 py-1.5 text-sm capitalize transition ${
+      aria-current={active ? "page" : undefined}
+      className={`inline-flex items-center gap-2 rounded-full border-2 px-4 py-1.5 text-sm font-semibold capitalize transition ${
         active
           ? "border-encre bg-encre text-papier"
-          : "border-encre/20 hover:border-encre"
+          : "border-encre/15 text-encre/70 hover:border-encre/40 hover:text-encre"
       }`}
     >
       {label}
+      <span
+        className={`rounded-full px-1.5 py-px text-xs ${
+          active ? "bg-papier/20" : "bg-encre/8"
+        }`}
+      >
+        {nombre}
+      </span>
     </Link>
   );
 }

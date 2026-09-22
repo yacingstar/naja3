@@ -2837,3 +2837,46 @@ every other product, added 14 Sept, restricted 17 Sept — and should be
 optimised before any of this goes live. The twelve customers have not been
 asked whether their photos may be published; two handles are blurred. The old
 homepage components are deliberately left in place as the revert path.
+
+## Thirty-fifth round: nomura's photos, and the admin gets a face
+
+**The photos are compressed but NOT uploaded.** Her words: *"avant ça je
+voudrais designer un peu le côté admin"*. The fifteen cutouts are raw PNGs
+(15.94 MB total, 889–1346 KB each, 1199×1312) against 43–96 KB WebP for every
+other product — the August optimisation pass never reached them, they went up
+on 14 Sept, and the project was restricted on the 17th. Re-encoded to WebP
+q=82 / alphaQuality 90, capped at 1200px: **15.94 MB → 1.35 MB, −92%**, with no
+visible difference even at 3× on the shade's gradient. Regenerating takes two
+minutes; the step that was NOT taken is the one that writes to Supabase.
+
+### The admin
+
+Restyled in the site's register, but calmer — it is a tool, not a shop window.
+Thick outlines and flat colour on the things you act on, plain type everywhere
+else.
+
+- **`/admin` has a page now.** It never did: `next.config.ts` redirected it
+  straight to `/admin/commandes` (I first read the missing `page.tsx` as a
+  404-after-login and said so — that was wrong, the redirect was there all
+  along). The redirect is removed and the route answers with the counts that
+  decide what to do first (à confirmer, à expédier, ce mois-ci, encaissé ce
+  mois — livrées only, so the figure means money actually taken), the last six
+  orders, an alert for any product with no coloris, and the three shortcuts.
+  Putting the redirect back is a two-line change.
+- **Orders are rows, not a table.** Seven columns scrolled sideways on a phone,
+  which is where orders get handled. The filter tabs carry their count, so you
+  no longer click "expédiée" to discover it is empty.
+- **The order page** puts the status badge beside the number, splits client and
+  basket into two bordered cards, renames the last line "À encaisser", and
+  **makes the phone a `tel:` link** — that is the one action the page exists
+  for.
+- **Products** show their lamp, price, coloris marks (faded when out of stock)
+  and the rupture count, instead of a name and a number.
+- `StatusBadge` follows the order's life: yellow arriving, teal confirmed, blue
+  shipped, solid black delivered, struck through when cancelled. The word is
+  always written — colour never carries the meaning alone.
+- The header is sticky and splits in two below `md`, because "Se déconnecter"
+  was being squeezed onto two lines beside the tabs.
+
+`getAdminProducts` gained `photoUrl` and `colors`; nothing else in the data
+layer moved, and no Server Action was touched.

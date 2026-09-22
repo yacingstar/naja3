@@ -1,19 +1,20 @@
-"use client";
-
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { StatusBadge } from "@/components/admin/StatusBadge";
 import { formatDateTimeShort, formatPrice } from "@/lib/format";
-import type { OrderStatus } from "@/lib/orders";
+import type { OrderStatus } from "@/lib/orderStatus";
 
-// Opening an order used to mean clicking the "#12" — the one bit of the row a
-// non-technical person would never guess was the button. The whole row is the
-// target now, with a hover highlight so it looks clickable and an explicit
-// "Ouvrir →" at the end so nobody has to guess at all.
+// Une ligne de commande, et non plus un `<tr>`.
 //
-// The real <Link> stays: it is what makes this keyboard-reachable and
-// right-clickable / open-in-new-tab. The row click is an addition on top, not
-// a replacement for it.
+// Le tableau tenait sept colonnes et défilait latéralement sur un téléphone —
+// or c'est depuis un téléphone que les commandes se traitent. Ici la ligne se
+// replie toute seule : empilée sur un écran étroit, alignée en colonnes dès
+// qu'il y a la place.
+//
+// C'est aussi devenu un simple lien, sans `router.push` sur la ligne entière.
+// L'ancien composant plaçait un `onClick` sur le `<tr>` et devait annuler la
+// propagation du lien interne pour ne pas naviguer deux fois. Un seul lien qui
+// couvre toute la ligne fait la même chose, en restant ouvrable dans un nouvel
+// onglet et atteignable au clavier sans rien de spécial.
 export function OrderRow({
   order,
 }: {
@@ -27,40 +28,37 @@ export function OrderRow({
     status: OrderStatus;
   };
 }) {
-  const router = useRouter();
-  const href = `/admin/commandes/${order.id}`;
-
   return (
-    <tr
-      onClick={() => router.push(href)}
-      className="cursor-pointer border-b border-encre/5 transition-colors hover:bg-lueur/10"
-    >
-      <td className="py-3 pr-4">
-        <Link
-          href={href}
-          // The row already navigates; without this the click would fire twice.
-          onClick={(e) => e.stopPropagation()}
-          className="font-medium hover:text-lueur"
-        >
-          #{order.id}
-        </Link>
-      </td>
-      <td className="py-3 pr-4 whitespace-nowrap text-encre/70">
-        <time dateTime={order.createdAt}>{formatDateTimeShort(order.createdAt)}</time>
-      </td>
-      <td className="py-3 pr-4">
-        {order.customerFirstName} {order.customerLastName}
-      </td>
-      <td className="py-3 pr-4">{order.wilaya}</td>
-      <td className="py-3 pr-4">{formatPrice(order.orderTotal)}</td>
-      <td className="py-3 pr-4">
-        <StatusBadge status={order.status} />
-      </td>
-      <td className="py-3 pr-4 text-right">
-        <span aria-hidden className="text-sm font-medium whitespace-nowrap text-encre/40">
-          Ouvrir →
+    <li>
+      <Link
+        href={`/admin/commandes/${order.id}`}
+        className="grid grid-cols-[auto_1fr_auto] items-center gap-x-4 gap-y-1.5 rounded-2xl border-2 border-encre/12 px-4 py-3 transition hover:border-encre/40 hover:bg-encre/[.03] sm:grid-cols-[3.5rem_1fr_8rem_7rem_7.5rem]"
+      >
+        <span className="font-heading text-base font-semibold">#{order.id}</span>
+
+        <span className="min-w-0 truncate font-medium">
+          {order.customerFirstName} {order.customerLastName}
+          <span className="text-encre/55"> · {order.wilaya}</span>
         </span>
-      </td>
-    </tr>
+
+        {/* Le statut passe en tête de ligne sur téléphone (3e colonne de la
+            grille étroite) et reprend sa place à droite dès qu'il y a la
+            largeur. */}
+        <span className="justify-self-end sm:order-last">
+          <StatusBadge status={order.status} />
+        </span>
+
+        <time
+          dateTime={order.createdAt}
+          className="col-span-2 text-[13px] font-medium whitespace-nowrap text-encre/50 sm:col-span-1"
+        >
+          {formatDateTimeShort(order.createdAt)}
+        </time>
+
+        <span className="justify-self-end font-heading text-base whitespace-nowrap sm:justify-self-start">
+          {formatPrice(order.orderTotal)}
+        </span>
+      </Link>
+    </li>
   );
 }

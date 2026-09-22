@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { AdminNav } from "@/components/admin/AdminNav";
 import { SignOutButton } from "@/components/admin/SignOutButton";
 import { getAdminUser } from "@/lib/adminAuth";
 
@@ -14,26 +15,27 @@ export default async function EspaceLayout({ children }: LayoutProps<"/admin">) 
 
   return (
     <div className="min-h-screen bg-papier text-encre">
-      <header className="border-b border-encre/10 px-6 py-4">
-        <div className="mx-auto flex max-w-5xl items-center justify-between">
-          <Link href="/admin" className="font-heading text-xl">
-            Naja — gestion
+      {/* Collante : sur un téléphone, la liste des commandes est longue et
+          remonter en haut pour changer d'onglet était une corvée. */}
+      <header className="sticky top-0 z-30 border-b-2 border-encre/10 bg-papier/95 px-5 py-3 backdrop-blur sm:px-8">
+        {/* Sur un téléphone la barre se coupe en deux : le logo et la
+            déconnexion sur la première ligne, les onglets sur toute la largeur
+            en dessous. Sans ça, « Se déconnecter » se retrouvait coincé à
+            droite des onglets et s'écrivait sur deux lignes. */}
+        <div className="mx-auto flex max-w-5xl flex-wrap items-center gap-x-3 gap-y-2.5">
+          <Link href="/admin" className="mr-auto flex items-baseline gap-2">
+            <span className="font-heading text-[26px] leading-none font-bold tracking-[-.02em]">
+              naja
+            </span>
+            <span className="rounded-full bg-encre px-2.5 py-1 font-heading text-[11px] text-papier">
+              gestion
+            </span>
           </Link>
-          <nav className="flex items-center gap-6 text-sm font-medium">
-            <Link href="/admin/commandes" className="hover:text-lueur">
-              Commandes
-            </Link>
-            <Link href="/admin/produits" className="hover:text-lueur">
-              Produits
-            </Link>
-            <Link href="/admin/livraison" className="hover:text-lueur">
-              Livraison
-            </Link>
-            <SignOutButton />
-          </nav>
+          <AdminNav className="order-last w-full md:order-none md:w-auto" />
+          <SignOutButton />
         </div>
       </header>
-      <main className="mx-auto max-w-5xl px-6 py-10">{children}</main>
+      <main className="mx-auto max-w-5xl px-5 py-8 sm:px-8 sm:py-10">{children}</main>
     </div>
   );
 }

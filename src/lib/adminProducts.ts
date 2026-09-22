@@ -11,24 +11,53 @@ export type AdminProductListItem = {
   name: string;
   price: number;
   colorCount: number;
+
+  // La liste ne montrait qu'un nom, un prix et un nombre. Reconnaître une
+  // veilleuse par son nom seul demande de se souvenir lequel est lequel ; la
+  // photo et les teintes se reconnaissent d'un coup d'œil, et une rupture de
+  // stock se voit sans ouvrir la fiche.
+  photoUrl: string | null;
+  colors: Array<{ id: number; hex: string | null; hex2: string | null; inStock: boolean }>;
 };
 
 export async function getAdminProducts(): Promise<AdminProductListItem[]> {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("products")
-    .select("id, slug, name, price, product_colors ( id )")
+    .select(
+      "id, slug, name, price, product_colors ( id, color_hex, color_hex_2, in_stock, cutout_photo_url, product_photos ( url, position ) )",
+    )
     .order("created_at", { ascending: false });
 
   if (error || !data) return [];
 
-  return data.map((product) => ({
-    id: product.id,
-    slug: product.slug,
-    name: product.name,
-    price: product.price,
-    colorCount: (product.product_colors ?? []).length,
-  }));
+  return data.map((product) => {
+    const colors = product.product_colors ?? [];
+    // Même règle que le catalogue public : le détourage d'abord, sinon la
+    // première photo de galerie du premier coloris qui en a une.
+    const photoUrl =
+      colors.find((c) => c.cutout_photo_url)?.cutout_photo_url ??
+      colors
+        .flatMap((c) => c.product_photos ?? [])
+        .slice()
+        .sort((a, b) => a.position - b.position)[0]?.url ??
+      null;
+
+    return {
+      id: product.id,
+      slug: product.slug,
+      name: product.name,
+      price: product.price,
+      colorCount: colors.length,
+      photoUrl,
+      colors: colors.map((c) => ({
+        id: c.id,
+        hex: c.color_hex,
+        hex2: c.color_hex_2,
+        inStock: c.in_stock,
+      })),
+    };
+  });
 }
 
 export type AdminProduct = {

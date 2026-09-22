@@ -15,7 +15,7 @@ export default function AdminLoading() {
     <div aria-busy="true" aria-live="polite">
       <span className="sr-only">Chargement…</span>
 
-      <div className="h-8 w-48 animate-pulse rounded-lg bg-encre/10" />
+      <div className="h-11 w-56 animate-pulse rounded-xl bg-encre/10" />
 
       {/* Stands in for the status filter tabs on the orders screen. */}
       <div className="mt-6 flex flex-wrap gap-2">
@@ -28,14 +28,14 @@ export default function AdminLoading() {
         ))}
       </div>
 
-      <div className="mt-8 space-y-px">
-        {/* Header rule, then rows that fade out down the page so the block
-            reads as unfinished rather than as real content. */}
-        <div className="h-9 w-full animate-pulse rounded-t-lg bg-encre/[0.07]" />
+      {/* Des lignes cerclées comme celles qu'elles remplacent, qui s'effacent
+          vers le bas pour que le bloc se lise comme inachevé et non comme du
+          vrai contenu. */}
+      <div className="mt-6 space-y-2">
         {Array.from({ length: 6 }).map((_, i) => (
           <div
             key={i}
-            className="flex animate-pulse items-center gap-4 border-b border-encre/5 py-4"
+            className="flex animate-pulse items-center gap-4 rounded-2xl border-2 border-encre/10 px-4 py-4"
             style={{ opacity: 1 - i * 0.13 }}
           >
             <div className="h-4 w-10 rounded bg-encre/10" />

@@ -25,6 +25,7 @@ export function SignOutButton() {
       onClick={handleSignOut}
       pending={isPending}
       pendingLabel="Déconnexion…"
+      className="shrink-0 whitespace-nowrap"
     >
       Se déconnecter
     </AdminButton>

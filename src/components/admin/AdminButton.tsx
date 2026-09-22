@@ -17,9 +17,9 @@ import type { ButtonHTMLAttributes, ReactNode } from "react";
 type Variant = "primary" | "secondary" | "danger" | "ghost";
 
 const VARIANTS: Record<Variant, string> = {
-  primary: "bg-lueur text-encre shadow-sm hover:bg-lueur/90",
-  secondary: "border border-encre/20 text-encre hover:border-encre hover:bg-encre/5",
-  danger: "border border-red-300 text-red-700 hover:bg-red-50 hover:border-red-500",
+  primary: "bg-encre text-papier hover:bg-encre/90",
+  secondary: "border-2 border-encre/20 text-encre hover:border-encre hover:bg-encre/5",
+  danger: "border-2 border-red-300 text-red-700 hover:bg-red-50 hover:border-red-500",
   ghost: "text-encre/50 hover:text-encre hover:bg-encre/5",
 };
 
@@ -39,7 +39,7 @@ export function AdminButton({
   pendingLabel?: string;
   size?: "sm" | "md";
 } & ButtonHTMLAttributes<HTMLButtonElement>) {
-  const sizing = size === "sm" ? "px-3.5 py-1.5 text-xs" : "px-6 py-2.5 text-sm";
+  const sizing = size === "sm" ? "px-3.5 py-1.5 text-xs" : "px-6 py-2.5 text-sm font-semibold";
 
   return (
     <button
