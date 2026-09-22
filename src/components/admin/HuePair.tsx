@@ -1,6 +1,6 @@
 "use client";
 
-import { swatchStyle } from "@/lib/swatch";
+import { LampMark } from "@/components/LampMark";
 
 // The colour controls for one variant: a hue, an optional second hue that
 // makes it bicolour, and a live preview of the swatch the customer will see.
@@ -9,6 +9,10 @@ import { swatchStyle } from "@/lib/swatch";
 // customer combines two colours". That is why it is a single row here: the
 // duo keeps its own name, its own photos and its own in-stock toggle, and an
 // order records it exactly like any plain colour.
+//
+// The two fields are labelled "Abat-jour" and "Pied" once the box is ticked,
+// not "hue 1" and "hue 2": the swatch draws a lamp, so which field is which
+// has a visible consequence and the form should say it outright.
 export function HuePair({
   hex,
   hex2,
@@ -26,7 +30,9 @@ export function HuePair({
   return (
     <>
       <label className="block">
-        <span className="mb-1 block text-xs font-medium text-encre/70">Teinte</span>
+        <span className="mb-1 block text-xs font-medium text-encre/70">
+          {bicolour ? "Abat-jour" : "Teinte"}
+        </span>
         <input
           type="color"
           value={hex}
@@ -35,24 +41,9 @@ export function HuePair({
         />
       </label>
 
-      <label className="flex items-center gap-2 pb-2 text-sm" htmlFor={`${idPrefix}-bicolore`}>
-        <input
-          id={`${idPrefix}-bicolore`}
-          type="checkbox"
-          checked={bicolour}
-          // Unchecking clears the second hue rather than remembering it: the
-          // stored value is what the storefront reads, so a hidden leftover
-          // would keep the swatch split.
-          onChange={(e) =>
-            onChange({ colorHex: hex, colorHex2: e.target.checked ? "#ffffff" : null })
-          }
-        />
-        Bicolore
-      </label>
-
       {bicolour ? (
         <label className="block">
-          <span className="mb-1 block text-xs font-medium text-encre/70">2ᵉ teinte</span>
+          <span className="mb-1 block text-xs font-medium text-encre/70">Pied</span>
           <input
             type="color"
             value={hex2}
@@ -62,13 +53,26 @@ export function HuePair({
         </label>
       ) : null}
 
+      <label className="flex items-center gap-2 pb-2 text-sm" htmlFor={`${idPrefix}-bicolore`}>
+        <input
+          id={`${idPrefix}-bicolore`}
+          type="checkbox"
+          checked={bicolour}
+          // Unchecking clears the second hue rather than remembering it: the
+          // stored value is what the storefront reads, so a hidden leftover
+          // would keep the swatch two-toned.
+          onChange={(e) =>
+            onChange({ colorHex: hex, colorHex2: e.target.checked ? "#ffffff" : null })
+          }
+        />
+        Bicolore
+      </label>
+
       <div className="pb-1">
         <span className="mb-1 block text-xs font-medium text-encre/70">Aperçu</span>
-        <span
-          aria-hidden
-          className="block h-10 w-10 rounded-full border border-encre/20"
-          style={swatchStyle(hex, hex2)}
-        />
+        <span className="flex h-11 w-11 items-center justify-center rounded-full border border-encre/15 bg-papier">
+          <LampMark hex={hex} hex2={hex2} className="h-8 w-8" />
+        </span>
       </div>
     </>
   );

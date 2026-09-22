@@ -1,17 +1,17 @@
 import type { CSSProperties } from "react";
 
-// One definition of how a colour is painted, shared by the storefront swatch
-// and the admin's preview of it. Kept in a single place on purpose: the whole
-// value of the admin preview is that it is the same pixels the customer gets,
-// and two copies of this would drift the first time either is tweaked.
+// How a colour is painted where the mark is too small to be a drawn lamp:
+// the 14px dot beside a name on the ad landing page, and the second-hue dot on
+// a catalogue card. The picker itself draws a real lamp instead — see
+// components/LampMark.tsx — and that is the only place with room for one.
 //
-// A plain colour is a flat fill. A bicolour variant is split on the diagonal,
-// first hue top-left, second bottom-right — hard-edged rather than blended,
-// because a gradient would read as a third colour that the lamp does not have.
+// A duo splits top / bottom rather than on the diagonal, so it agrees with the
+// lamp: first hue above, second below. Hard-edged, never blended — a gradient
+// would read as a third colour the lamp does not have.
 export function swatchStyle(hex: string | null, hex2: string | null): CSSProperties {
   // Falls back to the same beige the picker shows for a colour whose hex was
   // never filled in — see the thirty-second round in CONTEXT.md.
   const base = hex ?? "#e5d9cf";
   if (!hex2) return { backgroundColor: base };
-  return { backgroundImage: `linear-gradient(135deg, ${base} 0 50%, ${hex2} 50% 100%)` };
+  return { backgroundImage: `linear-gradient(to bottom, ${base} 0 50%, ${hex2} 50% 100%)` };
 }

@@ -1,17 +1,21 @@
 "use client";
 
 import type { ProductColorDetail } from "@/lib/products";
-import { swatchStyle } from "@/lib/swatch";
+import { LampMark } from "@/components/LampMark";
 
 // The colour picker, pulled out of DirectOrderForm so the detail page can
 // render it up beside the photo instead — the client's point being that you
 // pick a colour by looking at the lamp, so the two belong next to each other.
 //
-// Swatches carry no visible name any more, also at her request. The name is
-// still reachable three ways, because a bare dot is not self-explanatory:
-// `aria-label` for screen readers, `title` on hover, and the selected one
-// spelled out underneath. Losing all three would make the picker unusable
-// for anyone who cannot distinguish the colours.
+// Each swatch draws a little lamp rather than a coloured disc, which is what
+// lets a duo say where its two hues go: shade above, base below. The disc it
+// replaces split on the diagonal and meant nothing.
+//
+// Swatches carry no visible name, at her request. The name is still reachable
+// three ways, because a bare mark is not self-explanatory: `aria-label` for
+// screen readers, `title` on hover, and the selected one spelled out
+// underneath. Losing all three would make the picker unusable for anyone who
+// cannot distinguish the colours.
 export function ColorSwatches({
   colors,
   selectedColorId,
@@ -54,40 +58,28 @@ export function ColorSwatches({
               title={label}
               disabled={!color.inStock}
               onClick={() => onSelectColor(color.id)}
-              // The ring sits outside the swatch so the colour itself is never
-              // covered by its own selected state.
-              className={`relative h-10 w-10 rounded-full border transition ${
+              // The ring sits outside the swatch so the lamp is never covered
+              // by its own selected state. There is deliberately no tick any
+              // more: on a duo with a white half it disappeared into the
+              // colour it was meant to mark.
+              className={`relative flex h-11 w-11 items-center justify-center rounded-full border bg-papier transition duration-200 ease-out ${
                 isSelected
-                  ? "border-encre/20 ring-2 ring-encre ring-offset-2 ring-offset-papier"
-                  : "border-encre/20"
+                  ? "scale-105 border-encre/20 ring-2 ring-encre ring-offset-2 ring-offset-papier"
+                  : "border-encre/15"
               } ${
                 color.inStock
-                  ? "hover:ring-2 hover:ring-encre/30 hover:ring-offset-2 hover:ring-offset-papier"
+                  ? "hover:scale-105 hover:border-encre/40 active:scale-95"
                   : "cursor-not-allowed opacity-40"
               }`}
-              style={swatchStyle(color.colorHex, color.colorHex2)}
             >
-              {isSelected ? (
-                <svg
-                  viewBox="0 0 24 24"
-                  aria-hidden
-                  className="absolute inset-0 m-auto h-5 w-5 text-papier drop-shadow-[0_0_1.5px_rgba(58,46,54,0.95)]"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="3.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M4 12.5l5 5L20 6.5" />
-                </svg>
-              ) : null}
+              <LampMark hex={color.colorHex} hex2={color.colorHex2} className="h-8 w-8" />
 
-              {/* Out of stock reads as a struck-through dot, so it is not
+              {/* Out of stock reads as a struck-through mark, so it is not
                   carried by the faded opacity alone. */}
               {!color.inStock ? (
                 <span
                   aria-hidden
-                  className="absolute inset-0 m-auto h-[1.5px] w-7 rotate-45 rounded-full bg-encre/70"
+                  className="absolute inset-0 m-auto h-[1.5px] w-8 rotate-45 rounded-full bg-encre/70"
                 />
               ) : null}
             </button>
@@ -96,7 +88,9 @@ export function ColorSwatches({
       </div>
 
       {selectedColor ? (
-        <p className={`mt-2.5 text-sm text-encre/60 ${centered ? "text-center" : ""}`}>
+        <p
+          className={`mt-2.5 text-sm text-encre/60 ${centered ? "text-center" : ""}`}
+        >
           {selectedColor.colorName}
           {!selectedColor.inStock ? " — rupture" : ""}
         </p>
