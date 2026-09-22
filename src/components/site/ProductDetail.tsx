@@ -2,10 +2,12 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { DirectOrderForm } from "@/components/site/DirectOrderForm";
 import { ColorSwatches } from "@/components/site/ColorSwatches";
 import { ProductStage, type StageView } from "@/components/site/ProductStage";
+import { useReveal } from "@/components/accueil/useReveal";
+import { inkOn, pale } from "@/lib/accueil";
 import { trackViewContent } from "@/lib/analytics";
 import type { DeliveryRate } from "@/lib/deliveryRates";
 import { formatPrice } from "@/lib/format";
@@ -23,10 +25,14 @@ type ProductSummary = {
 // duplication: a customer landing straight on a product page from a
 // shared link never sees the homepage, and "do I pay now or on delivery?"
 // is the question that decides whether they fill the order form at all.
+//
+// Drawn as coloured pills now, in the register of the new homepage and shop,
+// and moved ABOVE the form: these three lines answer the objections that stop
+// somebody filling it in, so they have to be read before it, not after.
 const REASSURANCE = [
-  "Paiement à la livraison, partout en Algérie",
-  "Imprimée à la commande, rien n'est fait en série",
-  "Emballée à la main avant l'envoi",
+  { texte: "Paiement à la livraison", fond: "#ffd166" },
+  { texte: "Imprimée à la commande", fond: "#8ad4c1" },
+  { texte: "Emballée à la main", fond: "#ff9ec7" },
 ];
 
 // One client component owns the whole two-column layout, rather than a
@@ -50,6 +56,12 @@ export function ProductDetail({
 }) {
   const [selectedColorId, setSelectedColorId] = useState(colors[0]?.id);
   const [photoIndex, setPhotoIndex] = useState(0);
+  const zone = useRef<HTMLDivElement>(null);
+
+  // Seuls les blocs de la colonne de droite sont marqués : la colonne de
+  // gauche est en `sticky`, et une transformation GSAP sur un élément collant
+  // le décroche de son conteneur.
+  useReveal(zone, "[data-apparait]");
 
   // Colors come pre-sorted in-stock-first (see getProductBySlug), so the
   // default selection is always something a customer can actually buy.
@@ -97,22 +109,34 @@ export function ProductDetail({
     trackViewContent({ id: product.slug, name: product.name, value: product.price });
   }, [product.slug, product.name, product.price]);
 
+  // La teinte choisie déborde sur le cadre de la photo, comme sur l'accueil :
+  // la page prend la couleur de la lampe qu'on est en train de regarder.
+  const teinte = pale(selectedColor?.colorHex ?? null);
+
   return (
-    <div className="grid grid-cols-1 gap-10 lg:grid-cols-2 lg:items-start lg:gap-16">
+    <div ref={zone} className="grid grid-cols-1 gap-10 lg:grid-cols-2 lg:items-start lg:gap-16">
       {/* ── Left: the photo ─────────────────────────────────────────── */}
       <div className="lg:sticky lg:top-28">
-        <div className="mx-auto w-full max-w-lg">
-          <ProductStage
-            view={view}
-            alt={
-              selectedColor
-                ? `${product.name} — ${selectedColor.colorName}`
-                : product.name
-            }
-            // Capped at max-w-lg (512px) on desktop; full column width
-            // below that, since the grid collapses to one column.
-            sizes="(min-width: 640px) 512px, 100vw"
-          />
+        <div
+          className="mx-auto w-full max-w-lg rounded-[2.5rem] border-4 border-encre p-3 transition-colors duration-700 sm:p-4"
+          style={{ background: teinte }}
+        >
+          {/* Keyed sur le coloris : changer de couleur remonte le bloc, donc
+              l'animation d'entrée se rejoue. La photo « arrive » au lieu de se
+              substituer silencieusement. */}
+          <div key={selectedColor?.id ?? "vide"} className="naja-photo">
+            <ProductStage
+              view={view}
+              alt={
+                selectedColor
+                  ? `${product.name} — ${selectedColor.colorName}`
+                  : product.name
+              }
+              // Capped at max-w-lg (512px) on desktop; full column width
+              // below that, since the grid collapses to one column.
+              sizes="(min-width: 640px) 512px, 100vw"
+            />
+          </div>
         </div>
 
         {views.length > 1 ? (
@@ -124,11 +148,12 @@ export function ProductDetail({
                 onClick={() => setPhotoIndex(index)}
                 aria-label={v.kind === "cutout" ? "La lampe seule" : `Photo ${index}`}
                 aria-current={index === photoIndex}
-                className={`h-16 w-16 overflow-hidden rounded-2xl border-2 bg-papier transition ${
+                className={`naja-pop h-16 w-16 overflow-hidden rounded-2xl bg-papier transition active:scale-95 ${
                   index === photoIndex
-                    ? "border-lueur"
-                    : "border-encre/10 hover:border-encre/30"
+                    ? "border-[3px] border-encre"
+                    : "border-2 border-encre/15 hover:border-encre/40"
                 }`}
+                style={{ animationDelay: `${index * 0.05}s` }}
               >
                 <Image
                   src={v.url}
@@ -153,7 +178,7 @@ export function ProductDetail({
             choose blind. The form is told not to repeat the step. */}
         {colors.length > 0 ? (
           <div className="mt-7">
-            <p className="text-center font-heading text-base">
+            <p className="text-center font-heading text-lg font-semibold">
               Choisissez la couleur
             </p>
             <ColorSwatches
@@ -178,65 +203,80 @@ export function ProductDetail({
           <span className="text-encre/70">{product.name}</span>
         </nav>
 
-        <p className="mt-5 font-hand text-xl text-crepuscule">
-          fait main, à la commande
-        </p>
-        <h1 className="mt-1 font-heading text-4xl leading-tight font-bold sm:text-5xl">
-          {product.name}
-        </h1>
-        <p className="mt-3 font-heading text-2xl text-encre">
-          {formatPrice(product.price)}
-        </p>
+        <div data-apparait>
+          <span className="mt-5 inline-block rounded-full bg-encre px-4 py-2 font-heading text-[13px] text-papier">
+            imprimée après votre commande
+          </span>
+          <h1 className="mt-3 font-heading text-[46px] leading-[.9] font-bold tracking-[-.03em] sm:text-[58px]">
+            {product.name.toLowerCase()}
+          </h1>
 
-        {product.description ? (
-          <p className="mt-6 max-w-prose leading-relaxed whitespace-pre-line text-encre/75">
-            {product.description}
-          </p>
-        ) : null}
-
-        {selectedColor ? (
-          <DirectOrderForm
-            product={{
-              id: product.id,
-              slug: product.slug,
-              name: product.name,
-              price: product.price,
-            }}
-            colors={colors}
-            selectedColorId={selectedColor.id}
-            onSelectColor={selectColor}
-            showColorStep={false}
-            rates={rates}
-          />
-        ) : (
-          <p className="mt-8 text-sm text-encre/60">
-            Cette lampe n&apos;a pas encore de coloris en ligne — repassez très bientôt.
-          </p>
-        )}
-
-        <ul className="mt-8 space-y-2.5 border-t border-dashed border-encre/15 pt-6">
-          {REASSURANCE.map((line) => (
-            <li key={line} className="flex items-start gap-2.5 text-sm text-encre/70">
-              <svg
-                viewBox="0 0 24 24"
-                aria-hidden
-                className="mt-0.5 h-4 w-4 shrink-0 text-lueur"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
+          <div className="mt-4 flex flex-wrap items-center gap-3">
+            <span className="font-heading text-[30px] leading-none font-bold text-encre">
+              {formatPrice(product.price)}
+            </span>
+            {/* Le coloris choisi, écrit sur sa propre couleur — même pastille
+                que dans le configurateur de l'accueil. L'encre est calculée
+                pour rester lisible sur un jaune comme sur un bleu nuit. */}
+            {selectedColor ? (
+              <span
+                key={selectedColor.id}
+                className="naja-pop inline-block rounded-2xl border-2 px-3 py-1 font-heading text-[15px]"
+                style={{
+                  background: selectedColor.colorHex ?? "#e5d9cf",
+                  color: inkOn(selectedColor.colorHex ?? "#e5d9cf"),
+                  borderColor: "rgba(36,28,33,.22)",
+                }}
               >
-                <path d="M4 12.5l5 5L20 6.5" />
-              </svg>
-              {line}
+                {selectedColor.colorName}
+              </span>
+            ) : null}
+          </div>
+
+          {product.description ? (
+            <p className="mt-5 max-w-prose leading-relaxed whitespace-pre-line text-encre/75">
+              {product.description}
+            </p>
+          ) : null}
+        </div>
+
+        <ul data-apparait className="mt-6 flex flex-wrap gap-2">
+          {REASSURANCE.map((r, i) => (
+            <li
+              key={r.texte}
+              className="naja-pop rounded-full border-2 border-encre px-3.5 py-1.5 text-[13px] font-semibold text-encre"
+              style={{ background: r.fond, animationDelay: `${i * 0.06}s` }}
+            >
+              {r.texte}
             </li>
           ))}
         </ul>
 
+        <div data-apparait>
+          {selectedColor ? (
+            <DirectOrderForm
+              product={{
+                id: product.id,
+                slug: product.slug,
+                name: product.name,
+                price: product.price,
+              }}
+              colors={colors}
+              selectedColorId={selectedColor.id}
+              onSelectColor={selectColor}
+              showColorStep={false}
+              rates={rates}
+            />
+          ) : (
+            <p className="mt-8 text-sm text-encre/60">
+              Cette lampe n&apos;a pas encore de coloris en ligne — repassez très bientôt.
+            </p>
+          )}
+        </div>
+
         <p className="mt-5 text-sm">
           <Link
-            href="/#comment-c-est-fait"
+            href="/#comment"
             className="text-encre/60 underline transition hover:text-encre"
           >
             Comment cette lampe est fabriquée

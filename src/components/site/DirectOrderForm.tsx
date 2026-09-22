@@ -279,7 +279,7 @@ export function DirectOrderForm({
       </div>
 
       {/* ── Total and send ──────────────────────────────────────────── */}
-      <div className="mt-7 rounded-b-[1.75rem] border-t border-dashed border-encre/15 bg-papier/70 px-6 py-6 sm:px-8">
+      <div className="mt-7 rounded-b-[2.25rem] border-t-2 border-dashed border-encre/20 bg-papier/70 px-6 py-6 sm:px-8">
         <dl className="space-y-1.5 text-sm">
           <div className="flex justify-between">
             <dt className="text-encre/65">
@@ -297,7 +297,7 @@ export function DirectOrderForm({
               )}
             </dd>
           </div>
-          <div className="flex justify-between border-t border-encre/10 pt-2 font-heading text-lg">
+          <div className="mt-1 flex justify-between border-t-2 border-encre/15 pt-2.5 font-heading text-xl font-semibold">
             <dt>À payer à la livraison</dt>
             <dd>{formatPrice(order.total)}</dd>
           </div>
@@ -316,7 +316,7 @@ export function DirectOrderForm({
           ref={submitRef}
           type="submit"
           disabled={order.submitting || !order.inStock}
-          className="mt-5 w-full rounded-full bg-lueur px-6 py-4 font-heading text-base text-encre shadow-[0_10px_30px_-12px_var(--lueur)] transition hover:bg-lueur/90 disabled:cursor-not-allowed disabled:opacity-55 disabled:shadow-none"
+          className="mt-5 w-full rounded-full bg-encre px-6 py-4 font-heading text-lg text-papier shadow-[0_8px_0_-1px_rgba(36,28,33,.35)] transition active:translate-y-1 active:shadow-none disabled:cursor-not-allowed disabled:opacity-55 disabled:shadow-none"
         >
           {!order.inStock
             ? "Rupture de stock"
@@ -340,7 +340,7 @@ export function DirectOrderForm({
             onClick={() =>
               detailsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
             }
-            className="cta-float pointer-events-auto flex items-center gap-2.5 rounded-full bg-lueur px-7 py-3.5 font-heading text-sm text-encre transition-transform hover:scale-[1.03] active:scale-95"
+            className="cta-float pointer-events-auto flex items-center gap-2.5 rounded-full bg-encre px-7 py-3.5 font-heading text-base text-papier transition-transform hover:scale-[1.03] active:scale-95"
           >
             <span aria-hidden className="cta-float-bulb" />
             Commander · {formatPrice(order.total)}
@@ -361,10 +361,10 @@ function StepLabel({
   children: React.ReactNode;
 }) {
   return (
-    <p className="flex items-center gap-2.5 font-heading text-base">
+    <p className="flex items-center gap-2.5 font-heading text-lg font-semibold">
       <span
         aria-hidden
-        className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-sm text-encre ${tint}`}
+        className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full border-2 border-encre text-sm text-encre ${tint}`}
       >
         {n}
       </span>

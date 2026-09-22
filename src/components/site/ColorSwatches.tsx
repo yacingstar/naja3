@@ -42,7 +42,7 @@ export function ColorSwatches({
         aria-label="Couleur"
         className={`flex flex-wrap gap-2.5 ${centered ? "justify-center" : ""}`}
       >
-        {colors.map((color) => {
+        {colors.map((color, i) => {
           const isSelected = color.id === selectedColor?.id;
           const label = color.inStock
             ? color.colorName
@@ -62,7 +62,11 @@ export function ColorSwatches({
               // by its own selected state. There is deliberately no tick any
               // more: on a duo with a white half it disappeared into the
               // colour it was meant to mark.
-              className={`relative flex h-11 w-11 items-center justify-center rounded-full border bg-papier transition duration-200 ease-out ${
+              // Les pastilles arrivent en cascade. Animation CSS et non GSAP :
+              // l'état de repos est l'état final, donc si elle ne part pas,
+              // les pastilles sont simplement là — jamais minuscules.
+              style={{ animationDelay: `${i * 0.022}s` }}
+              className={`naja-pop relative flex h-11 w-11 items-center justify-center rounded-full border bg-papier transition duration-200 ease-out ${
                 isSelected
                   ? "scale-105 border-encre/20 ring-2 ring-encre ring-offset-2 ring-offset-papier"
                   : "border-encre/15"

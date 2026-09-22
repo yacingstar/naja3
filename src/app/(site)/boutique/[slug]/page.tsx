@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ProductCard } from "@/components/site/ProductCard";
+import { CarteProduit } from "@/components/boutique/CarteProduit";
+import { FondDoux } from "@/components/accueil/FondDoux";
 import { ProductDetail } from "@/components/site/ProductDetail";
-import { Reveal } from "@/components/site/Reveal";
 import { getDeliveryRates } from "@/lib/deliveryRates";
 import { getProductBySlug, getProducts } from "@/lib/products";
 
@@ -48,7 +48,11 @@ export default async function ProductPage({
     .slice(0, RELATED_COUNT);
 
   return (
-    <main className="pb-24">
+    <main className="relative pb-24">
+      {/* Le même lavis diffus que l'accueil et la boutique, pour que la page
+          d'achat ne soit pas la seule à être posée sur du blanc. */}
+      <FondDoux teinte="rgba(246,198,206,.20)" nuit={false} />
+
       <div className="mx-auto max-w-6xl px-6 pt-16">
         <ProductDetail
           product={{
@@ -65,17 +69,20 @@ export default async function ProductPage({
 
       {related.length > 0 ? (
         <section className="mx-auto mt-24 max-w-6xl px-6">
-          <Reveal>
-            <h2 className="text-center font-heading text-3xl">Vous aimerez aussi</h2>
-          </Reveal>
-          <div className="mt-12 grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-3">
+          <h2 className="font-heading text-[36px] leading-none font-bold tracking-[-.03em] sm:text-[48px]">
+            Vous aimerez aussi.
+          </h2>
+          <div className="mt-6 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {related.map((item, index) => (
-              <ProductCard key={item.id} product={item} index={index} />
+              <CarteProduit key={item.id} produit={item} index={index} />
             ))}
           </div>
-          <p className="mt-14 text-center">
-            <Link href="/boutique" className="text-sm font-medium hover:text-lueur">
-              Voir toute la collection →
+          <p className="mt-10">
+            <Link
+              href="/boutique"
+              className="inline-block rounded-full bg-encre px-7 py-3.5 font-heading text-base text-papier shadow-[0_8px_0_-1px_rgba(36,28,33,.35)] transition active:translate-y-1 active:shadow-none"
+            >
+              Voir toute la collection
             </Link>
           </p>
         </section>

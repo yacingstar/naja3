@@ -2756,3 +2756,84 @@ product page.
 **Never seen working:** the click-to-select on a bicolour swatch, and the admin `HuePair` control itself — `netlify dev` on this machine climbs to ~1.8GB and stops answering (several other projects’ dev servers run alongside it), and Netlify has no branch deploys enabled, so there is no preview environment. The selection logic was not touched, only the `style` prop, but the admin screen has genuinely never been opened.
 
 Outstanding: Meta CAPI (`META_CAPI_ACCESS_TOKEN` + test event code), Telegram notifications (@BotFather bot, `TELEGRAM_BOT_TOKEN`/`TELEGRAM_CHAT_ID`), an admin pass to fill every `color_hex` now that names are hidden, and the unexplained cached-egress spike that restricted the project on 2026-09-17 — resolved on her side, cause never found. Catalogue order is still two swapped `created_at` values. Awaiting review before Phase 7
+
+## Thirty-fourth round: a new art direction, built locally and never deployed
+
+Her brief, in her words: **"une totalement autre DA… animation partout… qui
+donne envie d'acheter"**, and after two rejected directions, **"quelque chose de
+fun et colorful — c'est ce qui fonctionne le mieux sur notre site, les
+couleurs"**. Everything in this round is local. Nothing has been pushed.
+
+The register that came out of it, and that now runs across three pages: heavy
+Fredoka in lower case, 3–4px `encre` outlines, flat blocks of saturated colour
+cycling through one shared palette (`#ffd166 #8ad4c1 #ff9ec7 #b9a7f5 #7fd4ee
+#ffb38a`), and the lamp silhouette — `LampMark`, option C of a comparison she
+picked from — as the one mark for a coloris everywhere: admin, configurator,
+product page, shop, footer.
+
+### The rule that this round is really about
+
+GSAP left content stuck in its start state **three separate times**: seven
+buttons at `opacity: 0`, fifteen swatches at `scale: .3`, the printing layers
+at `scaleY: 0`. Each time the page shipped a blank region. So:
+
+- **Entrances are CSS**, with `animation-fill-mode: backwards` — never `both`.
+  The resting state is the final state, so an animation that never starts
+  leaves the element simply *there*. `naja-monte`, `naja-pop`, `naja-photo`.
+- **GSAP is for interaction and loops only**, and it animates **transforms,
+  never opacity and never scale-from-zero**. `useReveal` moves `y` and nothing
+  else: the worst case is content sitting 40px low, which nobody notices.
+- Everything stops under `prefers-reduced-motion`.
+
+### What was built
+
+**Homepage** (`src/components/accueil/`): a hero configurator where only the
+selected photo is requested — one image, not 41 — a day/night switch that
+re-tints the whole page from one state tree, a three-step printing animation, a
+three-question quiz that lands on a real lamp and coloris, a Tinder-style swipe
+deck of twelve customer photos, and `FondDoux`, four very blurred drifting
+blobs at .25 opacity behind the lower half ("un background qui ne picote pas
+trop les yeux").
+
+**Shop** (`BoutiqueClient`): flat colour cards, parallax on the photos, the
+title lifting word by word, a cursor tilt gated to `pointerType === "mouse"`.
+
+**Product page** (this round's last piece — *"anime design la partie quand ils
+choisissent un produit et décident d'acheter"*): the photo now sits in a thick
+`encre` frame tinted with the chosen coloris and keyed on it, so picking a
+colour replays the entrance instead of swapping silently. The name is set big
+and lower case, the price beside a pill printed on the coloris' own hue (ink
+chosen by WCAG luminance). The three reassurance lines became coloured pills
+and moved **above** the form — they answer the objections that stop somebody
+filling it in. `.order-slip` took the 3px outline and 2.5rem radius of the rest
+of the site; it was the only piece of the buying screen still in the old
+language, and it is the one people look at while paying. The submit button and
+the floating CTA are now the same `encre` pill with the hard shadow as every
+other call to action. **No order logic was touched** — `useDirectOrder`,
+validation, the wilaya rates and the submit path are byte-identical.
+
+`CarteProduit` was extracted from `BoutiqueClient` so that "Vous aimerez aussi"
+at the foot of the product page uses the same card; that row was still ending
+the buying page on the old tilted `ProductCard`. A long name (`champignon`) was
+pushing its price past the card's edge — the row wraps now.
+
+### Bugs worth remembering
+
+- **All twelve customer photos rendered blank.** `next.config.ts` allows only
+  `qualities: [85]`; `next/image` defaults to 75, and the optimiser answers
+  **400** for a quality outside the allowlist. Every `<Image>` in the new code
+  carries `quality={85}`.
+- `line-clamp-2` silently did nothing next to a `block` utility — both set
+  `display`.
+- An eslint suppression for `react-hooks/set-state-in-effect` has to sit on the
+  `setState` line, not the `useEffect` line.
+- A patch script reported success while changing nothing: the repo is CRLF and
+  the search string was LF. Read the file back, or check the served HTML.
+
+### Still true, still pending
+
+Nothing in this round is deployed. nomura's fifteen photos are ~1MB each — 20×
+every other product, added 14 Sept, restricted 17 Sept — and should be
+optimised before any of this goes live. The twelve customers have not been
+asked whether their photos may be published; two handles are blurred. The old
+homepage components are deliberately left in place as the revert path.

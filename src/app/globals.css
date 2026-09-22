@@ -108,10 +108,15 @@ html::-webkit-scrollbar {
      translucent blush over it): the tear line below punches holes in the
      card's edge that are painted in the page background, and they only read
      as holes if the card itself isn't see-through. */
+  /* Le bon de commande porte le même trait épais et le même grand rayon que
+     les blocs du reste du site. Il était resté dans l'ancien registre (liseré
+     fin, coins doux) alors qu'il tombe juste sous des pastilles cerclées de
+     noir — c'était la seule pièce de la page à ne pas appartenir à la même
+     famille, et c'est celle qu'on regarde au moment de payer. */
   .order-slip {
     position: relative;
-    border-radius: 2rem;
-    border: 1px solid color-mix(in srgb, var(--encre) 10%, transparent);
+    border-radius: 2.5rem;
+    border: 3px solid var(--encre);
     background: color-mix(in srgb, var(--blush) 14%, var(--papier));
     box-shadow: 0 24px 60px -40px color-mix(in srgb, var(--encre) 55%, transparent);
   }
@@ -122,7 +127,7 @@ html::-webkit-scrollbar {
   .order-perf {
     position: relative;
     height: 0;
-    border-top: 2px dashed color-mix(in srgb, var(--encre) 14%, transparent);
+    border-top: 2px dashed color-mix(in srgb, var(--encre) 22%, transparent);
   }
   .order-perf::before,
   .order-perf::after {

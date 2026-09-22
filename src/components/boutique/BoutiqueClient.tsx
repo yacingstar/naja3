@@ -1,10 +1,8 @@
 "use client";
 
-import Image from "next/image";
-import Link from "next/link";
 import { useEffect, useRef } from "react";
 import type { FeaturedProduct } from "@/lib/products";
-import { LampMark } from "@/components/LampMark";
+import { CarteProduit } from "@/components/boutique/CarteProduit";
 import { FondDoux } from "@/components/accueil/FondDoux";
 import { useReveal } from "@/components/accueil/useReveal";
 
@@ -13,10 +11,8 @@ import { useReveal } from "@/components/accueil/useReveal";
 // soft cards; this one is meant to be scanned — shape, price, and how many
 // coloris, in that order, because that is the order the question comes in.
 //
-// The blocks cycle through the same five fills as the steps and the footer, so
-// the site keeps one palette rather than a new one per page.
-const FONDS = ["#ffd166", "#8ad4c1", "#ff9ec7", "#b9a7f5", "#7fd4ee", "#ffb38a"];
-
+// The card itself lives in CarteProduit: the product page's "Vous aimerez
+// aussi" row needs exactly the same one, and two copies would drift.
 export function BoutiqueClient({ produits }: { produits: FeaturedProduct[] }) {
   const zone = useRef<HTMLDivElement>(null);
   const titre = useRef<HTMLHeadingElement>(null);
@@ -70,26 +66,6 @@ export function BoutiqueClient({ produits }: { produits: FeaturedProduct[] }) {
     };
   }, []);
 
-  // La carte s'incline vers le curseur. Souris uniquement : sur un écran
-  // tactile il n'y a pas de survol, et l'appui a déjà sa propre réponse.
-  function pencher(e: React.PointerEvent<HTMLAnchorElement>) {
-    if (e.pointerType !== "mouse") return;
-    const el = e.currentTarget;
-    const r = el.getBoundingClientRect();
-    const x = (e.clientX - r.left) / r.width - 0.5;
-    const y = (e.clientY - r.top) / r.height - 0.5;
-    import("gsap").then(({ gsap }) =>
-      gsap.to(el, { rotateY: x * 7, rotateX: -y * 7, duration: 0.4, ease: "power2.out", overwrite: "auto" }),
-    );
-  }
-
-  function redresser(e: React.PointerEvent<HTMLAnchorElement>) {
-    const el = e.currentTarget;
-    import("gsap").then(({ gsap }) =>
-      gsap.to(el, { rotateY: 0, rotateX: 0, duration: 0.5, ease: "power2.out", overwrite: "auto" }),
-    );
-  }
-
   if (produits.length === 0) {
     return (
       <main className="mx-auto max-w-2xl px-5 py-24 text-center sm:px-12">
@@ -129,77 +105,9 @@ export function BoutiqueClient({ produits }: { produits: FeaturedProduct[] }) {
       </div>
 
       <div className="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-        {produits.map((p, i) => {
-          const dispo = p.colors.filter((c) => c.inStock);
-          const montres = p.colors.slice(0, 6);
-          const reste = p.colors.length - montres.length;
-          return (
-            <Link
-              key={p.id}
-              href={`/boutique/${p.slug}`}
-              data-apparait
-              onPointerMove={pencher}
-              onPointerLeave={redresser}
-              className="group block rounded-[2.25rem] border-4 border-encre p-5 transition-shadow duration-300 [transform-style:preserve-3d] hover:shadow-[0_24px_44px_-22px_rgba(36,28,33,.5)] sm:p-6"
-              style={{ background: FONDS[i % FONDS.length], perspective: 900 }}
-            >
-              <span className="flex h-[230px] items-center justify-center sm:h-[260px]">
-                {p.photoUrl ? (
-                  <Image
-                    src={p.photoUrl}
-                    alt={`Veilleuse ${p.name}`}
-                    width={420}
-                    height={420}
-                    quality={85}
-                    sizes="(min-width: 1024px) 320px, (min-width: 640px) 45vw, 90vw"
-                    className="carte-photo h-full w-auto object-contain transition duration-300 group-hover:scale-105"
-                  />
-                ) : null}
-              </span>
-
-              <span className="mt-3 flex items-baseline justify-between gap-3">
-                <span className="font-heading text-[30px] leading-none font-bold text-encre sm:text-[34px]">
-                  {p.name.toLowerCase()}
-                </span>
-                <span className="shrink-0 font-heading text-xl text-encre sm:text-[22px]">
-                  {p.price.toLocaleString("fr-FR")} DA
-                </span>
-              </span>
-
-              {p.description ? (
-                <span className="mt-1.5 line-clamp-2 text-[15px] leading-snug font-medium text-encre/75">
-                  {p.description}
-                </span>
-              ) : null}
-
-              {/* The coloris, drawn as the lamps they are — the same mark as the
-                  configurator, the product page and the admin. Six is where a
-                  row stops reading as a range and starts reading as clutter. */}
-              <span className="mt-3 flex flex-wrap items-center gap-1.5">
-                {montres.map((c) => (
-                  <span
-                    key={c.id}
-                    title={c.inStock ? c.colorName : `${c.colorName} (rupture)`}
-                    className={`flex h-9 w-9 items-center justify-center rounded-full border-2 border-encre/20 bg-papier ${
-                      c.inStock ? "" : "opacity-40"
-                    }`}
-                  >
-                    <LampMark hex={c.colorHex} hex2={c.colorHex2} className="h-6 w-6" />
-                  </span>
-                ))}
-                {reste > 0 ? (
-                  <span className="ml-0.5 font-heading text-sm text-encre/70">+{reste}</span>
-                ) : null}
-              </span>
-
-              <span className="mt-3 block text-[13px] font-semibold tracking-[.06em] text-encre/60 uppercase">
-                {dispo.length === p.colors.length
-                  ? `${p.colors.length} coloris`
-                  : `${dispo.length} sur ${p.colors.length} coloris disponibles`}
-              </span>
-            </Link>
-          );
-        })}
+        {produits.map((p, i) => (
+          <CarteProduit key={p.id} produit={p} index={i} />
+        ))}
       </div>
     </main>
   );
