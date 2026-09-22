@@ -55,6 +55,22 @@ export function ProductDetail({
   // default selection is always something a customer can actually buy.
   const selectedColor = colors.find((c) => c.id === selectedColorId) ?? colors[0];
 
+  // Arrivée depuis le configurateur de l'accueil : #c<id> désigne le coloris
+  // déjà choisi là-bas. Le fragment n'existe que dans le navigateur, donc il ne
+  // peut être lu qu'après le montage — le lire pendant le rendu ferait diverger
+  // le HTML du serveur et celui du client.
+  //
+  // C'est exactement ce pour quoi un effet existe : aligner l'état React sur un
+  // système extérieur, ici l'URL. La règle vise les cascades de rendus ; celui-ci
+  // s'exécute une fois au montage et ne se redéclenche jamais.
+  useEffect(() => {
+    const cible = Number(window.location.hash.replace("#c", ""));
+    if (cible && colors.some((c) => c.id === cible)) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setSelectedColorId(cible);
+    }
+  }, [colors]);
+
   // The cutout leads, with the real backdrop shots behind it. Two reasons
   // it goes first rather than replacing them: it's the view ProductStage
   // can actually light (no background of its own to fight), and it shows

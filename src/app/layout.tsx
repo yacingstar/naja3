@@ -49,9 +49,18 @@ const caveat = Caveat({
   weight: ["400"],
 });
 
+// Ce que Google affiche, et ce que les gens tapent. L'ancienne version disait
+// "Lampes" alors que tout le site dit veilleuses, et ne mentionnait ni le
+// paiement à la livraison ni l'Algérie — les deux choses qu'une cliente vérifie
+// avant de commander en ligne ici.
 export const metadata: Metadata = {
-  title: "Naja",
-  description: "Lampes imprimées en 3D, fabriquées à la commande.",
+  // Les autres pages posent leur propre titre ; le gabarit leur ajoute la marque.
+  title: {
+    default: "Naja — veilleuses imprimées en 3D, faites main en Algérie",
+    template: "%s · Naja",
+  },
+  description:
+    "Des veilleuses imprimées en 3D à Alger, fabriquées à la commande. 7 formes, 41 coloris. Livraison dans les 58 wilayas, paiement à la livraison.",
 };
 
 // Deliberately bare: no Header/Footer here. (site) and admin each get their

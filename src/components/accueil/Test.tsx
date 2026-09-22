@@ -192,7 +192,7 @@ export function Test({
                 </p>
                 <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
                   <a
-                    href={`/boutique/${produit.slug}`}
+                    href={`/boutique/${produit.slug}#c${coloris.id}`}
                     onClick={() => onChoisir(reco!.p, reco!.c)}
                     className="rounded-full bg-encre px-7 py-4 text-center font-heading text-lg text-papier shadow-[0_7px_0_-1px_rgba(36,28,33,.35)] transition active:translate-y-1 active:shadow-none sm:text-xl"
                   >
