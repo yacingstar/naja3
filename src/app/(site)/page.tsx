@@ -1,9 +1,5 @@
-import { CatalogPreview } from "@/components/site/CatalogPreview";
-import { CraftSteps } from "@/components/site/CraftSteps";
-import { Faq } from "@/components/site/Faq";
-import { Hero } from "@/components/site/Hero";
-import { ScrollSnapHomepage } from "@/components/site/ScrollSnapHomepage";
-import { TrustStrip } from "@/components/site/TrustStrip";
+import { AccueilClient } from "@/components/accueil/AccueilClient";
+import { getProducts } from "@/lib/products";
 
 // Prerender and serve from the CDN, re-rendering at most every 5 minutes.
 //
@@ -18,15 +14,11 @@ import { TrustStrip } from "@/components/site/TrustStrip";
 // bounds how stale things can get to something a shop owner won't notice.
 export const revalidate = 300;
 
-export default function HomePage() {
-  return (
-    <main>
-      <ScrollSnapHomepage />
-      <Hero />
-      <TrustStrip />
-      <CatalogPreview />
-      <CraftSteps />
-      <Faq />
-    </main>
-  );
+// The homepage IS the configurator now. Everything the visitor needs to choose
+// — every shape, every coloris and its photograph — is fetched once here and
+// handed to the client, so switching colour is instant and costs no round
+// trip. Only the selected photograph is ever downloaded (see Configurateur).
+export default async function HomePage() {
+  const produits = await getProducts();
+  return <AccueilClient produits={produits} />;
 }

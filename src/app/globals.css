@@ -477,3 +477,11 @@ html::-webkit-scrollbar {
     animation: none !important;
   }
 }
+
+/* Le bandeau noir de la page d'accueil. Il défile sur la moitié de sa largeur
+   puis se répète : le contenu est écrit deux fois, donc la boucle est
+   invisible. Pur CSS parce qu'il tourne en permanence et n'a aucun état —
+   GSAP ne servirait qu'à alourdir le fil principal. */
+@keyframes naja-defile {
+  to { transform: translateX(-50%); }
+}
