@@ -2891,3 +2891,38 @@ said had never happened. Ticking "Bicolore" on Akari's "Bleu Nuit" splits
 "Teinte" into "Abat-jour" and "Pied", the preview lamp redraws with a navy
 shade over a white base, and the bar correctly reports "Modifications non
 enregistrées". The tick was undone and nothing was saved.
+
+## Thirty-sixth round: everything goes live
+
+She asked for both at once — the photos and the redesign.
+
+**Order of operations, deliberately:** production build first (it has failed
+before on missing env, and a broken build after a push would take the shop
+down), then the photos, then the push. A `.env.local` was written from
+`netlify env:list --json`, used for `next build`, and **deleted immediately
+afterwards**; it is gitignored either way. The build passed, 32 static pages,
+`/admin` correctly listed as dynamic now that it has a page.
+
+**Photos.** The fifteen compressed WebPs went up under **new object names**
+(`…-w1199.webp` beside the original `.png`) with `cache-control: max-age=31536000`,
+and only `product_colors.cutout_photo_url` was rewritten. The originals are
+untouched in the bucket, so rolling back is one column write — the old URLs are
+saved at **`C:/Users/Pc/naja3-photos-rollback.json`**. Every PATCH asked for
+`return=representation` and the script compared the stored value against what
+it meant to write, so a silent partial failure was not possible. Verified from
+the live database afterwards: **15.94 MB → 1.35 MB**, every file 200.
+
+**Push.** Twelve commits, `34fcde3..bccc66f`, straight to `master` and therefore
+straight to production: the homepage configurator, the shop, the product page
+and order slip, and the admin.
+
+Worth recording: `META_CAPI_ACCESS_TOKEN`, `TELEGRAM_BOT_TOKEN` and
+`TELEGRAM_CHAT_ID` are **all set on Netlify now**. They have been listed as
+outstanding since the thirtieth round; whether they work has not been checked
+here.
+
+**Still outstanding:** the twelve customers have not been asked whether their
+photos may be published — and those photos are now live on the homepage, so
+this is no longer a pre-launch question. Two handles are blurred. The catalogue
+order is still two swapped `created_at` values. The old homepage components are
+still in the tree as the revert path.
