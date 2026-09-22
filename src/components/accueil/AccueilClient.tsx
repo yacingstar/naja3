@@ -1,12 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import type { FeaturedProduct } from "@/lib/products";
 import { inkOn, pale } from "@/lib/accueil";
 import { Configurateur } from "@/components/accueil/Configurateur";
 import { Etapes } from "@/components/accueil/Etapes";
+import { FondDoux } from "@/components/accueil/FondDoux";
 import { Retours } from "@/components/accueil/Retours";
 import { Test } from "@/components/accueil/Test";
+import { useReveal } from "@/components/accueil/useReveal";
 
 const BANDEAU = ["PAYEZ À LA LIVRAISON", "58 WILAYAS", "IMPRIMÉE POUR VOUS", "AUCUN ACOMPTE"];
 
@@ -17,6 +19,10 @@ export function AccueilClient({ produits }: { produits: FeaturedProduct[] }) {
   const [p, setP] = useState(0);
   const [c, setC] = useState(0);
   const [nuit, setNuit] = useState(false);
+  const zoneBasse = useRef<HTMLDivElement>(null);
+
+  // Tout ce qui suit le bandeau monte à l'arrivée dans l'écran.
+  useReveal(zoneBasse, "[data-apparait]");
 
   const produit = produits[p];
   const coloris = produit?.colors[c] ?? produit?.colors[0];
@@ -69,7 +75,10 @@ export function AccueilClient({ produits }: { produits: FeaturedProduct[] }) {
         </div>
       </div>
 
-      <Etapes encre={encre} encreDouce={encreDouce} />
+      <div ref={zoneBasse} className="relative">
+        <FondDoux teinte={pale(coloris?.colorHex ?? null)} nuit={nuit} />
+
+        <Etapes encre={encre} encreDouce={encreDouce} />
 
       <Test
         produits={produits}
@@ -83,10 +92,11 @@ export function AccueilClient({ produits }: { produits: FeaturedProduct[] }) {
 
       <Retours encre={encre} encreDouce={encreDouce} bord={bord} />
 
-      <div
-        className="mx-5 mt-12 rounded-[2.75rem] border-4 border-encre p-8 transition-colors duration-700 sm:mx-12 sm:p-12"
-        style={{ background: fond }}
-      >
+        <div
+          data-apparait
+          className="mx-5 mt-12 rounded-[2.75rem] border-4 border-encre p-8 transition-colors duration-700 sm:mx-12 sm:p-12"
+          style={{ background: fond }}
+        >
         <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h2
@@ -108,9 +118,10 @@ export function AccueilClient({ produits }: { produits: FeaturedProduct[] }) {
         </div>
       </div>
 
-      <p className="px-5 py-10 text-center text-sm font-medium sm:px-12" style={{ color: encreDouce }}>
-        fait main en Algérie · paiement à la livraison
-      </p>
+        <p className="px-5 py-10 text-center text-sm font-medium sm:px-12" style={{ color: encreDouce }}>
+          fait main en Algérie · paiement à la livraison
+        </p>
+      </div>
     </main>
   );
 }

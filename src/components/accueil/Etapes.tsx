@@ -62,6 +62,7 @@ export function Etapes({ encre, encreDouce }: { encre: string; encreDouce: strin
   return (
     <div id="comment" ref={bloc} className="scroll-mt-20 px-5 pt-12 sm:px-12 sm:pt-16">
       <h2
+        data-apparait
         className="font-heading text-[42px] leading-none font-bold tracking-[-.02em] sm:text-[54px]"
         style={{ color: encre }}
       >
@@ -76,6 +77,7 @@ export function Etapes({ encre, encreDouce }: { encre: string; encreDouce: strin
         {ETAPES.map((e) => (
           <div
             key={e.n}
+            data-apparait
             className="rounded-[2rem] border-4 border-encre p-6 text-encre transition duration-300 hover:-translate-y-2 hover:rotate-1"
             style={{ background: e.fond }}
           >

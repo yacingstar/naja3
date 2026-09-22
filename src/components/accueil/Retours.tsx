@@ -66,6 +66,7 @@ export function Retours({ encre, encreDouce, bord }: { encre: string; encreDouce
   return (
     <div className="px-5 pt-12 sm:px-12 sm:pt-16">
       <h2
+        data-apparait
         className="font-heading text-[42px] leading-none font-bold tracking-[-.02em] sm:text-[54px]"
         style={{ color: encre }}
       >
@@ -76,7 +77,7 @@ export function Retours({ encre, encreDouce, bord }: { encre: string; encreDouce
         qu&apos;on puisse montrer, et c&apos;est vous qui l&apos;avez faite.
       </p>
 
-      <div className="mt-6 flex items-center justify-center gap-4 sm:gap-7">
+      <div data-apparait className="mt-6 flex items-center justify-center gap-4 sm:gap-7">
         <button
           type="button"
           onClick={() => avancer(-1)}

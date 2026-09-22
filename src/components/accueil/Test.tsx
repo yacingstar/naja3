@@ -109,6 +109,7 @@ export function Test({
   return (
     <div className="px-5 pt-12 sm:px-12 sm:pt-16">
       <h2
+        data-apparait
         className="font-heading text-[42px] leading-none font-bold tracking-[-.02em] sm:text-[54px]"
         style={{ color: encre }}
       >
@@ -118,7 +119,7 @@ export function Test({
         On vous dit laquelle est faite pour vous — la forme et la couleur.
       </p>
 
-      <div className="mt-6 min-h-[400px] rounded-[2.25rem] border-4 border-encre bg-papier p-6 text-encre sm:p-9">
+      <div data-apparait className="mt-6 min-h-[400px] rounded-[2.25rem] border-4 border-encre bg-papier p-6 text-encre sm:p-9">
         {!fini ? (
           <>
             <div className="flex gap-2">
