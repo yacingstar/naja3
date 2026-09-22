@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 import type { FeaturedProduct } from "@/lib/products";
 import { LampMark } from "@/components/LampMark";
 import { FondDoux } from "@/components/accueil/FondDoux";
@@ -19,7 +19,76 @@ const FONDS = ["#ffd166", "#8ad4c1", "#ff9ec7", "#b9a7f5", "#7fd4ee", "#ffb38a"]
 
 export function BoutiqueClient({ produits }: { produits: FeaturedProduct[] }) {
   const zone = useRef<HTMLDivElement>(null);
+  const titre = useRef<HTMLHeadingElement>(null);
   useReveal(zone, "[data-apparait]");
+
+  // Deux mouvements liés au défilement, et un au curseur. Tous ne touchent que
+  // des transformations : jamais l'opacité, jamais la taille depuis zéro. Une
+  // animation interrompue laisse au pire un élément légèrement décalé, ce qui
+  // ne se remarque pas — contrairement à un contenu resté invisible.
+  useEffect(() => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+    let annule = false;
+    const tweens: gsap.core.Tween[] = [];
+
+    Promise.all([import("gsap"), import("gsap/ScrollTrigger")]).then(([{ gsap }, { ScrollTrigger }]) => {
+      if (annule || !zone.current) return;
+      gsap.registerPlugin(ScrollTrigger);
+
+      // Le titre se lève mot par mot.
+      if (titre.current) {
+        tweens.push(
+          gsap.from(titre.current.querySelectorAll("span"), {
+            y: 36,
+            duration: 0.6,
+            stagger: 0.07,
+            ease: "power3.out",
+          }),
+        );
+      }
+
+      // Parallaxe : la veilleuse dérive un peu plus lentement que sa carte, ce
+      // qui donne de la profondeur sans que rien ne bouge visiblement tout seul.
+      zone.current.querySelectorAll<HTMLElement>(".carte-photo").forEach((el) => {
+        tweens.push(
+          gsap.to(el, {
+            y: -24,
+            ease: "none",
+            scrollTrigger: { trigger: el, start: "top bottom", end: "bottom top", scrub: 0.6 },
+          }),
+        );
+      });
+    });
+
+    return () => {
+      annule = true;
+      tweens.forEach((t) => {
+        t.scrollTrigger?.kill();
+        t.kill();
+      });
+    };
+  }, []);
+
+  // La carte s'incline vers le curseur. Souris uniquement : sur un écran
+  // tactile il n'y a pas de survol, et l'appui a déjà sa propre réponse.
+  function pencher(e: React.PointerEvent<HTMLAnchorElement>) {
+    if (e.pointerType !== "mouse") return;
+    const el = e.currentTarget;
+    const r = el.getBoundingClientRect();
+    const x = (e.clientX - r.left) / r.width - 0.5;
+    const y = (e.clientY - r.top) / r.height - 0.5;
+    import("gsap").then(({ gsap }) =>
+      gsap.to(el, { rotateY: x * 7, rotateX: -y * 7, duration: 0.4, ease: "power2.out", overwrite: "auto" }),
+    );
+  }
+
+  function redresser(e: React.PointerEvent<HTMLAnchorElement>) {
+    const el = e.currentTarget;
+    import("gsap").then(({ gsap }) =>
+      gsap.to(el, { rotateY: 0, rotateX: 0, duration: 0.5, ease: "power2.out", overwrite: "auto" }),
+    );
+  }
 
   if (produits.length === 0) {
     return (
@@ -44,8 +113,15 @@ export function BoutiqueClient({ produits }: { produits: FeaturedProduct[] }) {
         <span className="inline-block rounded-full bg-encre px-4 py-2 font-heading text-[13px] text-papier sm:text-[15px]">
           {produits.length} formes · {coloris} coloris
         </span>
-        <h1 className="mt-3 font-heading text-[48px] leading-[.9] font-bold tracking-[-.03em] sm:text-[72px]">
-          Toutes les veilleuses.
+        <h1
+          ref={titre}
+          className="mt-3 font-heading text-[48px] leading-[.9] font-bold tracking-[-.03em] sm:text-[72px]"
+        >
+          {["Toutes", "les", "veilleuses."].map((mot) => (
+            <span key={mot} className="mr-[.22em] inline-block">
+              {mot}
+            </span>
+          ))}
         </h1>
         <p className="mt-3 max-w-[640px] text-base font-medium text-encre/72 sm:text-lg">
           Chacune est imprimée après votre commande, dans le coloris que vous choisissez. Vous payez au livreur.
@@ -62,8 +138,10 @@ export function BoutiqueClient({ produits }: { produits: FeaturedProduct[] }) {
               key={p.id}
               href={`/boutique/${p.slug}`}
               data-apparait
-              className="group block rounded-[2.25rem] border-4 border-encre p-5 transition duration-300 hover:-translate-y-2 hover:rotate-[.8deg] hover:shadow-[0_24px_44px_-22px_rgba(36,28,33,.5)] sm:p-6"
-              style={{ background: FONDS[i % FONDS.length] }}
+              onPointerMove={pencher}
+              onPointerLeave={redresser}
+              className="group block rounded-[2.25rem] border-4 border-encre p-5 transition-shadow duration-300 [transform-style:preserve-3d] hover:shadow-[0_24px_44px_-22px_rgba(36,28,33,.5)] sm:p-6"
+              style={{ background: FONDS[i % FONDS.length], perspective: 900 }}
             >
               <span className="flex h-[230px] items-center justify-center sm:h-[260px]">
                 {p.photoUrl ? (
@@ -74,7 +152,7 @@ export function BoutiqueClient({ produits }: { produits: FeaturedProduct[] }) {
                     height={420}
                     quality={85}
                     sizes="(min-width: 1024px) 320px, (min-width: 640px) 45vw, 90vw"
-                    className="h-full w-auto object-contain transition duration-300 group-hover:scale-105"
+                    className="carte-photo h-full w-auto object-contain transition duration-300 group-hover:scale-105"
                   />
                 ) : null}
               </span>
