@@ -191,16 +191,13 @@ export function Test({
                   {POURQUOI[reponses[0] ?? 0]}
                 </p>
                 <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      onChoisir(reco!.p, reco!.c);
-                      document.getElementById("composer")?.scrollIntoView({ behavior: "smooth" });
-                    }}
-                    className="cursor-pointer rounded-full bg-encre px-7 py-4 font-heading text-lg text-papier shadow-[0_7px_0_-1px_rgba(36,28,33,.35)] transition active:translate-y-1 active:shadow-none sm:text-xl"
+                  <a
+                    href={`/boutique/${produit.slug}`}
+                    onClick={() => onChoisir(reco!.p, reco!.c)}
+                    className="rounded-full bg-encre px-7 py-4 text-center font-heading text-lg text-papier shadow-[0_7px_0_-1px_rgba(36,28,33,.35)] transition active:translate-y-1 active:shadow-none sm:text-xl"
                   >
                     Je la commande · {produit.price.toLocaleString("fr-FR")} DA
-                  </button>
+                  </a>
                   <button
                     type="button"
                     onClick={recommencer}
