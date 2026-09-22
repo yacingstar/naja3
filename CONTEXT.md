@@ -2709,4 +2709,46 @@ Confirmed pre-existing by stashing this round's changes and reproducing the
 identical failure on untouched `master`. The Netlify build itself is
 unaffected.
 
-## Status: as the thirty-second round. The colour picker is now nameless pastilles sitting under the photo on `/boutique/[slug]`, verified on desktop and phone and deployed. The landing pages at `/lampe/[slug]` keep the old in-form step on purpose. Still outstanding from before, both built and both waiting on one external step each: Meta CAPI Purchase events (needs `META_CAPI_ACCESS_TOKEN` in Netlify + a test event code) and Telegram new-order notifications (needs the client to create the bot via @BotFather, press Start, and `TELEGRAM_BOT_TOKEN`/`TELEGRAM_CHAT_ID` set in Netlify). Newly outstanding: the bicolour lamp, blocked on price/photo/scope decisions, and an admin audit that every `color_hex` is filled now that names are hidden. Awaiting review before Phase 7
+## Thirty-third round: the Supabase outage, and swapping two products in the catalogue
+
+**The project was restricted, and the shop was empty.** She reported "the admin
+password doesn't work any more". It was not the password: the whole Supabase
+project was returning `402` — `exceed_cached_egress_quota` — on the database,
+on auth and on Storage alike. So the login could not be checked, `/boutique`
+rendered its empty-catalogue message ("Les premières lampes arrivent très
+bientôt") to every visitor, and no order could have been recorded. A few
+product pages still answered from Next's cache, which made it look half-alive
+and is exactly what makes this worth writing down: **a 402 on Supabase reads as
+a password problem from the outside.**
+
+Not the photos. The twenty-ninth round had already taken the referenced set to
+4.95MB and pinned a one-year `cacheControl`, so there was nothing left to
+compress — she asked, and the honest answer was that compression could not fix
+it: the quota was already spent, so it only ever affects the *next* cycle, and
+Storage was 402 anyway so the objects could not even be fetched to re-encode.
+Resolved on her side; the cause of the blow-up is still unexplained and worth
+looking at before it repeats.
+
+**Catalogue order: nomura first, Akari last.** `getProducts` orders by
+`created_at` ascending and there is no position column, so the two rows'
+`created_at` values were swapped directly through PostgREST with the
+service-role key. She chose this over an admin reordering control, knowing it
+is the throwaway version.
+
+**This is a deliberate lie in the data** — those timestamps no longer say when
+those two products were added. It is survivable only because products'
+`created_at` is never displayed: it feeds this ordering and the admin list's
+own `created_at desc`, nothing else (checked, not assumed). The admin list
+order flips as a side effect. If ordering is ever wanted properly, add a
+`position` column and stop leaning on a timestamp that means something else.
+
+No deploy was needed: both routes carry `revalidate = 300`, and the live pages
+picked the new order up on their own. Verified on najadz.com, listing and
+homepage carousel both.
+
+**Still pending, unchanged:** the bicolour work of the thirty-second round is
+two local commits, unpushed and unverified, and `20260917200001` has still not
+been applied — `color_hex_2` does not exist, so pushing would 400 every
+product page.
+
+## Status: as the thirty-third round. Supabase is out of its restriction and the storefront serves normally again; catalogue order is now nomura → … → Akari, done by swapping two `created_at` values rather than by a real ordering feature. **Two commits sit unpushed on master and MUST NOT be deployed yet**: the bicolour variant work (admin `HuePair`, split swatches on the product and landing pages, second-hue dot on the catalogue cards). Every product query in them selects `color_hex_2`, and `supabase/migrations/20260917200001_add_second_color_hex.sql` has not been run in the Supabase SQL Editor — verified absent again this session. None of that code has been seen working in a browser. Also outstanding from earlier: Meta CAPI (`META_CAPI_ACCESS_TOKEN` + test event code), Telegram notifications (@BotFather bot, `TELEGRAM_BOT_TOKEN`/`TELEGRAM_CHAT_ID`), an admin pass to fill every `color_hex` now that names are hidden, and the unexplained egress spike. Awaiting review before Phase 7
