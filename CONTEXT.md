@@ -3070,3 +3070,46 @@ confirmed by reading the submit button's computed `font-family` (Inter Tight).
 
 `HorsSerie` now hides the site header and footer on the whole `/boutique`
 subtree. Still local: nothing pushed.
+
+## Forty-first round: one motion system for the whole series
+
+*« Anime tout le site et rends-le très dynamique. »*
+
+Rather than scatter more `useEffect`s, the movement now lives in one hook,
+`serie/mouvement.ts`. A page marks elements with data attributes and the hook
+loads GSAP once, wires everything and tears it all down:
+
+| attribute | what it does |
+|---|---|
+| `data-monte` | rises into place on arrival, once |
+| `data-monte-suite` | same, staggered between siblings, triggered on the **parent** |
+| `data-titre` | lifts from under its own line (the page owns the `overflow-hidden` mask) |
+| `data-parallaxe` | drifts slower than the page (value = pixels) |
+| `data-flotte` | floats in a loop |
+| `data-aimant` | leans toward the cursor (mouse only) |
+| `data-incline` | tilts its children toward the cursor (mouse only) |
+| `data-compte` | counts up to the number already written in the HTML |
+
+**The rule the hook exists to enforce**, written at the top of the file: rest
+state is always the final state; transforms only; never opacity, never scale
+from zero. The counters are the clearest case — the final number is in the
+HTML and GSAP only climbs to it, so with no JavaScript the figure is simply
+correct. The one element allowed to be born invisible is `Progression`, the
+red scroll line, because it carries nothing.
+
+Applied: posters tilt toward the cursor on all three pages, the lamp drifts
+inside its ink (off in the homepage's pinned row — it travels sideways, a
+vertical drift there means nothing), section titles lift from their masks,
+process posters and FAQ rows and shop cards and ink swatches arrive in
+cascade, the closing button is magnetic, the counts climb.
+
+**A trap avoided:** the product page's poster is keyed on the coloris, so it is
+a new DOM node after every colour change. Motion put on it would be lost on the
+first change — `data-incline` and `data-flotte` sit on stable parents instead.
+
+Three.js was asked for by name and is **not** added: it renders 3D models, and
+the lamps exist only as photographs. See the reply — it needs `.glb` exports
+from the modelling software, which would be a real feature rather than a
+finish.
+
+Still local.

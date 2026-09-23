@@ -19,6 +19,7 @@ export function Affiche({
   pastilles = false,
   sizes,
   priority = false,
+  parallaxe = true,
 }: {
   produit: FeaturedProduct;
   index: number;
@@ -28,6 +29,9 @@ export function Affiche({
   pastilles?: boolean;
   sizes: string;
   priority?: boolean;
+  /** Faux dans la rangée épinglée de l accueil : elle se déplace
+   *  horizontalement, une dérive verticale n y voudrait rien dire. */
+  parallaxe?: boolean;
 }) {
   const encre = riso(index);
   const pente = index % 2 === 0 ? -1.6 : 1.4;
@@ -47,7 +51,7 @@ export function Affiche({
         }
       >
         {produit.photoUrl ? (
-          <div data-lampe className="absolute inset-0">
+          <div data-lampe data-parallaxe={parallaxe ? "-22" : undefined} className="absolute inset-0">
             <Image
               src={produit.photoUrl}
               alt={`Veilleuse ${produit.name}`}

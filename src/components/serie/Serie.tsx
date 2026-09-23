@@ -1,6 +1,7 @@
 import type { FeaturedProduct } from "@/lib/products";
 import { Galerie } from "@/components/serie/Galerie";
 import { Sections } from "@/components/serie/Sections";
+import { Progression } from "@/components/serie/Progression";
 import { ENCRE } from "@/components/serie/style";
 
 // La page d'accueil, refaite entière dans le style de la référence qu'elle a
@@ -40,6 +41,7 @@ export function CadreSerie({ polices, children }: { polices: string; children: R
       className={`${polices} papier-serie min-h-screen`}
       style={{ color: ENCRE, marginTop: "calc(-1 * var(--header-height))" }}
     >
+      <Progression />
       {children}
     </main>
   );

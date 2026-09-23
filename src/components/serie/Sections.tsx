@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { FAQS } from "@/components/site/Faq";
-import { useReveal } from "@/components/accueil/useReveal";
+import { useMouvement } from "@/components/serie/mouvement";
 import { RETOURS } from "@/lib/accueil";
 import { Pied } from "@/components/serie/Pied";
 import { ENCRE, G, M, riso, ROUGE } from "@/components/serie/style";
@@ -16,12 +16,16 @@ import { ENCRE, G, M, riso, ROUGE } from "@/components/serie/style";
 
 function Entete({ numero, nom, children }: { numero: string; nom: string; children: React.ReactNode }) {
   return (
-    <div data-apparait className="grid gap-4 border-t pt-5 lg:grid-cols-[220px_1fr]" style={{ borderColor: `${ENCRE}33` }}>
+    <div data-monte className="grid gap-4 border-t pt-5 lg:grid-cols-[220px_1fr]" style={{ borderColor: `${ENCRE}33` }}>
       <p className={`${M} text-[11px] tracking-[.14em] uppercase opacity-70`}>
         {numero} — {nom}
       </p>
-      <h2 className={`${G} text-[36px] leading-[.98] font-bold tracking-[-.03em] sm:text-[52px] lg:text-[60px]`}>
-        {children}
+      {/* Le titre se lève depuis sous sa ligne : le masque est ici, le
+          mouvement dans useMouvement. */}
+      <h2 className={`${G} overflow-hidden pb-[.06em] text-[36px] leading-[.98] font-bold tracking-[-.03em] sm:text-[52px] lg:text-[60px]`}>
+        <span data-titre className="inline-block">
+          {children}
+        </span>
       </h2>
     </div>
   );
@@ -137,7 +141,7 @@ function Procede() {
         {ETAPES.map(({ n, titre, texte, Dessin, etiquette }, i) => {
           const encre = riso(i + 1);
           return (
-            <article key={n} data-apparait>
+            <article key={n} data-monte-suite>
               <div
                 className="riso aspect-[4/5] p-[14%]"
                 style={{ background: encre.fond, transform: `rotate(${i === 1 ? 1.2 : -1.2}deg)` }}
@@ -206,6 +210,7 @@ function Retours() {
           {RETOURS.map((r, i) => (
             <figure
               key={r.src}
+              data-incline="8"
               className="w-[62vw] max-w-[260px] shrink-0 snap-center bg-[#f7f2e7] p-2.5 pb-3 shadow-[0_12px_24px_-16px_rgba(29,26,23,.5)]"
               style={{ transform: `rotate(${[-1.8, 1.2, -0.6, 1.6][i % 4]}deg)` }}
             >
@@ -239,7 +244,7 @@ function Questions() {
         {FAQS.map((f, i) => {
           const ouvert = ouverte === i;
           return (
-            <div key={f.q} data-apparait className="border-b" style={{ borderColor: `${ENCRE}33` }}>
+            <div key={f.q} data-monte-suite className="border-b" style={{ borderColor: `${ENCRE}33` }}>
               <button
                 type="button"
                 onClick={() => setOuverte(ouvert ? null : i)}
@@ -268,13 +273,14 @@ function Questions() {
 function Fin() {
   return (
     <section className="px-5 pt-24 sm:px-10 lg:pt-32">
-      <div data-apparait className="border-t pt-10" style={{ borderColor: `${ENCRE}33` }}>
+      <div data-monte className="border-t pt-10" style={{ borderColor: `${ENCRE}33` }}>
         <h2 className={`${G} max-w-[14ch] text-[44px] leading-[.95] font-bold tracking-[-.035em] sm:text-[72px] lg:text-[92px]`}>
           Choisissez <span style={{ color: ROUGE }}>la vôtre</span>, ce soir.
         </h2>
         <div className="mt-8 flex flex-wrap items-center gap-4">
           <Link
             href="/boutique"
+            data-aimant
             className={`${M} inline-flex items-center gap-3 rounded-full px-6 py-3.5 text-[12px] tracking-[.14em] text-[#ebe3d3] uppercase transition hover:gap-5`}
             style={{ background: ENCRE }}
           >
@@ -292,8 +298,7 @@ function Fin() {
 
 export function Sections() {
   const zone = useRef<HTMLDivElement>(null);
-  // Position seulement, jamais l'opacité : voir useReveal.
-  useReveal(zone, "[data-apparait]");
+  useMouvement(zone);
   return (
     <div ref={zone}>
       <Procede />

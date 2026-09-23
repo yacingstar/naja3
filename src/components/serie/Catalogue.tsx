@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useRef } from "react";
 import type { FeaturedProduct } from "@/lib/products";
-import { useReveal } from "@/components/accueil/useReveal";
+import { useMouvement } from "@/components/serie/mouvement";
 import { Affiche } from "@/components/serie/Affiche";
 import { Entete } from "@/components/serie/Entete";
 import { Pied } from "@/components/serie/Pied";
@@ -30,7 +30,7 @@ function numero(i: number) {
 
 export function Catalogue({ produits }: { produits: FeaturedProduct[] }) {
   const zone = useRef<HTMLDivElement>(null);
-  useReveal(zone, "[data-apparait]");
+  useMouvement(zone);
 
   const coloris = produits.reduce((n, p) => n + p.colors.length, 0);
   const prixMin = produits.length ? Math.min(...produits.map((p) => p.price)) : 0;
@@ -69,7 +69,7 @@ export function Catalogue({ produits }: { produits: FeaturedProduct[] }) {
         courant="boutique"
         droite={
           <span className="hidden opacity-80 sm:inline">
-            {produits.length} formes · {coloris} coloris
+            <span data-compte>{produits.length}</span> formes · <span data-compte>{coloris}</span> coloris
           </span>
         }
       />
@@ -94,7 +94,8 @@ export function Catalogue({ produits }: { produits: FeaturedProduct[] }) {
             Vous payez au livreur.
           </p>
           <p className={`${M} mt-3 text-[11px] tracking-[.12em] uppercase`}>
-            {produits.length} formes · {coloris} coloris · dès {prixMin.toLocaleString("fr-FR")} DA
+            <span data-compte>{produits.length}</span> formes · <span data-compte>{coloris}</span> coloris · dès{" "}
+            {prixMin.toLocaleString("fr-FR")} DA
           </p>
         </div>
       </div>
@@ -111,8 +112,10 @@ export function Catalogue({ produits }: { produits: FeaturedProduct[] }) {
               <Link
                 key={p.id}
                 href={`/boutique/${p.slug}`}
-                data-apparait
-                className="group block outline-none"
+                data-monte-suite
+                data-incline="6"
+                className="group block outline-none [transform-style:preserve-3d]"
+                style={{ perspective: 900 }}
               >
                 <Affiche
                   produit={p}
@@ -134,7 +137,7 @@ export function Catalogue({ produits }: { produits: FeaturedProduct[] }) {
           {/* ── L'index ─────────────────────────────────────────────── */}
           <section className="px-5 pt-24 sm:px-10 lg:pt-32">
             <div
-              data-apparait
+              data-monte
               className="grid gap-4 border-t pt-5 lg:grid-cols-[220px_1fr]"
               style={{ borderColor: `${ENCRE}33` }}
             >
@@ -147,7 +150,7 @@ export function Catalogue({ produits }: { produits: FeaturedProduct[] }) {
               {produits.map((p, i) => {
                 const dispo = p.colors.filter((c) => c.inStock).length;
                 return (
-                  <li key={p.id} data-apparait>
+                  <li key={p.id} data-monte-suite>
                     <Link
                       href={`/boutique/${p.slug}`}
                       className="group flex items-baseline gap-3 border-b py-4 transition-colors"

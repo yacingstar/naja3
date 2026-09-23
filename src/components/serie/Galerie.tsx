@@ -5,6 +5,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type { FeaturedProduct } from "@/lib/products";
 import { Affiche } from "@/components/serie/Affiche";
 import { Entete } from "@/components/serie/Entete";
+import { useMouvement } from "@/components/serie/mouvement";
 import { DEBUT, ENCRE, FIN, G, HEURES, M, minutes, ROUGE } from "@/components/serie/style";
 
 // Le premier écran : la série des veilleuses, comme une série d'affiches.
@@ -41,6 +42,9 @@ export function Galerie({ produits }: { produits: FeaturedProduct[] }) {
   const rangee = useRef<HTMLDivElement>(null);
   const curseur = useRef<HTMLSpanElement>(null);
   const actifRef = useRef(0);
+  // Inclinaison des affiches vers le curseur ; le reste du mouvement de cette
+  // section (épinglage, défilement horizontal) lui est propre, plus bas.
+  useMouvement(section);
   const [actif, setActif] = useState(0);
 
   const n = produits.length;
@@ -201,8 +205,9 @@ export function Galerie({ produits }: { produits: FeaturedProduct[] }) {
               <Link
                 key={p.id}
                 href={`/boutique/${p.slug}`}
-                className="group naja-monte block w-[68vw] max-w-[300px] shrink-0 snap-center sm:w-[260px] lg:w-[min(22vw,calc(38vh*.8))]"
-                style={{ animationDelay: `${0.35 + i * 0.07}s` }}
+                data-incline="6"
+                className="group naja-monte block w-[68vw] max-w-[300px] shrink-0 snap-center sm:w-[260px] lg:w-[min(22vw,calc(38vh*.8))] [transform-style:preserve-3d]"
+                style={{ perspective: 900, animationDelay: `${0.35 + i * 0.07}s` }}
               >
                 <Affiche
                   produit={p}
@@ -214,6 +219,7 @@ export function Galerie({ produits }: { produits: FeaturedProduct[] }) {
                       : `translateY(6px) rotate(${pente}deg) scale(.95)`
                   }
                   opaciteLegende={estActif ? 1 : 0.55}
+                  parallaxe={false}
                   priority={i < 3}
                   sizes="(min-width: 1024px) 300px, 70vw"
                 />

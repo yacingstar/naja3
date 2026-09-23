@@ -2,10 +2,11 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { DirectOrderForm } from "@/components/site/DirectOrderForm";
 import { Entete } from "@/components/serie/Entete";
 import { Pied } from "@/components/serie/Pied";
+import { useMouvement } from "@/components/serie/mouvement";
 import { ENCRE, G, M, riso, ROUGE } from "@/components/serie/style";
 import { trackViewContent } from "@/lib/analytics";
 import type { DeliveryRate } from "@/lib/deliveryRates";
@@ -36,6 +37,9 @@ export function Fiche({
   index: number;
   aussi: FeaturedProduct[];
 }) {
+  const zone = useRef<HTMLDivElement>(null);
+  useMouvement(zone);
+
   const [colorisId, setColorisId] = useState(colors[0]?.id);
   const [vue, setVue] = useState(0);
 
@@ -75,7 +79,7 @@ export function Fiche({
   const numero = `№ ${String(index + 1).padStart(2, "0")}`;
 
   return (
-    <div>
+    <div ref={zone}>
       <Entete courant="produit" droite={<span className="hidden opacity-80 sm:inline">{numero}</span>} />
 
       <nav className={`${M} px-5 pt-6 text-[11px] tracking-[.12em] uppercase opacity-70 sm:px-10`}>
@@ -88,7 +92,12 @@ export function Fiche({
 
       <div className="grid gap-8 px-5 pt-5 sm:px-10 lg:grid-cols-2 lg:gap-14 lg:pt-8">
         {/* ── L'affiche ───────────────────────────────────────────── */}
-        <div className="lg:sticky lg:top-6 lg:self-start">
+        <div
+          data-incline="5"
+          className="lg:sticky lg:top-6 lg:self-start [transform-style:preserve-3d]"
+          style={{ perspective: 1000 }}
+        >
+          <div data-flotte>
           {/* Keyée sur le coloris : changer de couleur rejoue l'entrée, donc la
               photo arrive au lieu de se substituer en silence. */}
           <div
@@ -112,6 +121,7 @@ export function Fiche({
               />
             ) : null}
             <span className={`${M} absolute top-4 left-4 text-[11px] text-[#f4ecdb] opacity-90`}>{numero}</span>
+          </div>
           </div>
 
           {vues.length > 1 ? (
@@ -193,7 +203,7 @@ export function Fiche({
 
           {/* ── Le nuancier ─────────────────────────────────────── */}
           {colors.length > 0 ? (
-            <div className="mt-8 border-t pt-5" style={{ borderColor: `${ENCRE}33` }}>
+            <div data-monte className="mt-8 border-t pt-5" style={{ borderColor: `${ENCRE}33` }}>
               <p className={`${M} text-[11px] tracking-[.14em] uppercase opacity-70`}>
                 01 — Le coloris · {colors.length} encres
               </p>
@@ -205,6 +215,7 @@ export function Fiche({
                       key={c.id}
                       type="button"
                       role="radio"
+                      data-monte-suite
                       aria-checked={choisi}
                       aria-label={c.inStock ? c.colorName : `${c.colorName} (rupture)`}
                       title={c.inStock ? c.colorName : `${c.colorName} (rupture)`}
@@ -238,7 +249,7 @@ export function Fiche({
           ) : null}
 
           {/* ── Le bon de commande ──────────────────────────────── */}
-          <div className="mt-8 border-t pt-5" style={{ borderColor: `${ENCRE}33` }}>
+          <div data-monte className="mt-8 border-t pt-5" style={{ borderColor: `${ENCRE}33` }}>
             <p className={`${M} text-[11px] tracking-[.14em] uppercase opacity-70`}>02 — La commande</p>
             {coloris ? (
               <DirectOrderForm
@@ -261,7 +272,7 @@ export function Fiche({
       {/* ── Le reste de la série ────────────────────────────────── */}
       {aussi.length > 0 ? (
         <section className="px-5 pt-24 sm:px-10 lg:pt-32">
-          <div className="grid gap-4 border-t pt-5 lg:grid-cols-[220px_1fr]" style={{ borderColor: `${ENCRE}33` }}>
+          <div data-monte className="grid gap-4 border-t pt-5 lg:grid-cols-[220px_1fr]" style={{ borderColor: `${ENCRE}33` }}>
             <p className={`${M} text-[11px] tracking-[.14em] uppercase opacity-70`}>Aussi</p>
             <h2 className={`${G} text-[36px] leading-[.98] font-bold tracking-[-.03em] sm:text-[52px]`}>
               Le reste de <span style={{ color: ROUGE }}>la série</span>.
@@ -273,7 +284,9 @@ export function Fiche({
                 <Link
                   key={p.id}
                   href={`/boutique/${p.slug}`}
-                  className="group block w-[62vw] max-w-[260px] shrink-0 snap-center sm:w-[240px]"
+                  data-monte-suite
+                  data-incline="7"
+                  className="group block w-[62vw] max-w-[260px] shrink-0 snap-center sm:w-[240px] [transform-style:preserve-3d]"
                 >
                   <div
                     className="riso relative aspect-[4/5] overflow-hidden transition-transform duration-700 ease-[cubic-bezier(.2,.8,.2,1)] [transform:rotate(-1.2deg)] group-hover:[transform:translateY(-8px)_rotate(0deg)_scale(1.02)]"
