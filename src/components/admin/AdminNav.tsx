@@ -2,11 +2,11 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { M, ROUGE } from "@/components/serie/style";
 
-// Les onglets de l'admin, dans la langue de la série : machine à écrire, en
-// capitales espacées, et l'onglet courant souligné de rouge. Pas de pastille
-// pleine — un outil se lit, il ne se décore pas.
+// L'ancienne barre était quatre liens en petit gris, sans indication de
+// l'endroit où l'on se trouve. Ici l'onglet courant est plein, les autres sont
+// cerclés : on sait toujours sur quelle page on est, y compris sur un
+// téléphone où la barre passe à la ligne.
 const ONGLETS = [
   { href: "/admin", label: "Accueil" },
   { href: "/admin/commandes", label: "Commandes" },
@@ -18,7 +18,7 @@ export function AdminNav({ className = "" }: { className?: string }) {
   const chemin = usePathname();
 
   return (
-    <nav className={`${M} flex flex-wrap items-center gap-x-6 gap-y-2 text-[11px] tracking-[.12em] uppercase ${className}`}>
+    <nav className={`flex flex-wrap items-center gap-1.5 ${className}`}>
       {ONGLETS.map((o) => {
         // « Accueil » ne doit s'allumer que sur /admin exactement, sinon il
         // reste allumé sur toutes les sous-pages.
@@ -28,8 +28,11 @@ export function AdminNav({ className = "" }: { className?: string }) {
             key={o.href}
             href={o.href}
             aria-current={actif ? "page" : undefined}
-            className={`transition hover:opacity-60 ${actif ? "underline decoration-2 underline-offset-[6px]" : "opacity-70"}`}
-            style={actif ? { textDecorationColor: ROUGE } : undefined}
+            className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
+              actif
+                ? "bg-encre text-papier"
+                : "border-2 border-encre/15 text-encre/70 hover:border-encre/40 hover:text-encre"
+            }`}
           >
             {o.label}
           </Link>

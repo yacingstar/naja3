@@ -15,31 +15,34 @@ export default function AdminLoading() {
     <div aria-busy="true" aria-live="polite">
       <span className="sr-only">Chargement…</span>
 
-      <div className="h-4 w-24 animate-pulse bg-[#1d1a17]/10" />
-      <div className="mt-3 h-11 w-56 animate-pulse bg-[#1d1a17]/10" />
+      <div className="h-11 w-56 animate-pulse rounded-xl bg-encre/10" />
 
       {/* Stands in for the status filter tabs on the orders screen. */}
-      <div className="mt-6 flex flex-wrap gap-6 border-b border-[#1d1a17]/20 pb-3">
+      <div className="mt-6 flex flex-wrap gap-2">
         {[68, 84, 76, 92, 72].map((w, i) => (
-          <div key={i} className="h-3 animate-pulse bg-[#1d1a17]/[0.12]" style={{ width: w }} />
+          <div
+            key={i}
+            className="h-8 animate-pulse rounded-full bg-encre/[0.07]"
+            style={{ width: w }}
+          />
         ))}
       </div>
 
       {/* Des lignes cerclées comme celles qu'elles remplacent, qui s'effacent
           vers le bas pour que le bloc se lise comme inachevé et non comme du
           vrai contenu. */}
-      <div className="mt-2">
+      <div className="mt-6 space-y-2">
         {Array.from({ length: 6 }).map((_, i) => (
           <div
             key={i}
-            className="flex animate-pulse items-center gap-4 border-b border-[#1d1a17]/15 py-4"
+            className="flex animate-pulse items-center gap-4 rounded-2xl border-2 border-encre/10 px-4 py-4"
             style={{ opacity: 1 - i * 0.13 }}
           >
-            <div className="h-3 w-10 bg-[#1d1a17]/12" />
-            <div className="h-4 flex-1 bg-[#1d1a17]/10" />
-            <div className="hidden h-3 w-28 bg-[#1d1a17]/10 sm:block" />
-            <div className="h-4 w-20 bg-[#1d1a17]/10" />
-            <div className="h-5 w-24 bg-[#1d1a17]/[0.08]" />
+            <div className="h-4 w-10 rounded bg-encre/10" />
+            <div className="h-4 flex-1 rounded bg-encre/10" />
+            <div className="hidden h-4 w-28 rounded bg-encre/10 sm:block" />
+            <div className="h-4 w-20 rounded bg-encre/10" />
+            <div className="h-6 w-24 rounded-full bg-encre/[0.07]" />
           </div>
         ))}
       </div>

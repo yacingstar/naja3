@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Reveal } from "@/components/site/Reveal";
 
 // Draft copy — worth a pass together before this goes live.
-export const FAQS = [
+const FAQS = [
   {
     q: "Combien de temps pour recevoir ma commande ?",
     a: "Chaque lampe est imprimée à la commande : comptez quelques jours de fabrication avant l'expédition, puis le délai habituel de livraison dans votre wilaya.",

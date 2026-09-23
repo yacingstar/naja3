@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ProductEditor } from "@/components/admin/ProductEditor";
-import { G, M } from "@/components/serie/style";
 import { getAdminProductById, getAdminProductColors } from "@/lib/adminProducts";
 
 export default async function ProduitDetailPage({
@@ -23,11 +22,11 @@ export default async function ProduitDetailPage({
 
   return (
     <div>
-      <Link href="/admin/produits" className={`${M} text-[11px] tracking-[.12em] uppercase underline underline-offset-4 opacity-70 transition hover:opacity-100`}>
+      <Link href="/admin/produits" className="text-sm font-semibold text-encre/60 transition hover:text-encre">
         ← Tous les produits
       </Link>
 
-      <h1 className={`${G} mt-4 text-[36px] leading-none font-bold tracking-[-.03em] sm:text-[44px]`}>
+      <h1 className="mt-4 font-heading text-[38px] leading-none font-bold tracking-[-.03em] sm:text-[44px]">
         {product.name}
       </h1>
 

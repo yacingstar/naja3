@@ -1,7 +1,6 @@
 "use client";
 
 import type { ButtonHTMLAttributes, ReactNode } from "react";
-import { M } from "@/components/serie/style";
 
 // One button for the whole admin, because the complaint was that clicking
 // something gave no sign anything had happened — you'd sit there wondering
@@ -17,13 +16,11 @@ import { M } from "@/components/serie/style";
 // tracks the real server round-trip rather than a guessed timeout.
 type Variant = "primary" | "secondary" | "danger" | "ghost";
 
-// Registre « série » : des rectangles et des filets, pas de pastilles. Les
-// libellés sont en machine à écrire, comme toutes les commandes de l admin.
 const VARIANTS: Record<Variant, string> = {
-  primary: "bg-encre text-papier hover:opacity-90",
-  secondary: "border border-encre/30 text-encre hover:border-encre hover:bg-encre/5",
-  danger: "border border-[#ef4f2a]/50 text-[#c0350f] hover:border-[#ef4f2a] hover:bg-[#ef4f2a]/8",
-  ghost: "text-encre/55 hover:text-encre hover:bg-encre/5",
+  primary: "bg-encre text-papier hover:bg-encre/90",
+  secondary: "border-2 border-encre/20 text-encre hover:border-encre hover:bg-encre/5",
+  danger: "border-2 border-red-300 text-red-700 hover:bg-red-50 hover:border-red-500",
+  ghost: "text-encre/50 hover:text-encre hover:bg-encre/5",
 };
 
 export function AdminButton({
@@ -42,7 +39,7 @@ export function AdminButton({
   pendingLabel?: string;
   size?: "sm" | "md";
 } & ButtonHTMLAttributes<HTMLButtonElement>) {
-  const sizing = size === "sm" ? "px-3 py-1.5 text-[10px]" : "px-6 py-3 text-[11px]";
+  const sizing = size === "sm" ? "px-3.5 py-1.5 text-xs" : "px-6 py-2.5 text-sm font-semibold";
 
   return (
     <button
@@ -50,7 +47,7 @@ export function AdminButton({
       disabled={disabled || pending}
       // aria-busy so assistive tech announces the wait, not just sighted users
       aria-busy={pending || undefined}
-      className={`${M} inline-flex items-center justify-center gap-2 tracking-[.12em] uppercase transition-all duration-150 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-60 disabled:active:scale-100 ${sizing} ${VARIANTS[variant]} ${className}`}
+      className={`inline-flex items-center justify-center gap-2 rounded-full font-medium transition-all duration-150 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-60 disabled:active:scale-100 ${sizing} ${VARIANTS[variant]} ${className}`}
     >
       {pending ? <Spinner /> : null}
       {pending && pendingLabel ? pendingLabel : children}

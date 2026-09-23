@@ -4,7 +4,6 @@ import { InternalNotesForm } from "@/components/admin/InternalNotesForm";
 import { DeleteOrderButton } from "@/components/admin/DeleteOrderButton";
 import { OrderStatusControl } from "@/components/admin/OrderStatusControl";
 import { StatusBadge } from "@/components/admin/StatusBadge";
-import { ENCRE, G, M, ROUGE } from "@/components/serie/style";
 import { formatDateTime, formatPrice } from "@/lib/format";
 import { getOrderById } from "@/lib/orders";
 
@@ -28,24 +27,24 @@ export default async function CommandeDetailPage({
     <div>
       <Link
         href="/admin/commandes"
-        className={`${M} text-[11px] tracking-[.12em] uppercase underline underline-offset-4 opacity-70 transition hover:opacity-100`}
+        className="text-sm font-semibold text-encre/60 transition hover:text-encre"
       >
         ← Toutes les commandes
       </Link>
 
       <div className="mt-4 flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
         <div className="flex flex-wrap items-center gap-3">
-          <h1 className={`${G} text-[36px] leading-none font-bold tracking-[-.03em] sm:text-[44px]`}>
-            Commande <span style={{ color: ROUGE }}>#{order.id}</span>
+          <h1 className="font-heading text-[38px] leading-none font-bold tracking-[-.03em] sm:text-[44px]">
+            Commande #{order.id}
           </h1>
           <StatusBadge status={order.status} />
         </div>
         <OrderStatusControl orderId={order.id} status={order.status} />
       </div>
 
-      <div className="mt-8 grid grid-cols-1 gap-8 lg:grid-cols-2 lg:gap-12">
-        <section className="border-t pt-5" style={{ borderColor: `${ENCRE}33` }}>
-          <h2 className={`${M} text-[11px] tracking-[.14em] uppercase opacity-70`}>01 — Client</h2>
+      <div className="mt-7 grid grid-cols-1 gap-5 lg:grid-cols-2">
+        <section className="rounded-[1.75rem] border-[3px] border-encre p-5 sm:p-6">
+          <h2 className="font-heading text-xl font-semibold">Client</h2>
           <dl className="mt-3.5 space-y-1.5 text-sm">
             <Row label="Reçue le">
               <time dateTime={order.createdAt}>{formatDateTime(order.createdAt)}</time>
@@ -56,7 +55,7 @@ export default async function CommandeDetailPage({
             <Row label="Téléphone">
               <a
                 href={`tel:${order.phone.replace(/\s/g, "")}`}
-                className={`${G} text-[17px] font-semibold underline decoration-[#1d1a17]/30 underline-offset-4 transition hover:decoration-[#1d1a17]`}
+                className="font-heading text-base underline decoration-encre/25 underline-offset-4 transition hover:decoration-encre"
               >
                 {order.phone}
               </a>
@@ -71,10 +70,8 @@ export default async function CommandeDetailPage({
             {order.notesClient ? <Row label="Note du client">{order.notesClient}</Row> : null}
           </dl>
 
-          <h2 className={`${M} mt-8 border-t pt-5 text-[11px] tracking-[.14em] uppercase opacity-70`} style={{ borderColor: `${ENCRE}33` }}>
-            Note interne
-          </h2>
-          <p className="mt-2 text-[13px] opacity-65">
+          <h2 className="mt-7 font-heading text-xl font-semibold">Note interne</h2>
+          <p className="mt-1 text-[13px] font-medium text-encre/55">
             Pour vous seulement — jamais visible par la cliente ou le client.
           </p>
           <div className="mt-3">
@@ -82,9 +79,9 @@ export default async function CommandeDetailPage({
           </div>
         </section>
 
-        <section className="border-t pt-5" style={{ borderColor: `${ENCRE}33` }}>
-          <h2 className={`${M} text-[11px] tracking-[.14em] uppercase opacity-70`}>02 — Articles</h2>
-          <ul className="mt-4 divide-y divide-[#1d1a17]/15 border-y border-[#1d1a17]/15 text-sm">
+        <section className="rounded-[1.75rem] border-[3px] border-encre p-5 sm:p-6">
+          <h2 className="font-heading text-xl font-semibold">Articles</h2>
+          <ul className="mt-3.5 divide-y-2 divide-encre/10 border-y-2 border-encre/10 text-sm">
             {order.items.map((item) => (
               <li key={item.id} className="flex justify-between gap-4 py-3">
                 <span className="font-medium">
@@ -106,7 +103,7 @@ export default async function CommandeDetailPage({
               <span className="text-encre/65">Livraison</span>
               <span>{formatPrice(order.deliveryFee)}</span>
             </p>
-            <p className={`${G} mt-2 flex justify-between border-t pt-3 text-[22px] font-bold tabular-nums`} style={{ borderColor: `${ENCRE}33` }}>
+            <p className="mt-1 flex justify-between border-t-2 border-encre/15 pt-2.5 font-heading text-xl font-semibold">
               <span>À encaisser</span>
               <span>{formatPrice(order.orderTotal)}</span>
             </p>
@@ -114,9 +111,9 @@ export default async function CommandeDetailPage({
         </section>
       </div>
 
-      {/* Tout en bas, et derrière un avertissement : c est le seul geste de
-          l admin qui ne se repare pas. */}
-      <div className="mt-16 border-t pt-5" style={{ borderColor: `${ENCRE}33` }}>
+      {/* Tout en bas, et derriere un avertissement : c'est le seul geste de
+          l'admin qui ne se repare pas. */}
+      <div className="mt-14 border-t-2 border-dashed border-encre/15 pt-6">
         <DeleteOrderButton
           orderId={order.id}
           client={`${order.customerFirstName} ${order.customerLastName}`}
@@ -130,7 +127,7 @@ export default async function CommandeDetailPage({
 function Row({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="flex justify-between gap-4">
-      <dt className={`${M} shrink-0 text-[10px] tracking-[.1em] uppercase opacity-60`}>{label}</dt>
+      <dt className="shrink-0 font-medium text-encre/55">{label}</dt>
       <dd className="text-right font-medium">{children}</dd>
     </div>
   );

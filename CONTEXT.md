@@ -3191,3 +3191,34 @@ session. It was not deleted from here: the delete feature was written
 minutes later and its final button has never been pressed, and before this
 round the admin had no way to delete an order at all. Recorded because the
 monthly figures moved with it (17 → 16 orders this month).
+
+## Forty-fourth round: the series is rolled back
+
+*« Remets l'ancien style. »* Said straight after the print-series direction went
+live across the whole site. The style goes back to the colourful register that
+was live before it — configurator homepage, flat colour cards, thick encre
+outlines, Fredoka — on the shop, the product page and the admin alike.
+
+**How.** Every style file was checked out from `6bdb2a9`, the commit just
+before the series began, and `src/components/serie/` and `HorsSerie.tsx` were
+deleted outright. Dead components left in the tree would be one more thing to
+read past; the series is recoverable in one command from commits
+`b35977a…07056b0`, which is a better revert path than a folder nobody imports.
+
+**What was kept.** The three things asked for an hour earlier are features, not
+style, so they stay — rewritten in the colourful register:
+
+- `Stats` — the fourteen-day bars, month-on-month, the three rankings, now in
+  bordered cards with the brand palette;
+- `OrdersSearch` — the accent-insensitive filter, now a rounded field;
+- `DeleteOrderButton` — the unfolding warning, now a blush panel.
+
+`adminStats.ts` and the `deleteOrder` action were untouched: no styling in
+either.
+
+**A local trap worth recording.** `netlify dev` reported success but every
+route answered `307 → /ar`: port 3000 was already held by **semsardz2**'s dev
+server, and Netlify happily proxied to it. Nothing was wrong with the code.
+Checking `Get-CimInstance Win32_Process` on the port's owner is what found it;
+naja was then run on `next dev -p 3010` rather than killing another project's
+server.

@@ -1,5 +1,4 @@
-import { Serie } from "@/components/serie/Serie";
-import { grotesque, machine } from "@/components/serie/polices";
+import { AccueilClient } from "@/components/accueil/AccueilClient";
 import { getProducts } from "@/lib/products";
 
 // Prerender and serve from the CDN, re-rendering at most every 5 minutes.
@@ -15,9 +14,11 @@ import { getProducts } from "@/lib/products";
 // bounds how stale things can get to something a shop owner won't notice.
 export const revalidate = 300;
 
-// L'accueil « série » : la gamme en affiches qui défilent à l'horizontale,
-// puis le procédé, les retours, les questions. Voir Serie.tsx.
+// The homepage IS the configurator now. Everything the visitor needs to choose
+// — every shape, every coloris and its photograph — is fetched once here and
+// handed to the client, so switching colour is instant and costs no round
+// trip. Only the selected photograph is ever downloaded (see Configurateur).
 export default async function HomePage() {
   const produits = await getProducts();
-  return <Serie produits={produits} polices={`${grotesque.variable} ${machine.variable}`} />;
+  return <AccueilClient produits={produits} />;
 }

@@ -9,7 +9,6 @@ import {
   saveProductAndColors,
 } from "@/app/admin/(espace)/produits/actions";
 import type { AdminProductColor } from "@/lib/adminProducts";
-import { ENCRE, M } from "@/components/serie/style";
 import { slugify } from "@/lib/slug";
 
 type ExistingProduct = {
@@ -125,9 +124,9 @@ export function ProductEditor({
 
   return (
     <div className="pb-28">
-      <div className="grid grid-cols-1 gap-8 lg:grid-cols-2 lg:items-start lg:gap-12">
-        <section className="border-t pt-5" style={{ borderColor: `${ENCRE}33` }}>
-          <h2 className={`${M} text-[11px] tracking-[.14em] uppercase opacity-70`}>01 — Détails</h2>
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-2 lg:items-start">
+        <section className="rounded-[1.75rem] border-[3px] border-encre p-5 sm:p-6">
+          <h2 className="font-heading text-xl font-semibold">Détails</h2>
           <div className="mt-4 max-w-lg space-y-4">
             <label className="block">
               <span className="mb-1 block text-sm font-medium text-encre/70">Nom</span>
@@ -179,8 +178,8 @@ export function ProductEditor({
           </div>
         </section>
 
-        <section className="border-t pt-5" style={{ borderColor: `${ENCRE}33` }}>
-          <h2 className={`${M} text-[11px] tracking-[.14em] uppercase opacity-70`}>02 — Couleurs</h2>
+        <section className="rounded-[1.75rem] border-[3px] border-encre p-5 sm:p-6">
+          <h2 className="font-heading text-xl font-semibold">Couleurs</h2>
           <p className="mt-1 text-[13px] font-medium text-encre/55">
             Les photos s&apos;enregistrent tout de suite. Le reste part avec le bouton
             « Enregistrer ».
@@ -200,7 +199,7 @@ export function ProductEditor({
 
       {/* Sticky so the save button is reachable without scrolling back up —
           a product with several colours makes for a long page. */}
-      <div className="fixed inset-x-0 bottom-0 z-30 border-t bg-[#ebe3d3]/95 backdrop-blur" style={{ borderColor: `${ENCRE}33` }}>
+      <div className="fixed inset-x-0 bottom-0 z-30 border-t-2 border-encre/15 bg-papier/95 backdrop-blur">
         <div className="mx-auto flex max-w-5xl flex-wrap items-center gap-x-4 gap-y-2 px-5 py-3.5 sm:px-8">
           <AdminButton
             onClick={handleSave}
@@ -211,7 +210,7 @@ export function ProductEditor({
             Enregistrer
           </AdminButton>
 
-          <span aria-live="polite" className={`${M} text-[10px] tracking-[.1em] uppercase`}>
+          <span aria-live="polite" className="text-sm">
             {error ? (
               <span className="text-red-700">{error}</span>
             ) : isPending ? (
