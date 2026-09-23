@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { InternalNotesForm } from "@/components/admin/InternalNotesForm";
+import { DeleteOrderButton } from "@/components/admin/DeleteOrderButton";
 import { OrderStatusControl } from "@/components/admin/OrderStatusControl";
 import { StatusBadge } from "@/components/admin/StatusBadge";
 import { ENCRE, G, M, ROUGE } from "@/components/serie/style";
@@ -111,6 +112,16 @@ export default async function CommandeDetailPage({
             </p>
           </div>
         </section>
+      </div>
+
+      {/* Tout en bas, et derrière un avertissement : c est le seul geste de
+          l admin qui ne se repare pas. */}
+      <div className="mt-16 border-t pt-5" style={{ borderColor: `${ENCRE}33` }}>
+        <DeleteOrderButton
+          orderId={order.id}
+          client={`${order.customerFirstName} ${order.customerLastName}`}
+          montant={formatPrice(order.orderTotal)}
+        />
       </div>
     </div>
   );

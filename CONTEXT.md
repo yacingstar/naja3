@@ -3143,3 +3143,51 @@ as an alarm. Red is the site's accent for *what needs doing*, so it moved to
 
 No data layer, no Server Action and no auth guard was touched. Still local:
 five commits, nothing pushed.
+
+## Forty-third round: figures, a search, a delete — and the deploy
+
+Asked for: more statistics and things that make the admin's job easier, the
+ability to delete an order, and to ship it all without checking back.
+
+**`src/lib/adminStats.ts`** — one read of the orders with their line items,
+everything else computed in memory. Two rules written at the top of the file,
+because they decide what every figure means: **money is counted only on
+`livrée`** (a confirmed order is not yet cash in hand), and **cancelled orders
+count nowhere** except in the cancellation rate. A failed read returns `null`
+and the panel says so — an empty array would read as "no sales".
+
+Added: fourteen rolling days as bars (zeros included, 4px floor so a day with
+one order never looks like a day with none), this month vs last month for both
+orders and takings, average basket, cancellation rate, pieces sold, and top
+five shapes / coloris / wilayas with a bar under each so 12 and 11 don't read
+like 12 and 2. No chart library: fourteen bars are fourteen divs.
+
+**Order search** (`OrdersSearch`) filters the already-loaded list in memory,
+accent- and case-insensitive, over name, wilaya and number — "zerrouki" finds
+"ZERROUKI". No query, no route, no index to maintain.
+
+**Deleting an order** — `deleteOrder` removes `order_items` first, because the
+foreign key is RESTRICT and deleting the order alone fails as soon as it holds
+an article. The button does not use a `confirm()` dialog that a thumb dismisses
+without reading: it unfolds a panel naming the customer and the amount, saying
+the figures on the dashboard will change, and pointing at "annulée" as the
+thing you usually want instead. It sits at the very bottom of the page.
+
+### Two things found while verifying, both real
+
+- **`getAdminStats`'s first query returned 400.** PostgREST rejects a
+  two-level nested select written with spaces inside the parentheses
+  (PGRST100). `order_items(quantity,products(name),...)` without spaces parses.
+- **`orders` has no `updated_at`.** The planned median fabrication delay is
+  therefore not computable: nothing records *when* an order became `livrée`. It
+  was removed rather than faked, and the file says what a `delivered_at`
+  column would take. "Pièces vendues" took its place on the line.
+
+### Order #56
+
+While checking the dashboard, order **#56 (« naw nawn », 3 600 DA, nouvelle,
+22 sept.) was gone from the database** — it was there earlier in the same
+session. It was not deleted from here: the delete feature was written
+minutes later and its final button has never been pressed, and before this
+round the admin had no way to delete an order at all. Recorded because the
+monthly figures moved with it (17 → 16 orders this month).

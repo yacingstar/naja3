@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { StatusBadge } from "@/components/admin/StatusBadge";
 import { ENCRE, G, M, RISO, ROUGE } from "@/components/serie/style";
+import { Stats } from "@/components/admin/Stats";
 import { getAdminProducts } from "@/lib/adminProducts";
+import { getAdminStats } from "@/lib/adminStats";
 import { formatDateTimeShort, formatPrice } from "@/lib/format";
 import { getOrders } from "@/lib/orders";
 
@@ -54,7 +56,11 @@ function Bloc({
 }
 
 export default async function AdminAccueilPage() {
-  const [commandes, produits] = await Promise.all([getOrders(), getAdminProducts()]);
+  const [commandes, produits, stats] = await Promise.all([
+    getOrders(),
+    getAdminProducts(),
+    getAdminStats(),
+  ]);
 
   const nouvelles = commandes.filter((c) => c.status === "nouvelle");
   const aExpedier = commandes.filter((c) => c.status === "confirmée");
@@ -187,7 +193,9 @@ export default async function AdminAccueilPage() {
         </ul>
       )}
 
-      <div className={`${M} mt-10 flex flex-wrap gap-x-7 gap-y-3 text-[11px] tracking-[.12em] uppercase`}>
+      <Stats stats={stats} />
+
+      <div className={`${M} mt-12 flex flex-wrap gap-x-7 gap-y-3 text-[11px] tracking-[.12em] uppercase`}>
         <Link
           href="/admin/produits/nouveau"
           className="px-5 py-3 text-[#f6efe1] transition hover:opacity-90"

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { OrderRow } from "@/components/admin/OrderRow";
+import { OrdersSearch } from "@/components/admin/OrdersSearch";
 import { ENCRE, G, M, ROUGE } from "@/components/serie/style";
 import { getOrders, ORDER_STATUSES, type OrderStatus } from "@/lib/orders";
 
@@ -47,11 +47,7 @@ export default async function CommandesPage({
           {status ? `Aucune commande « ${status} ».` : "Aucune commande pour le moment."}
         </p>
       ) : (
-        <ul className="mt-2">
-          {orders.map((order) => (
-            <OrderRow key={order.id} order={order} />
-          ))}
-        </ul>
+        <OrdersSearch orders={orders} />
       )}
     </div>
   );
