@@ -514,6 +514,38 @@ html::-webkit-scrollbar {
 .naja-pop   { animation: naja-pop .42s cubic-bezier(.2, .9, .3, 1.6) backwards; }
 .naja-photo { animation: naja-photo .6s cubic-bezier(.2, .9, .3, 1.4) backwards; }
 
+/* Le titre du héros : chaque mot monte depuis SOUS sa propre ligne, dans un
+   masque (overflow-hidden sur le parent). Même règle que le reste : au repos
+   le mot est à sa place, donc rien ne peut rester caché. */
+@keyframes naja-masque {
+  from { transform: translateY(105%); }
+}
+.naja-masque { animation: naja-masque .85s cubic-bezier(.2, .8, .2, 1) backwards; }
+
+
 @media (prefers-reduced-motion: reduce) {
-  .naja-monte, .naja-pop, .naja-photo { animation: none; }
+  .naja-monte, .naja-pop, .naja-photo, .naja-masque { animation: none; }
+}
+
+/* ── Accueil « série » ────────────────────────────────────────────────────
+   Le grain de risographie des affiches : un bruit SVG en ligne (aucune
+   requête) posé en « multiply » sur les aplats de couleur, pour qu'ils aient
+   l'air imprimés à l'encre plutôt que peints à l'écran. */
+.riso {
+  position: relative;
+  isolation: isolate;
+}
+.riso::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.32;
+  mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .9 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+/* Le même grain, très léger, sur tout le papier de la page. */
+.papier-serie {
+  background-color: #ebe3d3;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.75' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .08 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }

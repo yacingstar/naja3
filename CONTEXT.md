@@ -2965,3 +2965,47 @@ element is decorative and invisible *is* its resting state:
 
 Everything stops under `prefers-reduced-motion`. Verified at 375 and at 1280,
 day and night, with no horizontal page scroll.
+
+## Thirty-eighth round: the homepage becomes a print series
+
+Two brand-hero attempts first, both rejected and both removed from the tree:
+a dark "night" hero (*« ça gâche totalement le monde coloré de Naja, et le
+titre est trop violent »*), then a light one with five lamps on coloured
+discs, overtaken before she saw it by her next brief. She then sent a screen
+recording of **"Illustrated Print Series — Horizontal Scroll Website" by tubik
+on Dribbble** and asked to copy that art direction for the whole homepage.
+
+The reference, read frame by frame: beige paper with grain, a tight bold
+grotesque headline with one word in orange-red, typewriter labels, a row of
+risograph posters (flat blue / red / pink / olive) that moves **sideways**
+when you scroll down, each poster a moment of the morning with a time, a
+title, a line and a tag pill; a timeline scrubber along the bottom; a live
+clock top-right. Its "five small rituals before nine a.m." became Naja's
+**« Sept petites lumières après le dîner »** — each lamp is a moment of the
+evening, and the timeline runs 20:00 → 00:00.
+
+**`src/components/serie/`** — `Galerie` (header, title, posters, timeline),
+`Sections` (procédé as three drawn riso posters, customer photos as prints,
+questions, closing), `style` (inks, times, the two font classes), `polices`
+(Inter Tight + JetBrains Mono, loaded by the homepage only), `Serie` (root).
+The site header and footer are hidden on `/` only (`HorsAccueil`); the page
+carries its own in the reference's style. FAQ copy is shared with `Faq.tsx`.
+
+- **Horizontal scroll, safely.** The row is a native horizontal scroller by
+  default — that is the phone experience (scroll-snap, one poster centred),
+  and also the desktop fallback if GSAP never loads. On a desktop with a fine
+  pointer, GSAP pins the screen and turns vertical scroll into horizontal
+  travel over 1.5× the row's width. One `avancer(progress)` drives the active
+  poster, the clock and the scrubber in both modes.
+- The progress callback depends on the lamp count only. Anything less stable
+  would re-create the pin on every active-poster change; the React Compiler
+  lint flagged the first version for exactly that.
+- Riso grain is an inline SVG noise in `multiply` (`.riso`), the paper texture
+  another at 8% (`.papier-serie`). No image requests.
+- The old homepage (`src/components/accueil/`) is untouched and is the revert
+  path: point `page.tsx` back at `AccueilClient`.
+
+**`netlify dev` on this machine:** the preview tool exports `PORT=8888`, Next
+inherits it and binds 8888, and Netlify then times out waiting for 3000. The
+user-level `~/.claude/launch.json` entry for `naja3` now runs
+`Remove-Item Env:PORT` before `netlify dev`.
