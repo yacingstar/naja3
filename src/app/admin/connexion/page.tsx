@@ -3,6 +3,7 @@
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { ENCRE, G, M, ROUGE } from "@/components/serie/style";
 
 // No public sign-up anywhere in the app — the admin account is created by
 // hand in the Supabase dashboard (Authentication -> Users).
@@ -87,7 +88,9 @@ function ConnexionForm() {
   if (resetMode) {
     return (
       <main className="mx-auto flex min-h-screen max-w-sm flex-col justify-center px-6">
-        <h1 className="text-center font-heading text-2xl">Mot de passe oublié</h1>
+        <h1 className={`${G} text-[34px] leading-none font-bold tracking-[-.02em]`}>
+          Mot de passe <span style={{ color: ROUGE }}>oublié</span>.
+        </h1>
         {resetSent ? (
           <div className="mt-8 space-y-4 text-center">
             <p className="text-sm text-encre/70">
@@ -100,7 +103,7 @@ function ConnexionForm() {
                 setResetMode(false);
                 setResetSent(false);
               }}
-              className="text-sm text-encre/60 underline hover:text-encre"
+              className={`${M} text-[10px] tracking-[.12em] uppercase underline underline-offset-4 opacity-65 transition hover:opacity-100`}
             >
               Retour à la connexion
             </button>
@@ -108,7 +111,7 @@ function ConnexionForm() {
         ) : (
           <form onSubmit={handleReset} className="mt-8 space-y-4">
             <label className="block">
-              <span className="mb-1 block text-sm font-medium text-encre/70">Email</span>
+              <span className={`${M} mb-1.5 block text-[10px] tracking-[.12em] uppercase opacity-70`}>Email</span>
               <input
                 required
                 type="email"
@@ -121,14 +124,15 @@ function ConnexionForm() {
             <button
               type="submit"
               disabled={submitting}
-              className="w-full rounded-full bg-lueur px-6 py-3 text-sm font-medium text-encre transition hover:bg-lueur/90 disabled:cursor-not-allowed disabled:opacity-60"
+              className={`${M} w-full px-6 py-3.5 text-[11px] tracking-[.12em] text-[#f6efe1] uppercase transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60`}
+          style={{ background: ENCRE }}
             >
               {submitting ? "Envoi…" : "Envoyer le lien"}
             </button>
             <button
               type="button"
               onClick={() => setResetMode(false)}
-              className="block w-full text-center text-sm text-encre/60 underline hover:text-encre"
+              className={`${M} block w-full text-center text-[10px] tracking-[.12em] uppercase underline underline-offset-4 opacity-65 transition hover:opacity-100`}
             >
               Retour à la connexion
             </button>
@@ -140,10 +144,13 @@ function ConnexionForm() {
 
   return (
     <main className="mx-auto flex min-h-screen max-w-sm flex-col justify-center px-6">
-      <h1 className="text-center font-heading text-2xl">Naja — gestion</h1>
+      <p className={`${M} text-[11px] tracking-[.14em] uppercase opacity-70`}>Naja — gestion</p>
+      <h1 className={`${G} mt-2 text-[34px] leading-none font-bold tracking-[-.02em]`}>
+        Bonjour<span style={{ color: ROUGE }}>.</span>
+      </h1>
       <form onSubmit={handleSubmit} className="mt-8 space-y-4">
         <label className="block">
-          <span className="mb-1 block text-sm font-medium text-encre/70">Email</span>
+          <span className={`${M} mb-1.5 block text-[10px] tracking-[.12em] uppercase opacity-70`}>Email</span>
           <input
             required
             type="email"
@@ -153,7 +160,7 @@ function ConnexionForm() {
           />
         </label>
         <label className="block">
-          <span className="mb-1 block text-sm font-medium text-encre/70">
+          <span className={`${M} mb-1.5 block text-[10px] tracking-[.12em] uppercase opacity-70`}>
             Mot de passe
           </span>
           <input
@@ -168,7 +175,8 @@ function ConnexionForm() {
         <button
           type="submit"
           disabled={submitting}
-          className="w-full rounded-full bg-lueur px-6 py-3 text-sm font-medium text-encre transition hover:bg-lueur/90 disabled:cursor-not-allowed disabled:opacity-60"
+          className={`${M} w-full px-6 py-3.5 text-[11px] tracking-[.12em] text-[#f6efe1] uppercase transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60`}
+          style={{ background: ENCRE }}
         >
           {submitting ? "Connexion…" : "Se connecter"}
         </button>
@@ -178,7 +186,7 @@ function ConnexionForm() {
             setResetMode(true);
             setError(null);
           }}
-          className="block w-full text-center text-sm text-encre/60 underline hover:text-encre"
+          className={`${M} block w-full text-center text-[10px] tracking-[.12em] uppercase underline underline-offset-4 opacity-65 transition hover:opacity-100`}
         >
           Mot de passe oublié ?
         </button>

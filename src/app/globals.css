@@ -614,3 +614,19 @@ html::-webkit-scrollbar {
   box-shadow: 0 10px 24px -14px rgba(29, 26, 23, .8);
   animation: cta-pop 0.42s cubic-bezier(0.34, 1.56, 0.64, 1) both;
 }
+
+/* L'admin, dans le registre de la série. Les mêmes variables que les pages
+   publiques (voir .papier-serie) plus un aplatissement : un outil de gestion
+   n'a pas de pastilles à ombre dure, il a des filets et des rectangles. */
+.admin-serie .input {
+  border-radius: 0;
+  border-color: color-mix(in srgb, var(--encre) 28%, transparent);
+  background: transparent;
+  font-size: 0.9375rem;
+}
+.admin-serie .input:focus {
+  outline-color: #ef4f2a;
+}
+.admin-serie button:not([data-rond]) {
+  border-radius: 0;
+}

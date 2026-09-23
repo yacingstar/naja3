@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { OrderRow } from "@/components/admin/OrderRow";
+import { ENCRE, G, M, ROUGE } from "@/components/serie/style";
 import { getOrders, ORDER_STATUSES, type OrderStatus } from "@/lib/orders";
 
 function isOrderStatus(value: string): value is OrderStatus {
@@ -23,29 +24,30 @@ export default async function CommandesPage({
 
   return (
     <div>
-      <h1 className="font-heading text-[40px] leading-[.95] font-bold tracking-[-.03em] sm:text-[48px]">
-        Commandes
+      <p className={`${M} text-[11px] tracking-[.14em] uppercase opacity-70`}>Registre</p>
+      <h1 className={`${G} mt-2 text-[40px] leading-[.95] font-bold tracking-[-.03em] sm:text-[52px]`}>
+        Commandes.
       </h1>
 
-      <div className="mt-6 flex flex-wrap gap-2">
-        <FilterTab label="Toutes" nombre={toutes.length} href="/admin/commandes" active={!status} />
+      <div className={`${M} mt-6 flex flex-wrap gap-x-6 gap-y-2 border-b pb-3 text-[11px] tracking-[.12em] uppercase`} style={{ borderColor: `${ENCRE}33` }}>
+        <Onglet label="Toutes" nombre={toutes.length} href="/admin/commandes" actif={!status} />
         {ORDER_STATUSES.map((s) => (
-          <FilterTab
+          <Onglet
             key={s}
             label={s}
             nombre={toutes.filter((o) => o.status === s).length}
             href={`/admin/commandes?status=${encodeURIComponent(s)}`}
-            active={status === s}
+            actif={status === s}
           />
         ))}
       </div>
 
       {orders.length === 0 ? (
-        <p className="mt-10 font-medium text-encre/60">
+        <p className="mt-10 opacity-60">
           {status ? `Aucune commande « ${status} ».` : "Aucune commande pour le moment."}
         </p>
       ) : (
-        <ul className="mt-6 space-y-2">
+        <ul className="mt-2">
           {orders.map((order) => (
             <OrderRow key={order.id} order={order} />
           ))}
@@ -55,35 +57,28 @@ export default async function CommandesPage({
   );
 }
 
-function FilterTab({
+function Onglet({
   label,
   nombre,
   href,
-  active,
+  actif,
 }: {
   label: string;
   nombre: number;
   href: string;
-  active: boolean;
+  actif: boolean;
 }) {
   return (
     <Link
       href={href}
-      aria-current={active ? "page" : undefined}
-      className={`inline-flex items-center gap-2 rounded-full border-2 px-4 py-1.5 text-sm font-semibold capitalize transition ${
-        active
-          ? "border-encre bg-encre text-papier"
-          : "border-encre/15 text-encre/70 hover:border-encre/40 hover:text-encre"
+      aria-current={actif ? "page" : undefined}
+      className={`inline-flex items-baseline gap-1.5 capitalize transition hover:opacity-100 ${
+        actif ? "underline decoration-2 underline-offset-[6px]" : "opacity-65"
       }`}
+      style={actif ? { textDecorationColor: ROUGE } : undefined}
     >
       {label}
-      <span
-        className={`rounded-full px-1.5 py-px text-xs ${
-          active ? "bg-papier/20" : "bg-encre/8"
-        }`}
-      >
-        {nombre}
-      </span>
+      <span className="text-[10px] opacity-60">{nombre}</span>
     </Link>
   );
 }

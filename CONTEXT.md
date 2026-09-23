@@ -3113,3 +3113,33 @@ from the modelling software, which would be a real feature rather than a
 finish.
 
 Still local.
+
+## Forty-second round: the admin joins the series
+
+The panel now speaks the same language as the shop it manages: beige paper,
+Inter Tight for names and figures, JetBrains Mono for every label, riso inks,
+red for what needs attention. A tool that looks like the storefront is one
+less thing to learn.
+
+**The cheap half.** `src/app/admin/layout.tsx` — which covers the login screen
+too — wraps everything in `papier-serie admin-serie` and the two fonts. Because
+`.papier-serie` redefines the brand variables on its subtree, every admin
+component that used `font-heading`, `bg-papier`, `text-encre` or `bg-lueur`
+followed without being touched, and `.admin-serie` flattens `.input` and the
+buttons.
+
+**The half that needed writing.** The thick 3px cards and Fredoka titles were
+mine from two rounds ago and had to be rewritten as rules and numbered
+sections: the dashboard's stat blocks became riso ink blocks, the orders list
+and product list became registers (red number, name, mono meta, figure
+right-aligned and tabular), `StatusBadge` became a flat ink label, `AdminNav`
+and the order filters became underlined typewriter tabs, and the order page
+and product editor lost their cards for `01 —` / `02 —` headings over hairlines.
+The loading skeleton was reshaped to match the rows it stands in for.
+
+**One judgement recorded:** red first went on "Encaissé ce mois", where it read
+as an alarm. Red is the site's accent for *what needs doing*, so it moved to
+"À confirmer" and the takings took the olive.
+
+No data layer, no Server Action and no auth guard was touched. Still local:
+five commits, nothing pushed.
