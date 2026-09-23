@@ -173,8 +173,8 @@ export function Catalogue({ produits }: { produits: FeaturedProduct[] }) {
                           ? `${p.colors.length} coloris`
                           : `${dispo}/${p.colors.length} coloris`}
                       </span>
-                      <span className={`${M} ml-auto w-[76px] shrink-0 text-right text-[12px] sm:ml-0`}>
-                        {p.price.toLocaleString("fr-FR")} DA
+                      <span className={`${G} ml-auto w-[92px] shrink-0 text-right text-[17px] font-semibold tabular-nums sm:ml-0 sm:text-[19px]`}>
+                        {p.price.toLocaleString("fr-FR")} <span className="text-[12px] font-medium opacity-60">DA</span>
                       </span>
                     </Link>
                   </li>

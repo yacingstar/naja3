@@ -3037,3 +3037,36 @@ page 16px wider than the screen.
 `CarteProduit` is still used by "Vous aimerez aussi" on product pages.
 
 Still local, like the homepage: neither page has been pushed.
+
+## Fortieth round: the price, and the product page in the series register
+
+**The price.** *« Change la taille du prix, mets-le en valeur. »* It was a
+mono footnote beside the coloris tag. It now sits at the end of the name line
+in the grotesque, at the name's own size, with "DA" smaller and dimmed —
+poster captions on both the homepage and the shop, and the shop's index rows.
+A number people look for is not a footnote.
+
+**The product page.** `/boutique/[slug]` now renders `serie/Fiche` inside
+`CadreSerie`: the lamp on its riso ink to the left (numbered № 03, keyed on
+the coloris so a colour change replays the entrance), and to the right the
+name, a large price, the description, then two numbered sections — *01 Le
+coloris*, a printer's swatch board of ink squares (bicolours split top/bottom,
+out-of-stock struck through), and *02 La commande*. It closes on "Le reste de
+la série" and the shared footer.
+
+**How the order form changed register without being edited.** `.papier-serie`
+redefines the brand variables on its own subtree, so everything the page
+borrows from the rest of the site follows: `bg-papier`, `text-encre`,
+`bg-lueur` and the step dots all resolve to the series inks. A few rules
+flatten `.order-slip`, `.input` and its buttons from 2.5rem pills to rules and
+rectangles. **No JSX of `DirectOrderForm` was touched** — validation, the
+wilaya rates and the submit path are untouched.
+
+**The trap worth recording:** redefining `--font-heading` did nothing. The
+`@theme inline` block at the top of globals.css substitutes it at build time,
+so `font-heading` utilities compile to `var(--font-fredoka)` directly.
+Overriding `--font-fredoka` inside `.papier-serie` is what actually works —
+confirmed by reading the submit button's computed `font-family` (Inter Tight).
+
+`HorsSerie` now hides the site header and footer on the whole `/boutique`
+subtree. Still local: nothing pushed.

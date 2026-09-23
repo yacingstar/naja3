@@ -66,7 +66,15 @@ export function Affiche({
           <span className={`${M} text-[11px]`} style={{ color: ROUGE }}>
             {repere}
           </span>
-          <span className={`${G} text-[19px] leading-none font-semibold tracking-[-.01em]`}>{produit.name}</span>
+          <span className={`${G} min-w-0 truncate text-[19px] leading-none font-semibold tracking-[-.01em]`}>
+            {produit.name}
+          </span>
+          {/* Le prix au bout de la ligne du nom, dans la grotesque et à la
+              même échelle que lui : c'est une information qu'on cherche, pas
+              une note de bas de page. */}
+          <span className={`${G} ml-auto shrink-0 text-[19px] leading-none font-semibold tracking-[-.01em] tabular-nums`}>
+            {produit.price.toLocaleString("fr-FR")} <span className="text-[13px] font-medium opacity-60">DA</span>
+          </span>
         </p>
         {produit.description ? (
           <p className="mt-1.5 line-clamp-2 text-[13px] leading-snug opacity-75">{produit.description}</p>
@@ -93,14 +101,13 @@ export function Affiche({
             ) : null}
           </p>
         ) : null}
-        <p className="mt-2.5 flex items-center gap-2.5">
+        <p className="mt-2.5">
           <span
-            className={`${M} rounded-full px-2.5 py-1 text-[10px] tracking-[.1em] uppercase`}
+            className={`${M} inline-block rounded-full px-2.5 py-1 text-[10px] tracking-[.1em] uppercase`}
             style={{ background: encre.tag, color: encre.texte }}
           >
             {produit.colors.length} coloris
           </span>
-          <span className={`${M} text-[11px] opacity-70`}>{produit.price.toLocaleString("fr-FR")} DA</span>
         </p>
       </div>
     </>

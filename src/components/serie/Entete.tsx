@@ -19,7 +19,9 @@ export function Entete({
   courant,
   droite,
 }: {
-  courant: "accueil" | "boutique";
+  // « produit » : la fiche porte l'en-tête sans qu'aucun onglet ne soit
+  // souligné — on n'est ni sur la série ni sur la planche.
+  courant: "accueil" | "boutique" | "produit";
   droite?: React.ReactNode;
 }) {
   return (
@@ -46,10 +48,10 @@ export function Entete({
         {/* Sur téléphone la navigation est cachée : on garde le lien qui
             mène ailleurs que la page courante. */}
         <Link
-          href={courant === "boutique" ? "/" : "/boutique"}
+          href={courant === "accueil" ? "/boutique" : "/"}
           className="ml-2 tracking-[.12em] uppercase underline underline-offset-4 md:hidden"
         >
-          {courant === "boutique" ? "Série" : "Boutique"}
+          {courant === "accueil" ? "Boutique" : "Série"}
         </Link>
       </div>
     </header>
