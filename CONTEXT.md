@@ -3009,3 +3009,31 @@ carries its own in the reference's style. FAQ copy is shared with `Faq.tsx`.
 inherits it and binds 8888, and Netlify then times out waiting for 3000. The
 user-level `~/.claude/launch.json` entry for `naja3` now runs
 `Remove-Item Env:PORT` before `netlify dev`.
+
+## Thirty-ninth round: the shop in the same register
+
+*« Super, maintenant passons à la boutique, même style, même DA. »*
+
+`/boutique` now renders `serie/Catalogue` inside the shared `CadreSerie`
+frame (paper, fonts, header offset). The shared pieces were pulled out of the
+homepage so both pages speak identically: `Entete` (wordmark, typewriter nav
+with the current page underlined in red, a right-hand slot — the clock on the
+homepage, the counts in the shop), `Pied`, and `Affiche` (a riso poster plus
+its caption). `Affiche` takes an optional `transform`: the homepage drives it
+from scroll progress; without it, the poster tilts at rest and straightens on
+hover of its parent link, which is the shop's behaviour.
+
+The shop is the homepage's posters laid out as a plate rather than a strip —
+on the homepage you wander through the evening, here you compare. Each poster
+carries its number (№ 01…) and a small ink swatch per coloris (bicolours split
+top/bottom, out-of-stock faded). Below the plate, an **index** in the manner of
+a printer's catalogue: number, ink dot, name, dotted leader, coloris count,
+price. On a phone the count is dropped from the index row — it pushed the
+page 16px wider than the screen.
+
+`HorsAccueil` became `HorsSerie` and hides the site header/footer on `/` and
+`/boutique` exactly; product pages keep the usual header. The previous shop
+(`components/boutique/BoutiqueClient`) is untouched as the revert path;
+`CarteProduit` is still used by "Vous aimerez aussi" on product pages.
+
+Still local, like the homepage: neither page has been pushed.

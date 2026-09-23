@@ -1,10 +1,11 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { FeaturedProduct } from "@/lib/products";
-import { DEBUT, ENCRE, FIN, G, HEURES, M, minutes, riso, ROUGE } from "@/components/serie/style";
+import { Affiche } from "@/components/serie/Affiche";
+import { Entete } from "@/components/serie/Entete";
+import { DEBUT, ENCRE, FIN, G, HEURES, M, minutes, ROUGE } from "@/components/serie/style";
 
 // Le premier écran : la série des veilleuses, comme une série d'affiches.
 //
@@ -138,32 +139,21 @@ export function Galerie({ produits }: { produits: FeaturedProduct[] }) {
       aria-labelledby="serie-titre"
       className="relative flex flex-col overflow-hidden lg:h-screen"
     >
-      {/* ── En-tête ─────────────────────────────────────────────────── */}
-      <header className="flex items-center justify-between gap-4 px-5 pt-5 sm:px-10 lg:pt-6">
-        <Link href="/" className={`${G} flex items-center gap-1.5 text-[17px] font-bold tracking-[-.01em] uppercase`}>
-          Naja
-          <span aria-hidden className="h-2 w-2 rounded-full" style={{ background: ROUGE }} />
-        </Link>
-        <nav className={`${M} hidden items-center gap-7 text-[11px] tracking-[.12em] uppercase md:flex`}>
-          <a href="#serie-titre" className="transition hover:opacity-60">Série</a>
-          <Link href="/boutique" className="transition hover:opacity-60">Boutique</Link>
-          <a href="#procede" className="transition hover:opacity-60">Procédé</a>
-          <a href="#questions" className="transition hover:opacity-60">Questions</a>
-        </nav>
-        {/* L'heure de l'affiche courante, comme l'horloge de la référence.
-            Keyée : chaque nouvelle heure monte depuis sous sa ligne. */}
-        <p className={`${M} flex min-w-0 items-center gap-2 overflow-hidden text-[12px] sm:text-[13px]`} aria-live="off">
-          <span key={actif} className="naja-masque inline-block" style={{ color: ROUGE }}>
-            {heures[actif]}
+      <Entete
+        courant="accueil"
+        droite={
+          // L'heure de l'affiche courante, comme l'horloge de la référence.
+          // Keyée : chaque nouvelle heure monte depuis sous sa ligne.
+          <span className="flex min-w-0 items-center gap-2 overflow-hidden">
+            <span key={actif} className="naja-masque inline-block" style={{ color: ROUGE }}>
+              {heures[actif]}
+            </span>
+            <span key={`n${actif}`} className="naja-masque hidden max-w-[16ch] truncate sm:inline-block">
+              {courant?.name.toLowerCase()}…
+            </span>
           </span>
-          <span key={`n${actif}`} className="naja-masque hidden max-w-[16ch] truncate sm:inline-block">
-            {courant?.name.toLowerCase()}…
-          </span>
-          <Link href="/boutique" className="ml-2 tracking-[.12em] uppercase underline underline-offset-4 md:hidden">
-            Boutique
-          </Link>
-        </p>
-      </header>
+        }
+      />
 
       {/* ── Titre ───────────────────────────────────────────────────── */}
       <div className="grid gap-5 px-5 pt-8 sm:px-10 lg:grid-cols-[1.2fr_1fr] lg:items-end lg:pt-10">
@@ -205,7 +195,6 @@ export function Galerie({ produits }: { produits: FeaturedProduct[] }) {
       >
         <div ref={rangee} className="flex w-max items-start gap-5 px-5 pt-4 pb-6 sm:gap-7 sm:px-10 lg:h-full lg:items-center lg:pb-2">
           {produits.map((p, i) => {
-            const encre = riso(i);
             const estActif = i === actif;
             const pente = i % 2 === 0 ? -1.6 : 1.4;
             return (
@@ -215,52 +204,19 @@ export function Galerie({ produits }: { produits: FeaturedProduct[] }) {
                 className="group naja-monte block w-[68vw] max-w-[300px] shrink-0 snap-center sm:w-[260px] lg:w-[min(22vw,calc(38vh*.8))]"
                 style={{ animationDelay: `${0.35 + i * 0.07}s` }}
               >
-                <div
-                  className="riso relative aspect-[4/5] overflow-hidden transition-transform duration-700 ease-[cubic-bezier(.2,.8,.2,1)]"
-                  style={{
-                    background: encre.fond,
-                    transform: estActif
+                <Affiche
+                  produit={p}
+                  index={i}
+                  repere={heures[i]}
+                  transform={
+                    estActif
                       ? "translateY(-10px) rotate(0deg) scale(1.04)"
-                      : `translateY(6px) rotate(${pente}deg) scale(.95)`,
-                  }}
-                >
-                  {p.photoUrl ? (
-                    <Image
-                      src={p.photoUrl}
-                      alt={`Veilleuse ${p.name}`}
-                      fill
-                      quality={85}
-                      priority={i < 3}
-                      sizes="(min-width: 1024px) 300px, 70vw"
-                      className="object-contain p-[12%] drop-shadow-[0_10px_12px_rgba(0,0,0,.22)] transition-transform duration-700 group-hover:scale-[1.04]"
-                    />
-                  ) : null}
-                </div>
-
-                <div className="mt-4 transition-opacity duration-500" style={{ opacity: estActif ? 1 : 0.55 }}>
-                  <p className="flex items-baseline gap-2.5">
-                    <span className={`${M} text-[11px]`} style={{ color: ROUGE }}>
-                      {heures[i]}
-                    </span>
-                    <span className={`${G} text-[19px] leading-none font-semibold tracking-[-.01em]`}>
-                      {p.name}
-                    </span>
-                  </p>
-                  {p.description ? (
-                    <p className="mt-1.5 line-clamp-2 text-[13px] leading-snug opacity-75">{p.description}</p>
-                  ) : null}
-                  <p className="mt-2.5 flex items-center gap-2.5">
-                    <span
-                      className={`${M} rounded-full px-2.5 py-1 text-[10px] tracking-[.1em] uppercase`}
-                      style={{ background: encre.tag, color: encre.texte }}
-                    >
-                      {p.colors.length} coloris
-                    </span>
-                    <span className={`${M} text-[11px] opacity-70`}>
-                      {p.price.toLocaleString("fr-FR")} DA
-                    </span>
-                  </p>
-                </div>
+                      : `translateY(6px) rotate(${pente}deg) scale(.95)`
+                  }
+                  opaciteLegende={estActif ? 1 : 0.55}
+                  priority={i < 3}
+                  sizes="(min-width: 1024px) 300px, 70vw"
+                />
               </Link>
             );
           })}

@@ -1,4 +1,6 @@
-import { BoutiqueClient } from "@/components/boutique/BoutiqueClient";
+import { Catalogue } from "@/components/serie/Catalogue";
+import { grotesque, machine } from "@/components/serie/polices";
+import { CadreSerie } from "@/components/serie/Serie";
 import { getProducts } from "@/lib/products";
 
 // See the note on the homepage: CDN-served, with admin edits pushing through
@@ -13,5 +15,11 @@ export const metadata = {
 
 export default async function BoutiquePage() {
   const produits = await getProducts();
-  return <BoutiqueClient produits={produits} />;
+  // Dans le style « série » de l'accueil. L'ancienne boutique
+  // (components/boutique/BoutiqueClient) reste en place comme chemin de retour.
+  return (
+    <CadreSerie polices={`${grotesque.variable} ${machine.variable}`}>
+      <Catalogue produits={produits} />
+    </CadreSerie>
+  );
 }

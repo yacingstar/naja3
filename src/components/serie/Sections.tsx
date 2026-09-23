@@ -6,7 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import { FAQS } from "@/components/site/Faq";
 import { useReveal } from "@/components/accueil/useReveal";
 import { RETOURS } from "@/lib/accueil";
-import { CONTACT_LINKS } from "@/lib/contact";
+import { Pied } from "@/components/serie/Pied";
 import { ENCRE, G, M, riso, ROUGE } from "@/components/serie/style";
 
 // Tout ce qui suit la galerie, dans la même langue que la référence : un
@@ -267,7 +267,7 @@ function Questions() {
 
 function Fin() {
   return (
-    <section className="px-5 pt-24 pb-8 sm:px-10 lg:pt-32">
+    <section className="px-5 pt-24 sm:px-10 lg:pt-32">
       <div data-apparait className="border-t pt-10" style={{ borderColor: `${ENCRE}33` }}>
         <h2 className={`${G} max-w-[14ch] text-[44px] leading-[.95] font-bold tracking-[-.035em] sm:text-[72px] lg:text-[92px]`}>
           Choisissez <span style={{ color: ROUGE }}>la vôtre</span>, ce soir.
@@ -286,18 +286,6 @@ function Fin() {
         </div>
       </div>
 
-      <footer className={`${M} mt-20 flex flex-wrap items-end justify-between gap-x-8 gap-y-3 text-[10px] opacity-75 sm:text-[11px]`}>
-        <span>© {new Date().getFullYear()} Naja · veilleuses imprimées en 3D</span>
-        <span className="flex flex-wrap gap-5">
-          <Link href="/boutique" className="underline underline-offset-4">Boutique</Link>
-          {CONTACT_LINKS.map((l) => (
-            <a key={l.label} href={l.href} target="_blank" rel="noreferrer" className="underline underline-offset-4">
-              {l.label}
-            </a>
-          ))}
-        </span>
-        <span>Fait à Alger, surtout le soir</span>
-      </footer>
     </section>
   );
 }
@@ -312,6 +300,7 @@ export function Sections() {
       <Retours />
       <Questions />
       <Fin />
+      <Pied />
     </div>
   );
 }

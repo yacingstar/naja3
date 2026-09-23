@@ -12,7 +12,7 @@ import { ENCRE } from "@/components/serie/style";
 // src/components/accueil/ : c'est le chemin de retour si ce style ne tient
 // pas, et le configurateur sert toujours de modèle à la fiche produit.
 //
-// L'en-tête et le pied de page du site sont masqués ici (HorsAccueil) : la
+// L'en-tête et le pied de page du site sont masqués ici (HorsSerie) : la
 // page a les siens. D'où la marge négative, qui annule la place réservée à
 // l'en-tête fixe par (site)/layout.tsx.
 export function Serie({ produits, polices }: { produits: FeaturedProduct[]; polices: string }) {
@@ -24,12 +24,23 @@ export function Serie({ produits, polices }: { produits: FeaturedProduct[]; poli
     );
   }
   return (
+    <CadreSerie polices={polices}>
+      <Galerie produits={produits} />
+      <Sections />
+    </CadreSerie>
+  );
+}
+
+// Le papier, les polices, et la marge négative qui annule la place réservée à
+// l'en-tête fixe du site (masqué sur ces pages, voir HorsSerie). Partagé avec
+// la boutique.
+export function CadreSerie({ polices, children }: { polices: string; children: React.ReactNode }) {
+  return (
     <main
       className={`${polices} papier-serie min-h-screen`}
       style={{ color: ENCRE, marginTop: "calc(-1 * var(--header-height))" }}
     >
-      <Galerie produits={produits} />
-      <Sections />
+      {children}
     </main>
   );
 }
