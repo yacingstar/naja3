@@ -74,9 +74,10 @@ export function Footer() {
               </p>
             </div>
 
-            {/* No "Mon panier" here any more: orders are placed on the product
-                page itself (see DirectOrderForm), so the basket is never
-                filled and that link led to a permanently empty page. */}
+            {/* No "Mon panier" here. The basket can be filled again from the
+                product page (see DirectOrderForm), but the header bag is
+                already the way back to it — and a footer link that usually
+                lands on an empty page is one more thing to read past. */}
             <Colonne titre="La boutique">
               <Lien href="/boutique">Toutes les veilleuses</Lien>
               <Lien href="/">Composer la mienne</Lien>

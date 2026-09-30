@@ -1,18 +1,22 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import type { DeliveryRate } from "@/lib/deliveryRates";
 import { formatPrice } from "@/lib/format";
 import type { ProductColorDetail } from "@/lib/products";
 import { ColorSwatches } from "@/components/site/ColorSwatches";
+import { BagIcon } from "@/components/site/Icons";
+import { trackAddToCart } from "@/lib/analytics";
+import { useCart } from "@/lib/cart";
 import {
   MAX_ORDER_QUANTITY,
   useDirectOrder,
   type DirectOrderProduct,
 } from "@/lib/useDirectOrder";
 
-// The whole order, on the product page, in one card — no cart, no basket
-// step, no separate checkout screen.
+// The whole order, on the product page, in one card — no basket step, no
+// separate checkout screen.
 //
 // This replaced the add-to-cart button here because of a specific, observed
 // problem rather than a preference: customers were adding a lamp to the cart
@@ -24,12 +28,22 @@ import {
 //
 // So the design leans hard on looking like a form you fill in and send: an
 // order slip, numbered steps, a perforated tear line, and a submit button
-// that always states the full amount payable. The button is the only call to
-// action on the page.
+// that always states the full amount payable.
+//
+// `withCart` puts the basket back as a SECONDARY action, on the shop's product
+// page only. The reason it was removed has not gone away, so it is not undone:
+// the slip stays, "Commander" stays the only primary button, and what lands in
+// the basket is framed as something still being collected ("il reste à passer
+// la commande") rather than as a finished purchase. What it buys is the case
+// the slip alone could not serve — two *different* lamps in one delivery, which
+// used to mean two orders and two delivery fees.
+//
+// It stays off on /lampe/[slug]: those are paid-traffic pages whose whole point
+// is one place to order, and a second call to action there would spend the ad
+// click on a decision instead of on the form.
 //
 // Everything that isn't presentation — pricing, delivery fees, validation,
-// pixel events — lives in useDirectOrder, shared with the ad landing page's
-// very differently-styled version of the same form.
+// pixel events — lives in useDirectOrder, shared with the landing pages.
 
 export function DirectOrderForm({
   product,
@@ -37,6 +51,7 @@ export function DirectOrderForm({
   selectedColorId,
   onSelectColor,
   showColorStep = true,
+  withCart = false,
   rates,
 }: {
   product: DirectOrderProduct;
@@ -48,17 +63,89 @@ export function DirectOrderForm({
   // The detail page renders the swatches beside the photo instead, so it
   // turns this step off here and the two remaining steps renumber.
   showColorStep?: boolean;
+  // Off by default, and only the shop's product page turns it on — see the
+  // note at the top of this file for why the ad landing pages keep one
+  // single place to order.
+  withCart?: boolean;
   rates: DeliveryRate[];
 }) {
   const [noteOpen, setNoteOpen] = useState(false);
   const [ctaVisible, setCtaVisible] = useState(true);
   const [scrolledIn, setScrolledIn] = useState(false);
+  const [addedColorId, setAddedColorId] = useState<number | null>(null);
 
   const submitRef = useRef<HTMLButtonElement>(null);
   const detailsRef = useRef<HTMLDivElement>(null);
 
   const selectedColor = colors.find((c) => c.id === selectedColorId) ?? colors[0];
   const order = useDirectOrder({ product, selectedColor, rates });
+
+  // The basket. Read even when `withCart` is off, because hooks can't be
+  // conditional — and it costs nothing: this component is only ever rendered
+  // inside the (site) layout's CartProvider.
+  const { items, addItem } = useCart();
+
+  // A lit "✓ Ajouté" that puts itself out, so the next tap isn't misread as
+  // the first one failing.
+  const addedTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(
+    () => () => {
+      if (addedTimer.current) clearTimeout(addedTimer.current);
+    },
+    [],
+  );
+
+  // The 10-per-lamp ceiling the slip enforces applies to the basket too —
+  // otherwise the same lamp could be ordered as 10 here and 20 from /panier,
+  // which is a limit with no reason behind it.
+  const alreadyInCart = selectedColor
+    ? (items.find(
+        (i) => i.productId === product.id && i.colorId === selectedColor.id,
+      )?.quantity ?? 0)
+    : 0;
+  const roomInCart = MAX_ORDER_QUANTITY - alreadyInCart;
+  const canAddToCart = order.inStock && roomInCart > 0;
+
+  // Which colour was last added, rather than a plain boolean: derived from the
+  // current selection, so switching to another colour drops the "Ajouté" state
+  // by itself instead of claiming the new colour is the one in the basket.
+  // Adjusting the quantity keeps it — that colour really is in there.
+  const justAdded = addedColorId !== null && addedColorId === selectedColor?.id;
+
+  function handleAddToCart() {
+    if (!selectedColor || !canAddToCart) return;
+
+    const quantity = Math.min(order.quantity, roomInCart);
+
+    addItem(
+      {
+        productId: product.id,
+        productSlug: product.slug,
+        productName: product.name,
+        colorId: selectedColor.id,
+        colorName: selectedColor.colorName,
+        // A display snapshot only. placeOrder re-prices every line from the
+        // live catalogue before anything is written — see lib/cart.tsx.
+        unitPrice: product.price,
+        // Same rule as colorPhotoUrl in lib/products.ts: the cutout when the
+        // admin has set one, the first gallery shot otherwise.
+        photoUrl:
+          selectedColor.cutoutPhotoUrl ?? selectedColor.photos[0]?.url ?? null,
+      },
+      quantity,
+    );
+
+    trackAddToCart({
+      id: product.slug,
+      name: product.name,
+      value: product.price * quantity,
+      quantity,
+    });
+
+    setAddedColorId(selectedColor.id);
+    if (addedTimer.current) clearTimeout(addedTimer.current);
+    addedTimer.current = setTimeout(() => setAddedColorId(null), 2500);
+  }
 
   // The slip sits a long way below the photograph and the description on both
   // pages that use it, so the only call to action can be off-screen for most
@@ -85,6 +172,28 @@ export function DirectOrderForm({
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
+
+  // What the line under the basket button says. One expression rather than
+  // three nested ternaries in the markup. "Il reste à passer la commande" is
+  // the load-bearing half — it is the answer to the exact misreading that got
+  // the basket removed in the first place.
+  const cartHint = justAdded ? (
+    <>
+      Il reste à passer la commande ·{" "}
+      <Link
+        href="/panier"
+        className="underline decoration-dotted underline-offset-4 hover:text-encre"
+      >
+        Voir le panier
+      </Link>
+    </>
+  ) : !order.inStock ? (
+    "Ce coloris est en rupture."
+  ) : roomInCart <= 0 ? (
+    `Maximum ${MAX_ORDER_QUANTITY} par commande pour ce coloris.`
+  ) : (
+    "Plusieurs modèles ? Mettez-les au panier et commandez une seule fois."
+  );
 
   return (
     <form
@@ -142,6 +251,39 @@ export function DirectOrderForm({
           </div>
           <p className="font-heading text-xl">{formatPrice(order.subtotal)}</p>
         </div>
+
+        {/* Stays ABOVE the tear line, inside the half of the slip that is
+            "what you're buying": the basket is a place to put a lamp while you
+            go and look at another one, so it belongs next to the colour and
+            the quantity it acts on, not down among the delivery fields. */}
+        {withCart ? (
+          <div className="mt-5">
+            <button
+              type="button"
+              onClick={handleAddToCart}
+              disabled={!canAddToCart}
+              className={`flex w-full items-center justify-center gap-2 rounded-full border-2 border-encre px-6 py-3 font-heading text-base transition active:translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50 disabled:active:translate-y-0 ${
+                justAdded ? "bg-sauge/45" : "bg-papier hover:bg-lueur/20"
+              }`}
+            >
+              {justAdded ? (
+                <span aria-hidden>✓</span>
+              ) : (
+                <BagIcon className="h-5 w-5" aria-hidden />
+              )}
+              {justAdded ? "Ajouté au panier" : "Ajouter au panier"}
+            </button>
+            {/* aria-live because the button's own label swap is not announced:
+                the pressed control keeps its focus, so a screen reader gets
+                nothing unless the change is spoken from here. */}
+            <p
+              aria-live="polite"
+              className="mt-2 text-center text-[13px] leading-snug text-encre/60"
+            >
+              {cartHint}
+            </p>
+          </div>
+        ) : null}
       </div>
 
       {/* The tear line. Everything above is what you're buying, everything

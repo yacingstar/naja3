@@ -73,10 +73,11 @@ export function useDirectOrder({
   const subtotal = product.price * quantity;
   const total = subtotal + (deliveryFee ?? 0);
 
-  // InitiateCheckout used to fire on reaching /commande with a full cart, a
-  // moment that no longer exists. The equivalent signal is the first time
-  // someone actually starts filling a form in — a ref because it must fire
-  // exactly once and must not re-render anything.
+  // InitiateCheckout has to mean "started filling the form in", not "arrived
+  // at a page". For the slip that is the first keystroke, not the landing —
+  // there is no separate screen to arrive at. (Arriving at /commande with a
+  // basket still reports itself, from CheckoutForm.) A ref because it must
+  // fire exactly once and must not re-render anything.
   const started = useRef(false);
   function handleFirstInput() {
     if (started.current) return;
@@ -137,9 +138,13 @@ export function useDirectOrder({
       return;
     }
 
-    // Reported on a placed order rather than on a cart write, which no longer
-    // happens anywhere. Meta still wants the step: without it every Purchase
-    // would follow nothing at all.
+    // Fires on a placed order rather than on a basket write. There is no
+    // basket write on this path — the slip orders in one go — and this hook
+    // also drives the ad landing pages, which have no basket at all. Without
+    // it every Purchase from those pages would follow nothing. On the shop's
+    // product page the real basket write reports AddToCart too, from
+    // DirectOrderForm; a customer who does both is counted twice mid-funnel,
+    // which is harmless, and Purchase is de-duplicated by order id.
     trackAddToCart({
       id: product.slug,
       name: product.name,

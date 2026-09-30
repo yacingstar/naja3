@@ -89,6 +89,18 @@ export default function PanierPage() {
       >
         Passer la commande
       </Link>
+
+      {/* The basket is a collecting step again, not a dead end — without a way
+          back to the shop, a basket reads as somewhere you are stuck rather
+          than somewhere you are still choosing. */}
+      <p className="mt-5 text-center text-sm">
+        <Link
+          href="/boutique"
+          className="text-encre/60 underline transition hover:text-encre"
+        >
+          ← Continuer mes achats
+        </Link>
+      </p>
     </main>
   );
 }

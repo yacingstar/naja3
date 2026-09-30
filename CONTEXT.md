@@ -3222,3 +3222,89 @@ server, and Netlify happily proxied to it. Nothing was wrong with the code.
 Checking `Get-CimInstance Win32_Process` on the port's owner is what found it;
 naja was then run on `next dev -p 3010` rather than killing another project's
 server.
+
+## Forty-fifth round: the basket comes back, beside the slip rather than instead of it
+
+*« Je veux ajouter la fonctionnalité de panier. »* The basket was not missing —
+it was fully built and deliberately unwired in round 24. `addItem` had no caller
+anywhere in the project, so `CartLink` hid itself and `/panier` was reachable
+only by typing the URL. This round connects it again.
+
+**The tension, stated rather than quietly reversed.** Round 24's reason has not
+gone away: for cash-on-delivery buyers a filled basket reads as a finished
+purchase. So this is not a revert. Asked which way to go, the client chose the
+**hybrid** — the slip stays, "Commander" stays the only primary button, and the
+basket is added *next to* it.
+
+**What the basket is actually for.** The slip orders one lamp. Two *different*
+lamps meant two orders and two delivery fees; that is the case the basket
+serves, and it is the only one it now advertises.
+
+**`withCart` on `DirectOrderForm`, defaulting to `false`.** The component has
+two callers and they want opposite things: `ProductDetail` (`/boutique/[slug]`)
+turns it on, `ProductLanding` (`/lampe/[slug]`) does not. The paid-traffic pages
+keep exactly one place to order — a second call to action there would spend the
+ad click on a decision instead of on the form.
+
+**Placement is the design.** The button sits inside step ①, above `.order-perf`,
+in the half of the slip that is "what you're buying" — the basket is where a
+lamp waits while you go and look at another one, so it belongs next to the
+colour and quantity it acts on, not down among the delivery fields. It is a
+full-width outline button, deliberately flat where the submit button carries a
+cast shadow.
+
+**The anti-confusion line is the load-bearing part.** On add, the button flips
+to "✓ Ajouté au panier" for 2.5s and the line beneath becomes *"Il reste à
+passer la commande · Voir le panier"*. That sentence is the whole answer to
+round 24's misreading, so it is not decoration and should not be shortened away.
+
+**Small decisions worth keeping:**
+- The "added" state is derived (`addedColorId === selectedColor?.id`) rather than
+  a plain boolean, so switching colour drops it by itself instead of claiming
+  the *new* colour is the one in the basket. Adjusting the quantity keeps it —
+  that colour really is in there.
+- The 10-per-lamp ceiling the slip enforces now applies to the basket too:
+  adding clamps to `MAX_ORDER_QUANTITY - alreadyInCart`, and the button disables
+  with an explanation at the cap. Otherwise the same lamp could be ordered as 10
+  from the slip and 20 from `/panier`, a limit with no reason behind it.
+- `trackAddToCart` fires on the real basket write. The one inside
+  `useDirectOrder` was **kept**, not moved: the landing pages have no basket, and
+  without it every Purchase from those pages would follow nothing. A customer
+  who uses both is counted twice mid-funnel, which is harmless — Purchase is
+  de-duplicated by order id.
+- `/panier` gained "← Continuer mes achats". Without a way back to the shop a
+  basket reads as a dead end rather than as somewhere you are still choosing.
+
+**Comments corrected, no behaviour changed**: `CartLink.tsx` (still hidden while
+empty — the badge appearing the instant a lamp goes in beats a permanent icon),
+`Footer.tsx` (no "Mon panier" link, deliberately), `useDirectOrder.ts` and
+`ProductDetail.tsx`.
+
+**Verified by driving it, not by reading it** (dev server on 8888, real
+Chromium): add respects the stepper's quantity; adding the same colour merges
+into one line instead of duplicating; adding a *different* colour creates a
+second line; the header badge tracks the running total; the button's three
+states (papier → sauge → papier) and its label round-trip; switching colour
+mid-feedback resets it; the cap stops at 10 with the button disabled; `/panier`
+steppers, removal and totals; `/commande` showing the right summary. **No order
+was submitted** — there is still no staging database, so a test order writes to
+production (round 24 had to delete one by hand). `/lampe/[slug]` checked in the
+served HTML: zero occurrences of "Ajouter au panier".
+
+**A trap that nearly cost real time: a stale dev bundle reads exactly like a
+bug.** The first run showed the *old* `DirectOrderForm` — the added-state stayed
+on when the colour changed, which is precisely what the derived state was
+written to prevent. Nothing was wrong: the page had been loaded before the last
+edits were compiled, and HMR had not picked them up. A hard reload fixed it
+instantly and the behaviour was correct. Before debugging this file's basket
+logic in a running dev server, reload first.
+
+**Known gap, not fixed here.** A basket can sit in `localStorage` for days. If a
+price changes or a colour goes out of stock, `/panier` still shows the old
+number and the error only lands at checkout. It is *safe* — `placeOrder`
+re-fetches and re-prices every line and rejects an out-of-stock colour, so
+nothing is ever charged wrongly — but the customer can see a total that changes
+under them. Worth a second pass if baskets start living long.
+
+**Not committed, not pushed.** The work is in the working tree on `master` —
+which auto-deploys. Local only.

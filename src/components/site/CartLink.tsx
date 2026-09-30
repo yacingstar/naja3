@@ -7,11 +7,11 @@ import { useCart } from "@/lib/cart";
 export function CartLink() {
   const { totalQuantity } = useCart();
 
-  // Product pages take the order inline now (see DirectOrderForm), so nothing
-  // in the normal flow ever fills the cart and this bag would sit empty in
-  // the header of every page, linking to an empty basket. Hiding it while
-  // empty rather than deleting the component keeps the cart path intact — it
-  // reappears by itself if multi-item ordering is ever turned back on.
+  // Still hidden while empty. The product page can fill the basket again
+  // (DirectOrderForm's "Ajouter au panier"), but until something is actually
+  // in it the bag would sit in the header of every page linking to an empty
+  // basket — and a badge that appears the instant a lamp goes in says more
+  // than an icon that is always there and never changes.
   if (totalQuantity === 0) return null;
 
   return (

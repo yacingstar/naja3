@@ -40,8 +40,8 @@ const REASSURANCE = [
 // thumbnails AND the order, so a single state owner avoids lifting that
 // selection through the server page.
 //
-// The buying half of this file now lives in DirectOrderForm — the page takes
-// the order inline instead of adding to a cart (see that file for why).
+// The buying half of this file lives in DirectOrderForm — the page takes the
+// order inline, and offers the basket beside it (see that file for why both).
 // Colour selection stays here rather than moving down with it, because the
 // photo on the left depends on it too; the form receives it as a controlled
 // value.
@@ -265,6 +265,9 @@ export function ProductDetail({
               selectedColorId={selectedColor.id}
               onSelectColor={selectColor}
               showColorStep={false}
+              // The one page in the shop that offers the basket as well as the
+              // slip — see DirectOrderForm's note.
+              withCart
               rates={rates}
             />
           ) : (
