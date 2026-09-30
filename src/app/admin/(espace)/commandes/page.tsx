@@ -13,13 +13,26 @@ export default async function CommandesPage({
   const statusParam = typeof params.status === "string" ? params.status : undefined;
   const status = statusParam && isOrderStatus(statusParam) ? statusParam : undefined;
 
+  // Le tri de la liste. Par défaut la plus récente en tête, ce qui est ce
+  // qu'on veut pour surveiller l'activité. `ordre=ancienne` renverse, et c'est
+  // le bloc « En retard » de l'accueil qui l'utilise : une commande oubliée
+  // est la plus ANCIENNE, donc exactement celle qui se cache en bas d'une
+  // longue liste — le tri par défaut la rendait invisible.
+  const ordreAncien = params.ordre === "ancienne";
+
   // Une seule lecture, filtrée ensuite en mémoire, au lieu d'une requête par
   // statut : c'est ce qui permet d'écrire le nombre sur chaque onglet. Sans ce
   // nombre, il fallait cliquer sur « expédiée » pour découvrir qu'il n'y avait
   // rien dedans. Naïf mais honnête à cette échelle — voir la note de
   // /admin/page.tsx.
   const toutes = await getOrders();
-  const orders = status ? toutes.filter((o) => o.status === status) : toutes;
+  const orders = (status ? toutes.filter((o) => o.status === status) : toutes)
+    .slice()
+    .sort((a, b) =>
+      ordreAncien
+        ? new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+        : new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+    );
 
   return (
     <div>
@@ -39,6 +52,18 @@ export default async function CommandesPage({
           />
         ))}
       </div>
+
+      {ordreAncien ? (
+        <p className="mt-4 inline-flex flex-wrap items-center gap-x-2 rounded-full border-2 border-encre/15 bg-encre/5 px-4 py-2 text-[13px] font-medium text-encre/70">
+          Triées des plus anciennes aux plus récentes, pour voir ce qui traîne.
+          <Link
+            href={status ? `/admin/commandes?status=${encodeURIComponent(status)}` : "/admin/commandes"}
+            className="underline transition hover:text-encre"
+          >
+            Revenir au plus récent
+          </Link>
+        </p>
+      ) : null}
 
       {orders.length === 0 ? (
         <p className="mt-10 font-medium text-encre/60">

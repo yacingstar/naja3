@@ -3467,6 +3467,81 @@ order was placed on purpose**: `placeOrder` fires a Purchase event into the live
 Meta ad account with no test-event code set, so a fake order would teach Meta to
 optimise for a fake buyer. The next genuine order is the test.
 
+## Forty-eighth round: the admin splits in two, and finally gets its delays
+
+*« Plus de statistiques, plus d'organisation, que ça soit mieux organisé et
+facile à lire. »* Four kinds of information were picked when asked (le travail
+du jour, l'argent, les clientes, la qualité et les produits), a separate
+Statistics page, and the database change.
+
+**The diagnosis was that one screen was doing two jobs.** The admin home
+answered "what do I do now" *and* "how is it going" — four KPI blocks, two
+warnings, the last six orders, a fourteen-day chart, month-on-month
+comparisons, three rankings, and a footnote, in one scroll. The analysis moves
+to `/admin/statistiques`; the home keeps only what can be acted on, in the order
+it is acted on.
+
+**The gap the code had already admitted.** `adminStats.ts` carried this note
+since it was written: *"Le délai de fabrication aurait sa place ici, mais la
+table `orders` ne garde aucune date de changement de statut […] Pas de chiffre
+inventé en attendant."* Three nullable columns fix it — `confirmed_at`,
+`shipped_at`, `delivered_at` — chosen over a single `updated_at` because that
+one keeps only the LAST change, which would have destroyed the
+confirmation → shipping → delivery breakdown. That breakdown is the point: a
+slow preparation is the shop's problem, a slow journey is the carrier's.
+
+**`select("*")` instead of a column list, and this is the load-bearing
+decision.** The three columns do not exist until the migration is applied, and
+**the migration is applied by hand** — the Supabase CLI has never been linked
+(recorded in Phase 1), so every schema change goes through the dashboard SQL
+editor. An explicit column list would therefore have made the whole admin fail
+— every page reading stats — until the SQL was pasted. With `*`, the columns
+arrive as `undefined` before the migration and the delays read "pas encore
+mesuré" instead. The site works in both states, which is what a change requiring
+a human step has to do.
+
+**Everything is measured on orders that carry the dates, and the screens say
+so.** Old orders are unrecoverable — the information was never recorded — so
+each delay reports "sur N commandes mesurées" rather than implying a
+shop-lifetime average. `Delai` carries `{ jours, sur }` for exactly that reason.
+
+**Customers are grouped by NORMALISED phone.** `0555 12 34 56` and
+`+213555123456` are one person; grouping on the raw column would have made the
+loyal-customer ranking quietly wrong. `normalizePhone` (lib/phone.ts) already
+existed for the wa.me links — third reuse, still one copy.
+
+**The late-orders block needed a sort, not just a count.** "En retard" points at
+the oldest unhandled orders, and the orders list opens newest-first, so the
+relevant rows would have been at the bottom of the page — the exact problem the
+block exists to surface. `?ordre=ancienne` reverses it, with a visible line
+explaining the reversal and a way back.
+
+**The four "à faire" counters are computed in the page, not in `adminStats`.**
+They come from `getOrders()`, the cheap read the home already does, and put in
+both places they would be two sources for numbers shown twice on one screen.
+One derivation per displayed figure.
+
+**`commandesEnRetard` lives in `lib/orders.ts`, because the linter was right.**
+`Date.now()` during a component render is refused by `react-hooks/purity` —
+correctly, since a render must be replayable. The rule had to move out of the
+page rather than be silenced.
+
+**`Stats.tsx` was deleted, not kept.** Its content split between the home and
+the new page, and the display primitives it held (`Evolution`, `Palmares`, the
+fourteen-day bars) moved to a new `components/admin/chiffres.tsx` used by both —
+the same reasoning as the series rollback: a dead component is one more thing to
+read past.
+
+**Not verified by looking at it.** The admin needs a real Supabase login that
+this session does not have, so **no screen was seen rendered** — `tsc` and
+`eslint` are clean and the markup follows the existing components, but that is
+not the same as looking. That is the first thing to do, and it is recorded here
+rather than glossed.
+
+**Also not verifiable yet**: the delays themselves. They need the migration
+applied *and* a few real orders through the new statuses. Until then the four
+delay cards read "pas encore mesuré", which is the honest state and not a bug.
+
 **WhatsApp shipped inert.** She chose Telegram-now/WhatsApp-later, so round 46's
 code is live but does nothing until the four variables exist — and `/admin` says
 so out loud, which is the one place this project has ever made a

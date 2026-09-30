@@ -6,6 +6,18 @@ import type { ActionResult } from "@/lib/actionResult";
 import type { OrderStatus } from "@/lib/orderStatus";
 import { createAdminClient } from "@/lib/supabase/admin";
 
+// La colonne de date que chaque statut fait écrire. « nouvelle » et
+// « annulée » n'en ont pas : une commande non encore traitée n'a pas de date
+// à retenir, et une annulation se date par sa création, comme avant.
+//
+// Ces trois colonnes viennent de la migration 20260930173000 ; avant elle,
+// l'information n'existait pas du tout et aucun délai n'était calculable.
+const DATE_DU_STATUT: Partial<Record<OrderStatus, "confirmed_at" | "shipped_at" | "delivered_at">> = {
+  "confirmée": "confirmed_at",
+  "expédiée": "shipped_at",
+  "livrée": "delivered_at",
+};
+
 export async function updateOrderStatus(
   orderId: number,
   status: OrderStatus,
@@ -13,11 +25,32 @@ export async function updateOrderStatus(
   await requireAdminUser();
   const supabase = createAdminClient();
 
-  const { error } = await supabase.from("orders").update({ status }).eq("id", orderId);
+  const patch: Record<string, unknown> = { status };
+  const colonne = DATE_DU_STATUT[status];
+
+  if (colonne) {
+    // Relue avant d'être écrite, pour ne poser la date que si elle est encore
+    // vide. Sans cette précaution, corriger une commande passée par erreur de
+    // « livrée » à « confirmée » puis la remettre à « livrée » remplacerait la
+    // vraie date de livraison par celle de la correction — et fausserait tous
+    // les délais, en silence.
+    const { data: actuelle } = await supabase
+      .from("orders")
+      .select("confirmed_at, shipped_at, delivered_at")
+      .eq("id", orderId)
+      .maybeSingle();
+
+    if (actuelle && !actuelle[colonne]) patch[colonne] = new Date().toISOString();
+  }
+
+  const { error } = await supabase.from("orders").update(patch).eq("id", orderId);
   if (error) return { ok: false, error: "Impossible de mettre à jour le statut." };
 
   revalidatePath(`/admin/commandes/${orderId}`);
   revalidatePath("/admin/commandes");
+  // Les deux écrans de chiffres lisent ces statuts, donc ils changent aussi.
+  revalidatePath("/admin");
+  revalidatePath("/admin/statistiques");
   return { ok: true };
 }
 

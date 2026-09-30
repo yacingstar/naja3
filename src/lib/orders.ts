@@ -13,6 +13,25 @@ export type OrderListItem = {
   orderTotal: number;
 };
 
+/** Au-delà, une commande encore au statut « nouvelle » a été oubliée. */
+export const RETARD_MS = 2 * 86_400_000;
+
+/**
+ * Les commandes qui attendent une réponse depuis trop longtemps.
+ *
+ * Ici et pas dans la page, pour deux raisons : c'est une règle sur les
+ * commandes, pas une règle d'affichage ; et lire l'horloge pendant le rendu
+ * d'un composant est refusé par la règle de pureté de React
+ * (`react-hooks/purity`), à juste titre — un rendu doit pouvoir être rejoué
+ * sans changer de résultat.
+ */
+export function commandesEnRetard(orders: OrderListItem[]): OrderListItem[] {
+  const maintenant = Date.now();
+  return orders.filter(
+    (o) => o.status === "nouvelle" && maintenant - new Date(o.createdAt).getTime() > RETARD_MS,
+  );
+}
+
 export async function getOrders(status?: OrderStatus): Promise<OrderListItem[]> {
   const supabase = await createClient();
   let query = supabase

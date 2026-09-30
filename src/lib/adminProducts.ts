@@ -17,7 +17,17 @@ export type AdminProductListItem = {
   // photo et les teintes se reconnaissent d'un coup d'œil, et une rupture de
   // stock se voit sans ouvrir la fiche.
   photoUrl: string | null;
-  colors: Array<{ id: number; hex: string | null; hex2: string | null; inStock: boolean }>;
+  // `colorName` n'est pas affiché dans la liste des produits (l'admin a
+  // justement choisi de montrer les teintes plutôt que leurs noms), mais la
+  // page Statistiques en a besoin : savoir quels coloris n'ont JAMAIS été
+  // commandés est une information, et elle se lit par le nom, pas par un hex.
+  colors: Array<{
+    id: number;
+    colorName: string;
+    hex: string | null;
+    hex2: string | null;
+    inStock: boolean;
+  }>;
 };
 
 export async function getAdminProducts(): Promise<AdminProductListItem[]> {
@@ -25,7 +35,7 @@ export async function getAdminProducts(): Promise<AdminProductListItem[]> {
   const { data, error } = await supabase
     .from("products")
     .select(
-      "id, slug, name, price, product_colors ( id, color_hex, color_hex_2, in_stock, cutout_photo_url, product_photos ( url, position ) )",
+      "id, slug, name, price, product_colors ( id, color_name, color_hex, color_hex_2, in_stock, cutout_photo_url, product_photos ( url, position ) )",
     )
     .order("created_at", { ascending: false });
 
@@ -52,6 +62,7 @@ export async function getAdminProducts(): Promise<AdminProductListItem[]> {
       photoUrl,
       colors: colors.map((c) => ({
         id: c.id,
+        colorName: c.color_name,
         hex: c.color_hex,
         hex2: c.color_hex_2,
         inStock: c.in_stock,
