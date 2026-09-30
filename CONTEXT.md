@@ -3389,3 +3389,73 @@ newline and space rules, and `telegram.ts` unchanged apart from the type it no
 longer declares. **When the Meta side is done, the real test is one order placed
 through the site and then deleted** — there is still no staging database (round
 31 did exactly this, round 24 before it).
+
+## Forty-seventh round: the Telegram notifications had been broken, and nothing said so
+
+*« Je m'y connais rien en dev, fais le toi même. »* Asked to take the WhatsApp
+setup off her hands. The honest answer is that the Meta steps are tied to her
+identity and her SIM, but checking whether the *existing* Telegram channel
+worked was entirely doable — and it did not. **Round 31's notifications have
+been failing, silently, for as long as the group has been a supergroup.**
+
+**The cause.** `Commanders - Naja` was at some point upgraded by Telegram from a
+group to a **supergroup**, which changes its id. `sendMessage` to the old
+`-5026420464` is now refused outright:
+
+```
+{"ok":false,"error_code":400,
+ "description":"Bad Request: group chat was upgraded to a supergroup chat",
+ "parameters":{"migrate_to_chat_id":-1004442268740}}
+```
+
+Telegram tries to be helpful and returns the new id in `migrate_to_chat_id`.
+Nothing in this codebase read it. Every order since the upgrade logged one line
+to the Netlify function log and moved on — which is correct behaviour for a
+notification (the order is already safe in the database) and also why nobody
+noticed: **the failure had no path to a human being.** That is the real defect
+here, and the misplaced id is only its symptom.
+
+**Diagnosed with the API, not by reading code.** `getMe` (bot `@yacingstarBOT`),
+`getChat`, `getChatMemberCount`, then a real `sendMessage` to *both* ids — one
+fails, one delivers. Worth doing in that order: `getChat` on the old id still
+answers `ok:true`, so a softer check would have concluded the group was fine.
+
+**Fixed**: `TELEGRAM_CHAT_ID` is now `-1004442268740`.
+
+**Two CLI traps, both costing a round trip:**
+- `netlify env:set KEY -1004442268740` fails with `unknown option
+  '-1004442268740'` — oclif parses the leading dash as a flag. `--` ends option
+  parsing: `netlify env:set KEY -- <value>`.
+- Without `--force` it asks `Do you want to overwrite it? (y/N)`, and with no TTY
+  that hangs and then dies with `Detected unsettled top-level await` /
+  `Netlify CLI has terminated unexpectedly`. Correct form:
+  `netlify env:set TELEGRAM_CHAT_ID --force -- -1004442268740`.
+
+**An env change needs a redeploy** — the CLI says so itself. Restarting the
+functions is not enough.
+
+**Recorded because its absence cost real time, twice: the site is
+https://najadz.com** (Netlify project `najashuyie`, admin
+`app.netlify.com/projects/najashuyie`). It was written down nowhere in the repo.
+Also recorded: **Netlify posts no commit statuses to this repository**, so
+`gh api repos/yacingstar/naja3/commits/<sha>/status` returns an empty list and
+can never confirm a deploy. The live site is the only verification there is.
+
+**Verified on production, finally**: `https://najadz.com` answers 200, and the
+round-45 basket is live — `/boutique/<slug>` carries "Ajouter au panier" with
+its hint, and `/lampe/<slug>` carries none. Both earlier pushes had deployed
+correctly; there had simply been no way to see it from here.
+
+**Still open.** The group's creator is **Yacine** (`l.ahmedyacine@gmail.com`),
+not the shop owner, and it has three members. **Whether she is one of them is
+still unverified** — the Bot API cannot answer "is this phone number in this
+chat". Until that is settled, fixing the id may only have restored the
+notifications for everyone *except* her, which is the person they exist for. The
+alternative worth offering is her own private chat with the bot
+(`https://t.me/yacingstarBOT`, one tap on Start) instead of a group: it needs no
+invite link, no group admin, and no third party.
+
+**WhatsApp shipped inert.** She chose Telegram-now/WhatsApp-later, so round 46's
+code is live but does nothing until the four variables exist — and `/admin` says
+so out loud, which is the one place this project has ever made a
+notification-shaped silence visible.
