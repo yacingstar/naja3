@@ -3446,14 +3446,26 @@ round-45 basket is live — `/boutique/<slug>` carries "Ajouter au panier" with
 its hint, and `/lampe/<slug>` carries none. Both earlier pushes had deployed
 correctly; there had simply been no way to see it from here.
 
-**Still open.** The group's creator is **Yacine** (`l.ahmedyacine@gmail.com`),
-not the shop owner, and it has three members. **Whether she is one of them is
-still unverified** — the Bot API cannot answer "is this phone number in this
-chat". Until that is settled, fixing the id may only have restored the
-notifications for everyone *except* her, which is the person they exist for. The
-alternative worth offering is her own private chat with the bot
-(`https://t.me/yacingstarBOT`, one tap on Start) instead of a group: it needs no
-invite link, no group admin, and no third party.
+**Asked, because the API cannot answer it.** The Bot API has no call that says
+whether a given phone number is in a given chat, so the only way to know was to
+ask her to open Telegram and look for the test message. She saw it: **she is in
+the group, and the channel is whole end to end.** Worth recording as a limit of
+this kind of verification — the last link here was checked by a human, not by a
+request.
+
+The group's creator is **Yacine** (`l.ahmedyacine@gmail.com`), so the group
+belongs to a different Telegram account than hers; her own private chat with the
+bot (`https://t.me/yacingstarBOT`, one tap on Start) remains the simpler
+arrangement if the group ever becomes a nuisance. It needs no invite link, no
+group admin and no third party.
+
+**The one link still taken on trust**: that the redeployed function reads the
+new `TELEGRAM_CHAT_ID`. Netlify requires a redeploy for an env change (its own
+CLI says so), one was made and reports `ready`, and the variable is confirmed on
+the account — but nothing short of a real order exercises it, and **no test
+order was placed on purpose**: `placeOrder` fires a Purchase event into the live
+Meta ad account with no test-event code set, so a fake order would teach Meta to
+optimise for a fake buyer. The next genuine order is the test.
 
 **WhatsApp shipped inert.** She chose Telegram-now/WhatsApp-later, so round 46's
 code is live but does nothing until the four variables exist — and `/admin` says
