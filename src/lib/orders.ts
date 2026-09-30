@@ -3,6 +3,17 @@ import { ORDER_STATUSES, type OrderStatus } from "@/lib/orderStatus";
 
 export { ORDER_STATUSES, type OrderStatus };
 
+/** Ce qu'il y a dans une commande, tel que la liste en a besoin. */
+export type OrderItemSummary = {
+  productName: string;
+  colorName: string;
+  // Les deux teintes, pour dessiner la pastille. Une veilleuse bicolore a sa
+  // nuance d'abat-jour et sa nuance de pied — voir LampMark.
+  colorHex: string | null;
+  colorHex2: string | null;
+  quantity: number;
+};
+
 export type OrderListItem = {
   id: number;
   createdAt: string;
@@ -11,10 +22,25 @@ export type OrderListItem = {
   customerLastName: string;
   wilaya: string;
   orderTotal: number;
+  // Le contenu de la commande, dans la LISTE et pas seulement sur la fiche.
+  //
+  // C'est la demande de la patronne, et elle vient d'un vrai geste de travail :
+  // préparer une commande demande de savoir quoi imprimer et dans quelle
+  // couleur, et il fallait jusqu'ici ouvrir chaque commande l'une après
+  // l'autre, puis revenir en arrière. La liste EST l'écran de préparation.
+  items: OrderItemSummary[];
 };
 
-/** Au-delà, une commande encore au statut « nouvelle » a été oubliée. */
-export const RETARD_MS = 2 * 86_400_000;
+/**
+ * Au-delà, une commande encore au statut « nouvelle » a été oubliée.
+ *
+ * Sept jours, et c'est le délai maximum que la boutique s'engage à tenir, dit
+ * par la patronne elle-même. Le seuil était à deux jours au moment d'écrire
+ * cette page ; il a été porté à sept parce que deux jours signalaient comme un
+ * problème du travail parfaitement normal — et un signal qui crie pour rien
+ * finit par être ignoré, ce qui est pire que pas de signal du tout.
+ */
+export const RETARD_MS = 7 * 86_400_000;
 
 /**
  * Les commandes qui attendent une réponse depuis trop longtemps.
@@ -32,18 +58,35 @@ export function commandesEnRetard(orders: OrderListItem[]): OrderListItem[] {
   );
 }
 
+type OrderListRow = {
+  id: number;
+  created_at: string;
+  status: OrderStatus;
+  customer_first_name: string;
+  customer_last_name: string;
+  wilaya: string;
+  order_total: number;
+  order_items: Array<{
+    quantity: number;
+    products: { name: string } | null;
+    product_colors: { color_name: string; color_hex: string | null; color_hex_2: string | null } | null;
+  }>;
+};
+
 export async function getOrders(status?: OrderStatus): Promise<OrderListItem[]> {
   const supabase = await createClient();
   let query = supabase
     .from("orders")
     .select(
-      "id, created_at, status, customer_first_name, customer_last_name, wilaya, order_total",
+      // Sans espaces dans les parenthèses imbriquées : PostgREST refuse
+      // « order_items ( … ) » dès qu'il y a un deuxième niveau (PGRST100).
+      "id,created_at,status,customer_first_name,customer_last_name,wilaya,order_total,order_items(quantity,products(name),product_colors(color_name,color_hex,color_hex_2))",
     )
     .order("created_at", { ascending: false });
 
   if (status) query = query.eq("status", status);
 
-  const { data, error } = await query;
+  const { data, error } = await query.returns<OrderListRow[]>();
   if (error || !data) return [];
 
   return data.map((order) => ({
@@ -54,6 +97,13 @@ export async function getOrders(status?: OrderStatus): Promise<OrderListItem[]> 
     customerLastName: order.customer_last_name,
     wilaya: order.wilaya,
     orderTotal: order.order_total,
+    items: (order.order_items ?? []).map((item) => ({
+      productName: item.products?.name ?? "(veilleuse supprimée)",
+      colorName: item.product_colors?.color_name ?? "",
+      colorHex: item.product_colors?.color_hex ?? null,
+      colorHex2: item.product_colors?.color_hex_2 ?? null,
+      quantity: item.quantity,
+    })),
   }));
 }
 

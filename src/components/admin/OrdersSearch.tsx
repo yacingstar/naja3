@@ -14,6 +14,12 @@ import type { OrderListItem } from "@/lib/orders";
 // On cherche sur ce qu'on a sous les yeux quand le téléphone sonne : le nom,
 // la wilaya et le numéro de commande. Les accents et la casse sont ignorés —
 // « zerrouki » doit trouver « ZERROUKI », et « bejaia » « Béjaïa ».
+//
+// Le nom de la veilleuse et celui de son coloris sont entrés dans la liste
+// (voir OrderRow), donc ils entrent dans la recherche : la règle de ce fichier
+// est de chercher ce qui est affiché, et une liste qu'on voit sans pouvoir la
+// fouiller serait une drôle de moitié de fonctionnalité. « akari » retrouve
+// donc les commandes qui en contiennent.
 function nu(s: string): string {
   return s
     .normalize("NFD")
@@ -28,7 +34,10 @@ export function OrdersSearch({ orders }: { orders: OrderListItem[] }) {
     const terme = nu(q.trim());
     if (!terme) return orders;
     return orders.filter((o) =>
-      nu(`${o.customerFirstName} ${o.customerLastName} ${o.wilaya} #${o.id} ${o.id}`).includes(terme),
+      nu(
+        `${o.customerFirstName} ${o.customerLastName} ${o.wilaya} #${o.id} ${o.id} ` +
+          o.items.map((i) => `${i.productName} ${i.colorName}`).join(" "),
+      ).includes(terme),
     );
   }, [orders, q]);
 

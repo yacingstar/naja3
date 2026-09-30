@@ -3526,6 +3526,14 @@ One derivation per displayed figure.
 correctly, since a render must be replayable. The rule had to move out of the
 page rather than be silenced.
 
+**The threshold is seven days, and it came from her, not from me.** It shipped
+at two days — a guess — and was corrected the moment she said *« ma durée c'est
+7 jours maximum »*. That is her own commitment to her customers, and it is the
+only defensible place for the number to come from: a shorter one flags ordinary
+work as a problem, and a warning that fires on normal days is one you learn to
+ignore, which is worse than having none. `RETARD_MS` in `lib/orders.ts` is now
+the single place it lives.
+
 **`Stats.tsx` was deleted, not kept.** Its content split between the home and
 the new page, and the display primitives it held (`Evolution`, `Palmares`, the
 fourteen-day bars) moved to a new `components/admin/chiffres.tsx` used by both —
@@ -3541,6 +3549,44 @@ rather than glossed.
 **Also not verifiable yet**: the delays themselves. They need the migration
 applied *and* a few real orders through the new statuses. Until then the four
 delay cards read "pas encore mesuré", which is the honest state and not a bug.
+
+**Follow-up in the same round — the order list now shows what is in each
+order.** *« Ça va beaucoup me faciliter quand je suis en train de préparer leurs
+commandes. »* Two things asked for together: what the order contains, and a
+colour swatch for it.
+
+This is the same correction as the rest of the round, one level down. The list
+was an index — id, name, wilaya, total, status, date — and preparing an order
+meant opening it, reading it, going back, opening the next. **The list is the
+preparation screen, not the index**, and it was the only screen that did not
+say what was being prepared.
+
+- `getOrders()` now embeds `order_items` with the product name, the colour name
+  and BOTH hexes, and `OrderListItem` carries them. The whole list costs one
+  query, as before.
+- The swatch is `LampMark` — the same lamp drawn in the storefront picker, on
+  the product page and in the admin's colour settings. A bicolour shows its
+  shade above its base, so the mark says *which* of her colours, not just that
+  there is one. Reusing it means what she sees when picking a spool is what she
+  sees when packing.
+- The contents go on their **own full-width line under the identity line**,
+  rather than inside the name column. That column is about a thumb wide on a
+  phone, where three items would wrap onto six lines; full width, the row keeps
+  the same height on a phone and on a desktop.
+- Both lists get it — `/admin/commandes` and the home's six latest. The second
+  costs nothing (same query) and answers the same question at a glance.
+- **Search now covers product and colour names.** This file's own rule is that
+  you search what is on screen; a list you can see but not search would be half
+  a feature. A search for "akari" finds the orders containing one.
+
+Types are written inline in `OrderRow` rather than imported from `lib/orders`,
+following what that file already did: it renders inside a Client Component
+(`OrdersSearch`) and `lib/orders` pulls the server Supabase client. A type-only
+import would be erased anyway, but the local shape removes the need to remember
+that.
+
+**I still have not seen it.** Same limit as above: no admin login from here. The
+list is the screen she looks at most, so it is the one to check first.
 
 **WhatsApp shipped inert.** She chose Telegram-now/WhatsApp-later, so round 46's
 code is live but does nothing until the four variables exist — and `/admin` says

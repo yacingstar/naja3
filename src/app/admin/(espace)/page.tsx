@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { LampMark } from "@/components/LampMark";
 import { Bloc, Carte, EnClair } from "@/components/admin/chiffres";
 import { StatusBadge } from "@/components/admin/StatusBadge";
 import { getAdminProducts } from "@/lib/adminProducts";
@@ -82,7 +83,7 @@ export default async function AdminAccueilPage() {
         <Bloc
           valeur={String(enRetard.length)}
           libelle="En retard"
-          detail="+ de 48 h sans réponse"
+          detail="+ de 7 jours sans réponse"
           fond={enRetard.length > 0 ? "#ff9ec7" : "#8ad4c1"}
           href="/admin/commandes?status=nouvelle&ordre=ancienne"
         />
@@ -189,21 +190,46 @@ export default async function AdminAccueilPage() {
             <li key={c.id}>
               <Link
                 href={`/admin/commandes/${c.id}`}
-                className="flex flex-wrap items-center gap-x-4 gap-y-1.5 rounded-2xl border-2 border-encre/12 px-4 py-3 transition hover:border-encre/40 hover:bg-encre/[.03]"
+                className="block rounded-2xl border-2 border-encre/12 px-4 py-3 transition hover:border-encre/40 hover:bg-encre/[.03]"
               >
-                <span className="font-heading text-base font-semibold">#{c.id}</span>
-                <span className="min-w-0 flex-1 truncate font-medium">
-                  {c.customerFirstName} {c.customerLastName}
-                  <span className="text-encre/55"> · {c.wilaya}</span>
+                <span className="flex flex-wrap items-center gap-x-4 gap-y-1.5">
+                  <span className="font-heading text-base font-semibold">#{c.id}</span>
+                  <span className="min-w-0 flex-1 truncate font-medium">
+                    {c.customerFirstName} {c.customerLastName}
+                    <span className="text-encre/55"> · {c.wilaya}</span>
+                  </span>
+                  <span className="font-heading text-base">{formatPrice(c.orderTotal)}</span>
+                  <StatusBadge status={c.status} />
+                  <time
+                    dateTime={c.createdAt}
+                    className="w-full text-[13px] font-medium text-encre/50 sm:w-auto"
+                  >
+                    {formatDateTimeShort(c.createdAt)}
+                  </time>
                 </span>
-                <span className="font-heading text-base">{formatPrice(c.orderTotal)}</span>
-                <StatusBadge status={c.status} />
-                <time
-                  dateTime={c.createdAt}
-                  className="w-full text-[13px] font-medium text-encre/50 sm:w-auto"
-                >
-                  {formatDateTimeShort(c.createdAt)}
-                </time>
+
+                {/* Le contenu, ici aussi : c'est ce qui permet de savoir quoi
+                    préparer sans ouvrir la commande. Même traitement que la
+                    liste complète — voir OrderRow. */}
+                {c.items.length > 0 ? (
+                  <span className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1.5 border-t border-encre/10 pt-2">
+                    {c.items.map((item, i) => (
+                      <span key={i} className="inline-flex items-center gap-1.5">
+                        <LampMark
+                          hex={item.colorHex}
+                          hex2={item.colorHex2}
+                          className="h-5 w-5 shrink-0"
+                        />
+                        <span className="text-[13px] font-medium whitespace-nowrap text-encre/80">
+                          {item.quantity} × {item.productName}
+                          {item.colorName ? (
+                            <span className="text-encre/55"> · {item.colorName}</span>
+                          ) : null}
+                        </span>
+                      </span>
+                    ))}
+                  </span>
+                ) : null}
               </Link>
             </li>
           ))}
