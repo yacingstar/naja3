@@ -3,6 +3,9 @@ import "server-only";
 import { headers } from "next/headers";
 
 import { formatPrice } from "@/lib/format";
+// The payload shape is shared with the WhatsApp notifier now — see order.ts for
+// why it lives on its own rather than here.
+import type { NewOrderNotification } from "@/lib/notify/order";
 import { normalizePhone } from "@/lib/phone";
 
 // New-order notifications to the shop owner's Telegram.
@@ -50,26 +53,6 @@ function escapeHtml(value: string): string {
 const DELIVERY_LABEL: Record<"domicile" | "stopdesk", string> = {
   domicile: "À domicile",
   stopdesk: "Stopdesk",
-};
-
-export type NewOrderNotification = {
-  orderId: number;
-  firstName: string;
-  lastName: string;
-  phone: string;
-  wilaya: string;
-  commune: string;
-  deliveryMethod: "domicile" | "stopdesk";
-  note: string;
-  deliveryFee: number;
-  productsTotal: number;
-  orderTotal: number;
-  items: Array<{
-    productName: string;
-    colorName: string;
-    quantity: number;
-    price_at_order: number;
-  }>;
 };
 
 // The site's own origin, for a tappable link straight to the order in the

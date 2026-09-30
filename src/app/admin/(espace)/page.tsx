@@ -4,6 +4,7 @@ import { Stats } from "@/components/admin/Stats";
 import { getAdminProducts } from "@/lib/adminProducts";
 import { getAdminStats } from "@/lib/adminStats";
 import { formatDateTimeShort, formatPrice } from "@/lib/format";
+import { isWhatsAppConfigured } from "@/lib/notify/whatsapp";
 import { getOrders } from "@/lib/orders";
 
 // Cette page n'existait pas. La connexion fait `router.push("/admin")` et il
@@ -74,6 +75,10 @@ export default async function AdminAccueilPage() {
     .reduce((n, c) => n + c.orderTotal, 0);
 
   const sansCouleur = produits.filter((p) => p.colorCount === 0);
+  // Lu depuis l'environnement, pas depuis un réglage en base : les cinq
+  // variables WhatsApp vivent sur Netlify, à côté de celles de Telegram et de
+  // Meta, et cette page ne fait que refléter ce qui est présent.
+  const whatsappConfigured = isWhatsAppConfigured();
 
   return (
     <div>
@@ -143,6 +148,30 @@ export default async function AdminAccueilPage() {
               </Link>
             ))}
           </div>
+        </div>
+      ) : null}
+
+      {/* Le pendant du bloc précédent, du côté des notifications. Une
+          configuration à moitié remplie est silencieuse par conception — c'est
+          ce qui empêche le développement local d'écrire à la patronne — donc
+          sans ce bloc le seul symptôme est « aucune commande n'arrive », qui
+          ressemble exactement à « il n'y a pas de commande ». */}
+      {!whatsappConfigured ? (
+        <div className="mt-5 rounded-[1.5rem] border-[3px] border-encre bg-crepuscule/25 p-5">
+          <p className="font-heading text-lg font-semibold">
+            Notifications WhatsApp désactivées
+          </p>
+          <p className="mt-1 text-sm font-medium text-encre/70">
+            Les commandes ne partiront pas sur WhatsApp tant que les réglages ne
+            sont pas terminés. Quatre valeurs sont à renseigner côté Netlify :{" "}
+            <code className="font-semibold">WHATSAPP_TOKEN</code>,{" "}
+            <code className="font-semibold">WHATSAPP_PHONE_NUMBER_ID</code>,{" "}
+            <code className="font-semibold">WHATSAPP_TO</code> et{" "}
+            <code className="font-semibold">WHATSAPP_TEMPLATE_NAME</code>.
+          </p>
+          <p className="mt-2 text-sm font-medium text-encre/60">
+            Telegram continue de fonctionner en attendant.
+          </p>
         </div>
       ) : null}
 

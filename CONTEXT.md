@@ -3306,5 +3306,86 @@ re-fetches and re-prices every line and rejects an out-of-stock colour, so
 nothing is ever charged wrongly — but the customer can see a total that changes
 under them. Worth a second pass if baskets start living long.
 
-**Not committed, not pushed.** The work is in the working tree on `master` —
-which auto-deploys. Local only.
+**Deployed at the owner's request, straight after the local pass.** Commit
+`ae2c778`, pushed to `master` and therefore straight to production. The push
+succeeded; **the Netlify build result was never confirmed from here** — the
+Netlify CLI and the GitHub API were both being refused by the session's
+permission classifier, and the site's URL is recorded nowhere in the repo, so
+there was nothing to poll either. Worth knowing that a failed build is not an
+outage: Netlify keeps serving the previous deploy.
+
+## Forty-sixth round: the same order notification, on WhatsApp
+
+*« À chaque fois que je reçois une commande, j'aurai un message sur WhatsApp. »*
+
+**The feature already existed — and she had never seen it.** Round 31 built
+exactly this, on Telegram, and its own notes say the recipient is the
+`Commanders - Naja` group with *"the client is not in the group yet —
+deliberately, until this is signed off."* The notifications had been going into
+a group with nobody in it. That is the likeliest reason the question was ever
+asked, and it was worth saying plainly before building anything: the honest
+answer to "can you add this?" was "it is already there, you were never added to
+it."
+
+**Telegram is kept; WhatsApp is added beside it.** Not a migration. Telegram
+costs nothing, has no per-message price and needs no approval; WhatsApp is where
+she actually lives. Both fire in the same `after()` block and either can fail
+without the other noticing, which is the whole reason to run two.
+
+**What shapes the WhatsApp code is Meta's template rules, not the API call.**
+The endpoint is four lines. The difficulty is that a business may only *start* a
+conversation with a pre-approved template — free-form text is legal only inside
+a 24-hour window the *recipient* opens by writing first, which a
+server-initiated notification can never rely on. So the message is fixed in
+Meta's dashboard and this code only fills six slots. The rules that bite:
+
+- **A parameter cannot contain a newline or a tab.** Meta rejects the entire
+  message, not the value. There is no cross-platform workaround — a carriage
+  return breaks the line on iOS and renders as a space everywhere else.
+- **No more than four consecutive spaces.**
+- **The body cannot begin or end with a placeholder**, and a line holding
+  nothing but a placeholder is rejected as a "floating parameter" — which is why
+  every line here has a label in front of its value.
+- **An empty parameter is rejected.** This is why the customer's free-text note
+  is *not* in the WhatsApp message: it is optional, so it would need a sentinel
+  like "aucune note" on every order that has none. It stays in the admin and in
+  Telegram, which has no such rule.
+- **1024 characters in total**, template plus every value. `MAX_ITEMS_LENGTH`
+  caps the one unbounded value so that ceiling cannot be reached.
+
+**`param()` is a sanitiser, not a formatter**, and it is the load-bearing
+function in the file: product names typed in the admin and the customer's
+address both arrive through it.
+
+**One payload, two channels.** `NewOrderNotification` moved out of `telegram.ts`
+into `notify/order.ts` — a type-only move, the same reasoning as `normalizePhone`
+in round 31: two senders that must agree on one shape, and a second copy free to
+drift. `actions.ts` now builds the object once and hands the same one to both,
+rather than a second literal that could disagree with the first about the same
+order.
+
+**No fallback from template to text, deliberately.** A silent fallback would look
+like it worked while quietly spending a paid template on every send, and would
+hide the one failure worth seeing. Meta's error codes are named in the module's
+comment so the log reads as a diagnosis rather than a number.
+
+**A block on `/admin` when it is not configured.** A half-filled configuration is
+silent by design — that is exactly what stops local development from messaging
+the owner — so the only symptom is that no order ever arrives, which is
+indistinguishable from having no orders. Same shape as the existing "un produit
+n'a aucun coloris" block.
+
+**The constraint to weigh, recorded because it is easy to find out too late:**
+the number registered with the Cloud API **cannot be one already in use in the
+WhatsApp app** — registering it removes it from the phone. The normal
+arrangement is a second SIM or a virtual number as the *sender*, with the owner
+keeping her own WhatsApp as the recipient.
+
+**Not verified end to end, and it cannot be from here.** With no
+`WHATSAPP_TOKEN` the module does nothing at all, by design — that guard is what
+keeps local development from messaging her. What *was* checked: `tsc` and
+`eslint` clean, the six parameters rendered and read back by hand against the
+newline and space rules, and `telegram.ts` unchanged apart from the type it no
+longer declares. **When the Meta side is done, the real test is one order placed
+through the site and then deleted** — there is still no staging database (round
+31 did exactly this, round 24 before it).
