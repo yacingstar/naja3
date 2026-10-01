@@ -35,7 +35,7 @@ export function OrdersSearch({ orders }: { orders: OrderListItem[] }) {
     if (!terme) return orders;
     return orders.filter((o) =>
       nu(
-        `${o.customerFirstName} ${o.customerLastName} ${o.wilaya} #${o.id} ${o.id} ` +
+        `${o.customerFirstName} ${o.customerLastName} ${o.wilaya} ${o.commune} #${o.id} ${o.id} ` +
           o.items.map((i) => `${i.productName} ${i.colorName}`).join(" "),
       ).includes(terme),
     );

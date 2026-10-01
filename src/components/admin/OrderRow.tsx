@@ -42,6 +42,7 @@ export function OrderRow({
     customerFirstName: string;
     customerLastName: string;
     wilaya: string;
+    commune: string;
     orderTotal: number;
     status: OrderStatus;
     items: Array<{
@@ -62,9 +63,13 @@ export function OrderRow({
         <span className="grid grid-cols-[auto_1fr_auto] items-center gap-x-4 gap-y-1.5 sm:grid-cols-[3.5rem_1fr_8rem_7rem_7.5rem]">
           <span className="font-heading text-base font-semibold">#{order.id}</span>
 
-          <span className="min-w-0 truncate font-medium">
+          {/* Plus de `truncate` depuis que la commune est là : la couper à
+              l'écran serait pire que de ne pas l'afficher du tout, parce qu'on
+              croirait l'avoir lue. La ligne s'allonge ou passe à la ligne. */}
+          <span className="min-w-0 font-medium">
             {order.customerFirstName} {order.customerLastName}
             <span className="text-encre/55"> · {order.wilaya}</span>
+            {order.commune ? <span className="text-encre/55"> — {order.commune}</span> : null}
           </span>
 
           {/* Le statut passe en tête de ligne sur téléphone (3e colonne de la

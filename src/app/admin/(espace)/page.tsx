@@ -194,9 +194,10 @@ export default async function AdminAccueilPage() {
               >
                 <span className="flex flex-wrap items-center gap-x-4 gap-y-1.5">
                   <span className="font-heading text-base font-semibold">#{c.id}</span>
-                  <span className="min-w-0 flex-1 truncate font-medium">
+                  <span className="min-w-0 flex-1 font-medium">
                     {c.customerFirstName} {c.customerLastName}
                     <span className="text-encre/55"> · {c.wilaya}</span>
+                    {c.commune ? <span className="text-encre/55"> — {c.commune}</span> : null}
                   </span>
                   <span className="font-heading text-base">{formatPrice(c.orderTotal)}</span>
                   <StatusBadge status={c.status} />

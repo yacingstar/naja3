@@ -21,6 +21,10 @@ export type OrderListItem = {
   customerFirstName: string;
   customerLastName: string;
   wilaya: string;
+  // La commune, à côté de la wilaya. La wilaya dit où c'est en gros, la commune
+  // dit où c'est vraiment — et c'est la commune qu'on lit au moment de préparer
+  // le colis.
+  commune: string;
   orderTotal: number;
   // Le contenu de la commande, dans la LISTE et pas seulement sur la fiche.
   //
@@ -65,6 +69,7 @@ type OrderListRow = {
   customer_first_name: string;
   customer_last_name: string;
   wilaya: string;
+  commune: string;
   order_total: number;
   order_items: Array<{
     quantity: number;
@@ -80,7 +85,7 @@ export async function getOrders(status?: OrderStatus): Promise<OrderListItem[]> 
     .select(
       // Sans espaces dans les parenthèses imbriquées : PostgREST refuse
       // « order_items ( … ) » dès qu'il y a un deuxième niveau (PGRST100).
-      "id,created_at,status,customer_first_name,customer_last_name,wilaya,order_total,order_items(quantity,products(name),product_colors(color_name,color_hex,color_hex_2))",
+      "id,created_at,status,customer_first_name,customer_last_name,wilaya,commune,order_total,order_items(quantity,products(name),product_colors(color_name,color_hex,color_hex_2))",
     )
     .order("created_at", { ascending: false });
 
@@ -96,6 +101,7 @@ export async function getOrders(status?: OrderStatus): Promise<OrderListItem[]> 
     customerFirstName: order.customer_first_name,
     customerLastName: order.customer_last_name,
     wilaya: order.wilaya,
+    commune: order.commune,
     orderTotal: order.order_total,
     items: (order.order_items ?? []).map((item) => ({
       productName: item.products?.name ?? "(veilleuse supprimée)",
