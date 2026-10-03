@@ -92,7 +92,13 @@ html::-webkit-scrollbar {
     border-color: color-mix(in srgb, var(--encre) 20%, transparent);
     background-color: var(--papier);
     padding: 0.625rem 1rem;
-    font-size: 0.875rem;
+    /* 16 px, et c'est un plancher, pas un choix esthétique. En dessous, iOS
+       zoome tout seul sur le champ dès qu'on le touche, et l'écran reste
+       zoomé : on ne voit plus qu'un morceau du formulaire, et il faut
+       dézoomer à la main pour continuer. 14 px était en dessous du seuil.
+       La règle vaut pour tous les champs du site, admin compris — elle sert
+       aussi depuis un téléphone. */
+    font-size: 1rem;
     color: var(--encre);
   }
   .input:focus {

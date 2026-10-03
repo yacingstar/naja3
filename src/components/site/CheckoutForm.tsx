@@ -71,8 +71,10 @@ export function CheckoutForm({ rates }: { rates: DeliveryRate[] }) {
     setError(null);
 
     const result = await placeOrder({
-      firstName,
-      lastName,
+      // Cet écran-ci garde ses deux champs (il n'a pas été redessiné) : ils
+      // sont réunis avant l'envoi, et le serveur les redécoupe. Le découpage
+      // reste ainsi à un seul endroit, quel que soit le formulaire d'origine.
+      nomComplet: `${firstName} ${lastName}`.trim(),
       phone,
       wilaya,
       commune,

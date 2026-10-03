@@ -5,11 +5,15 @@ import { after } from "next/server";
 import { sendPurchaseEvent } from "@/lib/meta/capi";
 import { notifyNewOrder } from "@/lib/notify/telegram";
 import { notifyNewOrderOnWhatsApp } from "@/lib/notify/whatsapp";
+import { analyserTelephone, decouperNom } from "@/lib/phone";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 export type PlaceOrderInput = {
-  firstName: string;
-  lastName: string;
+  // Un seul champ côté cliente. Le découpage en prénom / nom se fait ici, et
+  // pas dans le formulaire : c'est une règle sur la DONNÉE, la base garde deux
+  // colonnes, et deux découpages différents selon l'écran finiraient par ne
+  // plus raconter la même chose.
+  nomComplet: string;
   phone: string;
   wilaya: string;
   commune: string;
@@ -49,17 +53,25 @@ export type PlaceOrderResult =
 // before anything is written, using the service-role client — the only
 // role with INSERT on orders/order_items.
 export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResult> {
-  const firstName = input.firstName.trim();
-  const lastName = input.lastName.trim();
+  // Le nom complet est redécoupé ici, et le téléphone validé ici : le
+  // formulaire fait les mêmes vérifications pour afficher une erreur sous le
+  // champ, mais c'est une commodité, jamais la garantie. Une requête peut
+  // arriver sans être passée par le formulaire.
+  const { firstName, lastName } = decouperNom(input.nomComplet);
   const phone = input.phone.trim();
   const commune = input.commune.trim();
   const note = input.note.trim();
 
-  if (!firstName || !lastName || !commune) {
+  // Le nom de famille peut être vide : une cliente qui n'écrit qu'un mot doit
+  // pouvoir commander (voir decouperNom). La colonne est `not null`, pas
+  // « non vide ».
+  if (!firstName || !commune) {
     return { ok: false, error: "Merci de remplir tous les champs obligatoires." };
   }
-  if (!/^0[0-9]{8,9}$/.test(phone.replace(/[\s.-]/g, ""))) {
-    return { ok: false, error: "Merci d'indiquer un numéro de téléphone valide." };
+
+  const telephone = analyserTelephone(phone);
+  if (!telephone.ok) {
+    return { ok: false, error: telephone.erreur };
   }
   if (input.items.length === 0) {
     return { ok: false, error: "Votre panier est vide." };

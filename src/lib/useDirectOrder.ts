@@ -6,6 +6,7 @@ import { placeOrder } from "@/app/(site)/commande/actions";
 import { trackAddToCart, trackInitiateCheckout } from "@/lib/analytics";
 import type { DeliveryRate } from "@/lib/deliveryRates";
 import { stashOrder } from "@/lib/lastOrder";
+import { analyserTelephone } from "@/lib/phone";
 import type { ProductColorDetail } from "@/lib/products";
 
 // Everything a one-product, no-cart order needs, minus the markup.
@@ -41,9 +42,10 @@ export function useDirectOrder({
   const router = useRouter();
 
   const [quantity, setQuantity] = useState(1);
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
-  const [phone, setPhone] = useState("");
+  // Un seul champ de nom, pour aller plus vite au doigt sur un téléphone. Le
+  // découpage en prénom / nom se fait côté serveur (decouperNom), pas ici.
+  const [nomComplet, setNomComplet] = useState("");
+  const [phone, setPhoneState] = useState("");
   const [wilaya, setWilaya] = useState("");
   const [commune, setCommune] = useState("");
   const [deliveryMethod, setDeliveryMethod] = useState<"domicile" | "stopdesk">(
@@ -52,6 +54,10 @@ export function useDirectOrder({
   const [note, setNote] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Séparé de `error` : celle-ci s'affiche SOUS le champ téléphone, à l'endroit
+  // où on la corrige. Une erreur reléguée auprès du bouton oblige à remonter
+  // pour comprendre.
+  const [erreurTelephone, setErreurTelephone] = useState<string | null>(null);
 
   const inStock = Boolean(selectedColor?.inStock);
 
@@ -95,6 +101,13 @@ export function useDirectOrder({
     }
   }
 
+  // Le champ téléphone efface son erreur dès qu'on le corrige : laisser le
+  // message pendant la correction donne l'impression que rien ne va plus.
+  function setPhone(next: string) {
+    setPhoneState(next);
+    if (erreurTelephone) setErreurTelephone(null);
+  }
+
   function increment() {
     setQuantity((q) => Math.min(MAX_ORDER_QUANTITY, q + 1));
   }
@@ -106,24 +119,30 @@ export function useDirectOrder({
     e.preventDefault();
     if (submitting || !selectedColor) return;
 
+    if (!nomComplet.trim()) {
+      setError("Merci d'indiquer votre nom complet.");
+      return;
+    }
     if (!wilaya) {
       setError("Merci de choisir votre wilaya.");
       return;
     }
-    // Mirrors the Server Action's own check so a typo is caught next to the
-    // field instead of after a round trip. The server still re-validates: this
-    // is a convenience, never the guarantee.
-    if (!/^0[0-9]{8,9}$/.test(phone.replace(/[\s.-]/g, ""))) {
-      setError("Merci d'indiquer un numéro de téléphone valide (ex. 0555 12 34 56).");
+    // Mêmes vérifications que la Server Action, pour que la faute se corrige à
+    // côté du champ au lieu d'après un aller-retour réseau. Le serveur
+    // revalide : ceci est une commodité, jamais la garantie.
+    const telephone = analyserTelephone(phone);
+    if (!telephone.ok) {
+      setErreurTelephone(telephone.erreur);
+      setError(null);
       return;
     }
 
     setSubmitting(true);
     setError(null);
+    setErreurTelephone(null);
 
     const result = await placeOrder({
-      firstName,
-      lastName,
+      nomComplet: nomComplet.trim(),
       phone,
       wilaya,
       commune,
@@ -160,12 +179,11 @@ export function useDirectOrder({
     quantity,
     increment,
     decrement,
-    firstName,
-    setFirstName,
-    lastName,
-    setLastName,
+    nomComplet,
+    setNomComplet,
     phone,
     setPhone,
+    erreurTelephone,
     wilaya,
     changeWilaya,
     commune,

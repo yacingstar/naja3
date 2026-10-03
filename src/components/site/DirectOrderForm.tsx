@@ -270,39 +270,49 @@ export function DirectOrderForm({
         </StepLabel>
 
         <div className="mt-4 space-y-3">
-          <div className="grid grid-cols-2 gap-3">
-            <Field label="Prénom">
-              <input
-                required
-                value={order.firstName}
-                onChange={(e) => order.setFirstName(e.target.value)}
-                autoComplete="given-name"
-                className="input"
-              />
-            </Field>
-            <Field label="Nom">
-              <input
-                required
-                value={order.lastName}
-                onChange={(e) => order.setLastName(e.target.value)}
-                autoComplete="family-name"
-                className="input"
-              />
-            </Field>
-          </div>
-
-          <Field label="Téléphone" hint="On vous appelle pour confirmer">
+          {/* Un seul champ de nom. Deux champs sur un téléphone, c'est un
+              champ de trop : le clavier s'ouvre deux fois, et chaque champ
+              supplémentaire est une occasion d'abandonner. Le serveur redécoupe
+              en prénom / nom pour la base — voir decouperNom. */}
+          <Field label="Nom complet">
             <input
               required
-              type="tel"
-              inputMode="tel"
-              value={order.phone}
-              onChange={(e) => order.setPhone(e.target.value)}
-              autoComplete="tel"
-              placeholder="0555 12 34 56"
+              value={order.nomComplet}
+              onChange={(e) => order.setNomComplet(e.target.value)}
+              autoComplete="name"
+              placeholder="Amina Belkacem"
               className="input"
             />
           </Field>
+
+          {/* L'erreur de téléphone vit SOUS son champ, pas auprès du bouton :
+              c'est là qu'on la corrige. `aria-describedby` la relie au champ
+              pour les lecteurs d'écran, et `role="alert"` la fait annoncer. */}
+          <div>
+            <Field label="Téléphone" hint="On vous appelle pour confirmer">
+              <input
+                required
+                type="tel"
+                inputMode="tel"
+                value={order.phone}
+                onChange={(e) => order.setPhone(e.target.value)}
+                autoComplete="tel"
+                placeholder="05 / 06 / 07 XX XX XX XX"
+                aria-invalid={order.erreurTelephone ? true : undefined}
+                aria-describedby={order.erreurTelephone ? "erreur-telephone" : undefined}
+                className="input"
+              />
+            </Field>
+            {order.erreurTelephone ? (
+              <p
+                id="erreur-telephone"
+                role="alert"
+                className="mt-1.5 text-[13px] font-medium text-red-700"
+              >
+                {order.erreurTelephone}
+              </p>
+            ) : null}
+          </div>
 
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <Field label="Wilaya">

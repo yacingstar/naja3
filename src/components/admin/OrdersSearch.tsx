@@ -44,13 +44,16 @@ export function OrdersSearch({ orders }: { orders: OrderListItem[] }) {
   return (
     <div>
       <div className="mt-6 flex flex-wrap items-center gap-3">
+        {/* `text-base` (16 px) et non `text-sm` : en dessous de 16 px, iOS
+            zoome tout seul sur le champ dès qu'on le touche — même règle que
+            `.input`, voir globals.css. */}
         <input
           type="search"
           value={q}
           onChange={(e) => setQ(e.target.value)}
           placeholder="Chercher un nom, une wilaya, un numéro…"
           aria-label="Chercher une commande"
-          className="w-full max-w-sm rounded-full border-2 border-encre/20 bg-papier px-5 py-2.5 text-sm font-medium transition outline-none placeholder:text-encre/40 focus:border-encre"
+          className="w-full max-w-sm rounded-full border-2 border-encre/20 bg-papier px-5 py-2.5 text-base font-medium transition outline-none placeholder:text-encre/40 focus:border-encre"
         />
         {q ? (
           <p className="text-sm font-semibold text-encre/65">
