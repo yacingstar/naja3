@@ -232,12 +232,6 @@ export function ProductDetail({
               </span>
             ) : null}
           </div>
-
-          {product.description ? (
-            <p className="mt-5 max-w-prose leading-relaxed whitespace-pre-line text-encre/75">
-              {product.description}
-            </p>
-          ) : null}
         </div>
 
         <ul data-apparait className="mt-6 flex flex-wrap gap-2">
@@ -276,6 +270,25 @@ export function ProductDetail({
             </p>
           )}
         </div>
+
+        {/* La description passe en DERNIER, après le bon de commande. Elle
+            était juste sous le prix, entre le nom et le formulaire : il fallait
+            donc la traverser pour arriver à ce qu'on venait faire. La patronne
+            a demandé l'ordre nom → prix → coloris → commande → description, et
+            c'est l'ordre naturel : on choisit, on commande, et on lit le
+            détail si on en a encore envie.
+            Le texte est masqué quand il n'y en a pas, plutôt que de laisser un
+            titre vide en bas de page. */}
+        {product.description ? (
+          <div data-apparait className="mt-8 border-t-2 border-dashed border-encre/20 pt-6">
+            <p className="text-[13px] font-semibold tracking-[.06em] text-encre/60 uppercase">
+              À propos de cette veilleuse
+            </p>
+            <p className="mt-3 max-w-prose leading-relaxed whitespace-pre-line text-encre/75">
+              {product.description}
+            </p>
+          </div>
+        ) : null}
 
         <p className="mt-5 text-sm">
           <Link
