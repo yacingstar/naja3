@@ -57,24 +57,30 @@ export function FondDoux({ teinte, nuit }: { teinte: string; nuit: boolean }) {
     ? ["rgba(255,196,110,.20)", "rgba(255,150,90,.14)", "rgba(167,155,224,.12)", "rgba(255,196,110,.10)"]
     : [`${teinte}`, "rgba(167,155,224,.18)", "rgba(168,195,160,.16)", "rgba(246,198,206,.20)"];
 
+  // Un DÉGRADÉ, et surtout PAS `filter: blur()` — c'est le correctif, pas un
+  // détail de style.
+  //
+  // Les taches faisaient 440 à 520 px et portaient un `blur(120px)`. Sur iOS,
+  // Safari découpe les filtres en tuiles et leur donne un budget mémoire ; au-
+  // delà, il cesse de les peindre au lieu de les peindre lentement. Résultat :
+  // pendant le défilement, des pans entiers de la page restent vides — le
+  // contenu est là, il n'est simplement plus dessiné. Le défaut n'apparaît que
+  // sur iOS, et sur toutes les pages qui portent ce fond (accueil, boutique,
+  // fiche produit) : c'est ce qui a mis sur la voie.
+  //
+  // Un dégradé radial donne la même douceur — le bord se fond au lieu d'être
+  // coupé — sans créer de filtre, donc sans budget à dépasser. C'est moins
+  // joli à lire dans le code et strictement moins cher à l'affichage.
+  const tache = (couleur: string) => ({
+    background: `radial-gradient(closest-side, ${couleur}, transparent)`,
+  });
+
   return (
     <div ref={bloc} aria-hidden className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
-      <span
-        className="blob absolute -top-32 -left-24 h-[520px] w-[520px] rounded-full blur-[120px]"
-        style={{ background: couleurs[0] }}
-      />
-      <span
-        className="blob absolute top-[28%] -right-32 h-[460px] w-[460px] rounded-full blur-[120px]"
-        style={{ background: couleurs[1] }}
-      />
-      <span
-        className="blob absolute bottom-[22%] -left-32 h-[440px] w-[440px] rounded-full blur-[120px]"
-        style={{ background: couleurs[2] }}
-      />
-      <span
-        className="blob absolute -right-24 -bottom-32 h-[500px] w-[500px] rounded-full blur-[120px]"
-        style={{ background: couleurs[3] }}
-      />
+      <span className="blob absolute -top-32 -left-24 h-[520px] w-[520px]" style={tache(couleurs[0])} />
+      <span className="blob absolute top-[28%] -right-32 h-[460px] w-[460px]" style={tache(couleurs[1])} />
+      <span className="blob absolute bottom-[22%] -left-32 h-[440px] w-[440px]" style={tache(couleurs[2])} />
+      <span className="blob absolute -right-24 -bottom-32 h-[500px] w-[500px]" style={tache(couleurs[3])} />
     </div>
   );
 }

@@ -246,11 +246,16 @@ export function Configurateur({
         >
           {/* La teinte choisie déborde derrière la lampe. C'est ce qui met de
               la couleur dans l'écran sans toucher au fond, qui doit rester
-              assez pâle pour que le texte reste lisible. */}
+              assez pâle pour que le texte reste lisible.
+
+              Dégradé radial plutôt que `blur(70px)`, pour la même raison que
+              FondDoux : sur iOS, Safari cesse de peindre les gros filtres
+              quand son budget de tuiles est dépassé, et la page se vide au
+              défilement. Un dégradé se peint sans filtre. */}
           <span
             aria-hidden
-            className="absolute h-[250px] w-[250px] rounded-full opacity-45 blur-[70px] transition-colors duration-700 lg:h-[420px] lg:w-[420px]"
-            style={{ background: teinte }}
+            className="absolute h-[250px] w-[250px] rounded-full opacity-45 transition-colors duration-700 lg:h-[420px] lg:w-[420px]"
+            style={{ background: `radial-gradient(closest-side, ${teinte}, transparent)` }}
           />
           {/* L'onde de changement de coloris. Invisible au repos. */}
           <span
