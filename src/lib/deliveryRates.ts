@@ -13,6 +13,11 @@ export type DeliveryRate = {
   stopdeskPrice: number | null;
 };
 
+// Le calcul des chiffres à afficher (« à partir de X ») vit dans
+// deliveryRatesSummary.ts, et pas ici : ce fichier-ci tire le client Supabase
+// serveur, donc un composant CLIENT ne peut en importer que des types. Voir la
+// note en tête de ce fichier-là.
+
 // `cache` de-duplicates within a single render pass, the same way products.ts
 // does — a page that needs the rates in both its body and its metadata makes
 // one query, not two.

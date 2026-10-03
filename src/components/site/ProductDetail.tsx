@@ -10,6 +10,7 @@ import { useReveal } from "@/components/accueil/useReveal";
 import { inkOn, pale } from "@/lib/accueil";
 import { trackViewContent } from "@/lib/analytics";
 import type { DeliveryRate } from "@/lib/deliveryRates";
+import { resumeTarifs } from "@/lib/deliveryRatesSummary";
 import { formatPrice } from "@/lib/format";
 import type { ProductColorDetail } from "@/lib/products";
 
@@ -112,6 +113,11 @@ export function ProductDetail({
   // La teinte choisie déborde sur le cadre de la photo, comme sur l'accueil :
   // la page prend la couleur de la lampe qu'on est en train de regarder.
   const teinte = pale(selectedColor?.colorHex ?? null);
+
+  // Le coût de la livraison, annoncé AVANT le formulaire et non découvert
+  // dedans. Le formulaire ne montre le prix exact qu'une fois la wilaya
+  // choisie, et tout ce qui ressemble à une surprise à la fin fait abandonner.
+  const resume = resumeTarifs(rates);
 
   return (
     <div ref={zone} className="grid grid-cols-1 gap-10 lg:grid-cols-2 lg:items-start lg:gap-16">
@@ -232,6 +238,20 @@ export function ProductDetail({
               </span>
             ) : null}
           </div>
+
+          {/* Le prix de la livraison, juste sous celui de la lampe : c'est la
+              question qui suit immédiatement « combien », et y répondre ici
+              évite qu'elle se pose au moment de valider. Le montant vient de la
+              grille en base — voir resumeTarifs. */}
+          {resume.minimum !== null ? (
+            <p className="mt-2.5 text-[14px] leading-snug font-medium text-encre/70">
+              🚚 Livraison à partir de{" "}
+              <span className="font-heading font-semibold text-encre">
+                {formatPrice(resume.minimum)}
+              </span>
+              {resume.alger !== null ? <> · Alger {formatPrice(resume.alger)}</> : null}
+            </p>
+          ) : null}
         </div>
 
         <ul data-apparait className="mt-6 flex flex-wrap gap-2">

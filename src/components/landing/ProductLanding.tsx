@@ -10,6 +10,7 @@ import { Reveal } from "@/components/site/Reveal";
 import { TrustStrip } from "@/components/site/TrustStrip";
 import { trackViewContent } from "@/lib/analytics";
 import type { DeliveryRate } from "@/lib/deliveryRates";
+import { resumeTarifs } from "@/lib/deliveryRatesSummary";
 import { formatPrice } from "@/lib/format";
 import type { ProductColorDetail } from "@/lib/products";
 
@@ -82,6 +83,10 @@ export function ProductLanding({
 
   const color = colors.find((c) => c.id === selectedColorId) ?? colors[0];
 
+  // Ces pages sont celles où arrive la publicité : le prix de la livraison y
+  // est annoncé sous le prix, comme sur la boutique. Même calcul, même source.
+  const resume = resumeTarifs(rates);
+
   // The in-situ shot follows the selected colour, but a colour that only has a
   // cutout would blank the whole "chez vous" band. Falling back to any other
   // colour's room photo keeps the section intact — it is there to show the
@@ -118,6 +123,16 @@ export function ProductLanding({
             <p className="font-heading text-3xl">{formatPrice(product.price)}</p>
             <p className="text-sm text-encre/60">Paiement en espèces, à la livraison</p>
           </div>
+
+          {resume.minimum !== null ? (
+            <p className="mt-2 text-[14px] leading-snug font-medium text-encre/70">
+              🚚 Livraison à partir de{" "}
+              <span className="font-heading font-semibold text-encre">
+                {formatPrice(resume.minimum)}
+              </span>
+              {resume.alger !== null ? <> · Alger {formatPrice(resume.alger)}</> : null}
+            </p>
+          ) : null}
 
           <div className="mt-7 flex flex-wrap gap-3">
             {/* An anchor, not a button: the form at the foot of the page is the

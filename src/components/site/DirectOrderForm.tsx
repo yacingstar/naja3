@@ -3,10 +3,10 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import type { DeliveryRate } from "@/lib/deliveryRates";
+import { resumeTarifs } from "@/lib/deliveryRatesSummary";
 import { formatPrice } from "@/lib/format";
 import type { ProductColorDetail } from "@/lib/products";
 import { ColorSwatches } from "@/components/site/ColorSwatches";
-import { BagIcon } from "@/components/site/Icons";
 import { trackAddToCart } from "@/lib/analytics";
 import { useCart } from "@/lib/cart";
 import {
@@ -79,6 +79,11 @@ export function DirectOrderForm({
 
   const selectedColor = colors.find((c) => c.id === selectedColorId) ?? colors[0];
   const order = useDirectOrder({ product, selectedColor, rates });
+
+  // Le plus bas tarif de la grille, pour répondre à « et la livraison ? » avant
+  // que la wilaya ne soit choisie. Le calcul du total, lui, ne change pas : il
+  // reste `deliveryFee ?? 0` tant qu'aucune wilaya n'est sélectionnée.
+  const resume = resumeTarifs(rates);
 
   // The basket. Read even when `withCart` is off, because hooks can't be
   // conditional — and it costs nothing: this component is only ever rendered
@@ -173,27 +178,14 @@ export function DirectOrderForm({
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  // What the line under the basket button says. One expression rather than
-  // three nested ternaries in the markup. "Il reste à passer la commande" is
-  // the load-bearing half — it is the answer to the exact misreading that got
-  // the basket removed in the first place.
-  const cartHint = justAdded ? (
-    <>
-      Il reste à passer la commande ·{" "}
-      <Link
-        href="/panier"
-        className="underline decoration-dotted underline-offset-4 hover:text-encre"
-      >
-        Voir le panier
-      </Link>
-    </>
-  ) : !order.inStock ? (
-    "Ce coloris est en rupture."
-  ) : roomInCart <= 0 ? (
-    `Maximum ${MAX_ORDER_QUANTITY} par commande pour ce coloris.`
-  ) : (
-    "Plusieurs modèles ? Mettez-les au panier et commandez une seule fois."
-  );
+  // Le lien « + Ajouter un autre modèle » se suffit à lui-même : il ne reste
+  // ici que ce qu'il faut dire quand il ne PEUT pas servir. `null` dans le cas
+  // normal, pour que le lien soit seul et discret.
+  const cartHint = !order.inStock
+    ? "Ce coloris est en rupture."
+    : roomInCart <= 0
+      ? `Maximum ${MAX_ORDER_QUANTITY} par commande pour ce coloris.`
+      : null;
 
   return (
     <form
@@ -252,38 +244,12 @@ export function DirectOrderForm({
           <p className="font-heading text-xl">{formatPrice(order.subtotal)}</p>
         </div>
 
-        {/* Stays ABOVE the tear line, inside the half of the slip that is
-            "what you're buying": the basket is a place to put a lamp while you
-            go and look at another one, so it belongs next to the colour and
-            the quantity it acts on, not down among the delivery fields. */}
-        {withCart ? (
-          <div className="mt-5">
-            <button
-              type="button"
-              onClick={handleAddToCart}
-              disabled={!canAddToCart}
-              className={`flex w-full items-center justify-center gap-2 rounded-full border-2 border-encre px-6 py-3 font-heading text-base transition active:translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50 disabled:active:translate-y-0 ${
-                justAdded ? "bg-sauge/45" : "bg-papier hover:bg-lueur/20"
-              }`}
-            >
-              {justAdded ? (
-                <span aria-hidden>✓</span>
-              ) : (
-                <BagIcon className="h-5 w-5" aria-hidden />
-              )}
-              {justAdded ? "Ajouté au panier" : "Ajouter au panier"}
-            </button>
-            {/* aria-live because the button's own label swap is not announced:
-                the pressed control keeps its focus, so a screen reader gets
-                nothing unless the change is spoken from here. */}
-            <p
-              aria-live="polite"
-              className="mt-2 text-center text-[13px] leading-snug text-encre/60"
-            >
-              {cartHint}
-            </p>
-          </div>
-        ) : null}
+        {/* Plus de bouton panier ici. Il était le PREMIER bouton de la page,
+            avant même le formulaire de livraison : les clientes cliquaient
+            dessus, se croyaient servies, et s'arrêtaient là — beaucoup
+            d'ajouts au panier, très peu de commandes. La possibilité de
+            commander plusieurs modèles existe toujours, mais plus bas et
+            discrète : voir le lien sous le bouton Commander. */}
       </div>
 
       {/* The tear line. Everything above is what you're buying, everything
@@ -291,7 +257,14 @@ export function DirectOrderForm({
       <div className="order-perf" />
 
       {/* ── ③ Where to deliver ──────────────────────────────────────── */}
-      <div ref={detailsRef} className="px-6 pt-7 sm:px-8">
+      {/* `scroll-mt` : le bouton collant amène ici en `block: "start"`, et sans
+          cette marge le premier champ atterrissait SOUS l'en-tête fixe — on
+          appuie sur « Commander », et on ne voit pas le formulaire. La hauteur
+          vient de la même variable que partout ailleurs. */}
+      <div
+        ref={detailsRef}
+        className="scroll-mt-[var(--header-height)] px-6 pt-7 sm:px-8"
+      >
         <StepLabel n={showColorStep ? 3 : 2} tint="bg-sauge">
           Où on vous livre ?
         </StepLabel>
@@ -434,13 +407,24 @@ export function DirectOrderForm({
             <dd>
               {order.deliveryFee != null ? (
                 formatPrice(order.deliveryFee)
+              ) : resume.minimum !== null ? (
+                // Un chiffre plutôt que « choisissez la wilaya » : la même
+                // information qu'un ordre de grandeur, sans faire semblant de
+                // connaître la wilaya. Le montant exact arrive dès qu'elle est
+                // choisie, et le total se met à jour avec.
+                <span className="text-encre/55">
+                  à partir de {formatPrice(resume.minimum)}
+                </span>
               ) : (
                 <span className="text-encre/45">choisissez la wilaya</span>
               )}
             </dd>
           </div>
           <div className="mt-1 flex justify-between border-t-2 border-encre/15 pt-2.5 font-heading text-xl font-semibold">
-            <dt>À payer à la livraison</dt>
+            {/* Tant qu'aucune wilaya n'est choisie, le montant affiché ne
+                contient pas la livraison — le dire ici plutôt que de laisser
+                croire à un prix tout compris. La valeur, elle, ne change pas. */}
+            <dt>{order.deliveryFee != null ? "À payer à la livraison" : "Total, hors livraison"}</dt>
             <dd>{formatPrice(order.total)}</dd>
           </div>
         </dl>
@@ -470,6 +454,40 @@ export function DirectOrderForm({
         <p className="mt-3 text-center text-xs text-encre/55">
           Paiement en espèces à la livraison · Aucune carte demandée
         </p>
+
+        {/* Le seul chemin vers plusieurs modèles — et discret par
+            construction. C'était un gros bouton placé AVANT le formulaire :
+            il détournait la commande au lieu de la servir. Sous le bouton
+            Commander, il ne peut plus être pris pour l'action principale.
+            `aria-live` parce que rien d'autre n'annonce le changement d'état :
+            le lien pressé garde le focus. */}
+        {withCart ? (
+          <p aria-live="polite" className="mt-5 text-center text-[13px] leading-snug">
+            {justAdded ? (
+              <span className="font-medium text-encre/75">
+                ✓ Ajouté au panier ·{" "}
+                <Link
+                  href="/panier"
+                  className="underline decoration-dotted underline-offset-4 hover:text-encre"
+                >
+                  Voir le panier
+                </Link>
+              </span>
+            ) : (
+              <button
+                type="button"
+                onClick={handleAddToCart}
+                disabled={!canAddToCart}
+                className="font-medium text-encre/60 underline decoration-dotted underline-offset-4 transition hover:text-encre disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                + Ajouter un autre modèle à ma commande
+              </button>
+            )}
+            {!justAdded && cartHint ? (
+              <span className="mt-1 block text-encre/50">{cartHint}</span>
+            ) : null}
+          </p>
+        ) : null}
       </div>
 
       {/* Floats over the page rather than pinning a full-width bar to the
