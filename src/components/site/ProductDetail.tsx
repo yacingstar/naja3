@@ -121,6 +121,14 @@ export function ProductDetail({
 
   return (
     <div ref={zone} className="grid grid-cols-1 gap-10 lg:grid-cols-2 lg:items-start lg:gap-16">
+      {/* Name and price lead on phones; the photograph remains centred below. */}
+      <div className="lg:hidden">
+        <h1 className="font-heading text-[46px] leading-tight font-bold">{product.name.toLowerCase()}</h1>
+        <p className="mt-3 font-heading text-[30px] font-bold">{formatPrice(product.price)}</p>
+        {resume.minimum !== null ? (
+          <p className="mt-2 text-sm text-encre/70">🚚 Livraison à partir de {formatPrice(resume.minimum)}{resume.alger !== null ? ` · Alger ${formatPrice(resume.alger)}` : ""}</p>
+        ) : null}
+      </div>
       {/* ── Left: the photo ─────────────────────────────────────────── */}
       <div className="lg:sticky lg:top-28">
         <div
@@ -209,7 +217,7 @@ export function ProductDetail({
           <span className="text-encre/70">{product.name}</span>
         </nav>
 
-        <div data-apparait>
+        <div className="hidden lg:block" data-apparait>
           <span className="mt-5 inline-block rounded-full bg-encre px-4 py-2 font-heading text-[13px] text-papier">
             imprimée après votre commande
           </span>

@@ -54,6 +54,25 @@ export async function updateOrderStatus(
   return { ok: true };
 }
 
+export async function updateOrderPrepared(orderId: number, prepared: boolean): Promise<ActionResult> {
+  await requireAdminUser();
+  if (!Number.isSafeInteger(orderId) || orderId <= 0 || typeof prepared !== "boolean") {
+    return { ok: false, error: "Commande invalide." };
+  }
+  const supabase = createAdminClient();
+  const { data, error } = await supabase.from("orders")
+    .update({ prepared_at: prepared ? new Date().toISOString() : null })
+    .eq("id", orderId).select("id").maybeSingle();
+  if (error || !data) return {
+    ok: false,
+    error: "Impossible d'enregistrer : vérifiez que la migration prepared_at a été appliquée.",
+  };
+  revalidatePath("/admin");
+  revalidatePath("/admin/commandes");
+  revalidatePath(`/admin/commandes/${orderId}`);
+  return { ok: true };
+}
+
 export async function updateInternalNotes(
   orderId: number,
   notes: string,

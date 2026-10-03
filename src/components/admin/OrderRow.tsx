@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { PreparedCheckbox } from "@/components/admin/PreparedCheckbox";
 import { StatusBadge } from "@/components/admin/StatusBadge";
 import { LampMark } from "@/components/LampMark";
 import { formatDateTimeShort, formatPrice } from "@/lib/format";
@@ -45,6 +46,8 @@ export function OrderRow({
     commune: string;
     orderTotal: number;
     status: OrderStatus;
+    preparedAt: string | null;
+    preparationAvailable: boolean;
     items: Array<{
       productName: string;
       colorName: string;
@@ -55,7 +58,7 @@ export function OrderRow({
   };
 }) {
   return (
-    <li>
+    <li className="rounded-2xl border-2 border-encre/12">
       <Link
         href={`/admin/commandes/${order.id}`}
         className="block rounded-2xl border-2 border-encre/12 px-4 py-3 transition hover:border-encre/40 hover:bg-encre/[.03]"
@@ -113,6 +116,9 @@ export function OrderRow({
           </span>
         ) : null}
       </Link>
+      {order.status !== "expédiée" && order.status !== "livrée" && order.status !== "annulée" ? (
+        <PreparedCheckbox orderId={order.id} preparedAt={order.preparedAt} available={order.preparationAvailable} />
+      ) : null}
     </li>
   );
 }

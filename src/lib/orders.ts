@@ -33,6 +33,8 @@ export type OrderListItem = {
   // couleur, et il fallait jusqu'ici ouvrir chaque commande l'une après
   // l'autre, puis revenir en arrière. La liste EST l'écran de préparation.
   items: OrderItemSummary[];
+  preparedAt: string | null;
+  preparationAvailable: boolean;
 };
 
 /**
@@ -63,6 +65,7 @@ export function commandesEnRetard(orders: OrderListItem[]): OrderListItem[] {
 }
 
 type OrderListRow = {
+  prepared_at?: string | null;
   id: number;
   created_at: string;
   status: OrderStatus;
@@ -85,7 +88,7 @@ export async function getOrders(status?: OrderStatus): Promise<OrderListItem[]> 
     .select(
       // Sans espaces dans les parenthèses imbriquées : PostgREST refuse
       // « order_items ( … ) » dès qu'il y a un deuxième niveau (PGRST100).
-      "id,created_at,status,customer_first_name,customer_last_name,wilaya,commune,order_total,order_items(quantity,products(name),product_colors(color_name,color_hex,color_hex_2))",
+      "*,order_items(quantity,products(name),product_colors(color_name,color_hex,color_hex_2))",
     )
     .order("created_at", { ascending: false });
 
@@ -103,6 +106,8 @@ export async function getOrders(status?: OrderStatus): Promise<OrderListItem[]> 
     wilaya: order.wilaya,
     commune: order.commune,
     orderTotal: order.order_total,
+    preparedAt: order.prepared_at ?? null,
+    preparationAvailable: Object.prototype.hasOwnProperty.call(order, "prepared_at"),
     items: (order.order_items ?? []).map((item) => ({
       productName: item.products?.name ?? "(veilleuse supprimée)",
       colorName: item.product_colors?.color_name ?? "",
