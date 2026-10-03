@@ -30,7 +30,26 @@ export function Reveal({
           observer.disconnect();
         }
       },
-      { threshold: 0.15 },
+      // `threshold: 0`, jamais un pourcentage — et c'est le cœur du composant.
+      //
+      // Le rapport d'intersection vaut au mieux (hauteur d'écran / hauteur du
+      // bloc). Un seuil de 0,15 n'est donc ATTEIGNABLE que pour un bloc plus
+      // court que ~6,7 écrans ; au-delà, l'observateur ne se déclenche jamais
+      // et le bloc reste à `opacity: 0` POUR TOUJOURS. Le contenu est bien
+      // dans la page, il n'est simplement jamais montré.
+      //
+      // C'est arrivé sur un téléphone, et seulement là : l'écran y est court
+      // (barre d'adresse comprise) pendant que les sections sont longues. La
+      // FAQ et les étapes de fabrication dépassent le rapport, l'ordinateur
+      // non — d'où un bug qu'on ne voit qu'en regardant depuis un mobile.
+      //
+      // Avec un seuil nul, le bloc apparaît dès qu'il commence à entrer. La
+      // marge négative en bas ne fait que retarder le déclenchement de 12 % de
+      // l'écran, pour que le mouvement soit fini avant d'être lu — c'est du
+      // confort, pas une condition d'apparition. C'est le même choix que
+      // `useReveal` : dans le pire des cas le contenu apparaît trop tôt, jamais
+      // pas du tout.
+      { threshold: 0, rootMargin: "0px 0px -12% 0px" },
     );
     observer.observe(el);
     return () => observer.disconnect();

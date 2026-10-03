@@ -263,6 +263,18 @@ html::-webkit-scrollbar {
     transform: translateY(0);
   }
 
+  /* Filet de sécurité : sans JavaScript, `data-reveal` n'est jamais posé et
+     tout le contenu marqué `.reveal` resterait à `opacity: 0` — une page à
+     moitié vide, pour toujours. Le repli n'est pas une animation, c'est le
+     contenu. Même principe que le commentaire de `useReveal` : au pire le
+     contenu apparaît sans mouvement, jamais il ne manque. */
+  @media (scripting: none) {
+    .reveal {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
   /* Homepage-only scroll-snap (ScrollSnapHomepage.tsx toggles this class on
      <html> for as long as the homepage is mounted). proximity, not
      mandatory — mandatory forces a hard stop at every section boundary

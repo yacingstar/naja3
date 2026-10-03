@@ -3588,6 +3588,30 @@ that.
 **I still have not seen it.** Same limit as above: no admin login from here. The
 list is the screen she looks at most, so it is the one to check first.
 
+**Follow-up, same evening: "mon site gestion ne marche plus", and it was already
+fine.** Reported minutes after a deploy, then confirmed working again before
+anything was changed. Nothing was broken: **a tab left open across a deploy
+holds JavaScript chunks the new deploy has replaced**, so the next navigation
+404s on a file that no longer exists and the page dies. A reload fixes it, every
+time.
+
+Worth knowing because of what the investigation cost and what it ruled out —
+`/admin` answered 307 (the normal redirect), the Supabase database answered 200
+on `orders` and `delivery_rates`, and `/auth/v1/health` answered 200. That last
+trio matters: this shop has had a real Supabase outage (round 33) and a paused
+free-tier project is the first thing to suspect, so ruling it out in one command
+is worth doing first, not last.
+
+**The rule to carry forward: after a deploy, always try a reload before
+believing a "it doesn't work any more" report** — and say so to her, because
+from her side an open tab and a broken site look identical.
+
+**The commune joined the same two lists** — *« ajoute la commune comme tu as
+fait pour le modèle »*. The wilaya says roughly where an order goes, the commune
+says where it actually goes, and it was only visible after opening the order.
+`truncate` came off the identity line with it: cutting the commune off at the
+screen edge would be worse than not showing it, because it would look read.
+
 **WhatsApp shipped inert.** She chose Telegram-now/WhatsApp-later, so round 46's
 code is live but does nothing until the four variables exist — and `/admin` says
 so out loud, which is the one place this project has ever made a
