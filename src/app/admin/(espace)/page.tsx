@@ -2,6 +2,7 @@ import Link from "next/link";
 import { LampMark } from "@/components/LampMark";
 import { Bloc, Carte, EnClair } from "@/components/admin/chiffres";
 import { StatusBadge } from "@/components/admin/StatusBadge";
+import { PreparedCheckbox } from "@/components/admin/PreparedCheckbox";
 import { getAdminProducts } from "@/lib/adminProducts";
 import { getAdminStats } from "@/lib/adminStats";
 import { formatDateTimeShort, formatPrice } from "@/lib/format";
@@ -232,6 +233,9 @@ export default async function AdminAccueilPage() {
                   </span>
                 ) : null}
               </Link>
+              {c.status !== "expédiée" && c.status !== "livrée" && c.status !== "annulée" ? (
+                <PreparedCheckbox orderId={c.id} preparedAt={c.preparedAt} available={c.preparationAvailable} />
+              ) : null}
             </li>
           ))}
         </ul>
