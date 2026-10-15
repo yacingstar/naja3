@@ -71,11 +71,36 @@ type WorkshopRow = {
   workshop_registrations: RegistrationRow[] | null;
 };
 
-const CHAMPS =
-  "id, title, description, starts_at, ends_at, location, price, deposit, seats, created_at, " +
-  // Sans espaces dans les parenthèses imbriquées : PostgREST refuse dès qu'il y
-  // a un deuxième niveau (PGRST100) — même remarque que getOrders.
-  "workshop_registrations(status)";
+const COLONNES_ATELIER =
+  "id, title, description, starts_at, ends_at, location, price, deposit, seats, created_at";
+
+// Sans espaces dans les parenthèses imbriquées : PostgREST refuse dès qu'il y a
+// un deuxième niveau (PGRST100) — même remarque que getOrders.
+//
+// Deux sélections et pas une, parce que les deux écrans ne lisent pas la même
+// chose. La LISTE ne fait que compter les inscrits : elle n'a besoin que du
+// statut, et charger les noms et les téléphones de tout le monde pour les
+// compter serait sortir des données personnelles de la base sans raison.
+const CHAMPS_LISTE = `${COLONNES_ATELIER}, workshop_registrations(status)`;
+
+// La FICHE, elle, affiche chaque inscrit — donc TOUTES les colonnes qu'elle
+// lit ensuite.
+//
+// ⚠️ C'est ici qu'était le bug. Cette requête ne demandait que `status`, et la
+// fiche appelait ensuite `formatDateTimeShort` sur une date qui n'avait jamais
+// été chargée : `new Date(undefined)` donne une date invalide, et `Intl.format`
+// lève une RangeError. Résultat, une page d'erreur à la place de la liste des
+// inscrits — et SEULEMENT à partir de la première inscription, parce qu'avec
+// zéro inscrit la boucle ne s'exécute pas et rien ne plantait. La liste, elle,
+// continuait de marcher : elle ne lit que les statuts.
+//
+// La leçon : quand une colonne est lue quelque part, elle doit être demandée
+// ici. TypeScript ne peut pas le voir — le client Supabase n'est pas typé
+// contre le schéma de la base, donc `RegistrationRow` promet des champs que la
+// requête ne ramène pas.
+const CHAMPS_FICHE =
+  `${COLONNES_ATELIER}, ` +
+  "workshop_registrations(id, created_at, status, first_name, last_name, phone)";
 
 function versInscription(row: RegistrationRow): AdminRegistration {
   return {
@@ -119,7 +144,7 @@ export async function getAdminWorkshops(): Promise<AdminWorkshopListItem[]> {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("workshops")
-    .select(CHAMPS)
+    .select(CHAMPS_LISTE)
     .order("starts_at", { ascending: false })
     .returns<WorkshopRow[]>();
 
@@ -150,7 +175,7 @@ export async function getAdminWorkshop(id: number): Promise<AdminWorkshopDetail 
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("workshops")
-    .select(CHAMPS)
+    .select(CHAMPS_FICHE)
     .eq("id", id)
     .maybeSingle<WorkshopRow>();
 

@@ -147,6 +147,23 @@ function Contenu({ workshop, ouvert }: { workshop: Workshop; ouvert: boolean }) 
           ) : null}
         </dl>
 
+        {/* La liste d'attente, écrite noir sur blanc.
+            Deux raisons, et la seconde est la vraie. La première : c'est
+            exactement ce que la patronne veut faire des inscriptions
+            supplémentaires. La seconde : le formulaire accepte PLUS de
+            personnes que de places annoncées (les places ne bloquent rien, et
+            c'est un choix). Sans cette phrase, la 9e personne ne sait pas si
+            elle a une place, si elle est en trop, ou si le site s'est trompé —
+            et c'est le genre de doute qui se règle par un appel au lieu d'un
+            autre appel. */}
+        {workshop.seats != null ? (
+          <p className="mt-4 text-sm leading-relaxed font-medium text-encre/60">
+            Si les {workshop.seats} places sont prises, les inscriptions
+            suivantes sont mises en liste d&apos;attente — on vous appelle si
+            une place se libère.
+          </p>
+        ) : null}
+
         {workshop.description ? (
           <TexteAtelier texte={workshop.description} className="mt-6" />
         ) : null}
