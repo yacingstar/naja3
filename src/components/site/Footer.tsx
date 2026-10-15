@@ -81,6 +81,11 @@ export function Footer() {
             <Colonne titre="La boutique">
               <Lien href="/boutique">Toutes les veilleuses</Lien>
               <Lien href="/">Composer la mienne</Lien>
+              {/* Le même lien que la pastille du menu, et pas un doublon
+                  inutile : l'atelier est une page qu'on découvre, et le pied
+                  de page est le seul endroit d'où elle reste joignable si le
+                  menu se resserre sur un petit écran. */}
+              <Lien href="/atelier">L&apos;atelier</Lien>
             </Colonne>
 
             <Colonne titre="Aide">

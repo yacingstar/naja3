@@ -73,6 +73,17 @@ export function Header() {
           <Link href="/boutique" className={NAV_PILL}>
             Boutique
           </Link>
+          {/* « Atelier » reste visible à TOUTES les largeurs, contrairement à
+              « Comment c'est fait » et « FAQ » juste en dessous. Le mot est court,
+              et c'est une page qu'on ouvre une fois pour s'inscrire : la
+              cacher derrière un point de rupture sm: reviendrait à la rendre
+              introuvable sur un téléphone, c'est-à-dire là où on s'inscrit.
+              Si la barre venait à déborder sur un petit écran, c'est cette
+              ligne qu'il faut passer en `hidden sm:inline-flex`, pas la
+              supprimer — le pied de page porte le même lien en secours. */}
+          <Link href="/atelier" className={NAV_PILL}>
+            Atelier
+          </Link>
           <Link href="/#comment" className={`hidden sm:inline-flex ${NAV_PILL}`}>
             Comment c&apos;est fait
           </Link>
