@@ -2,20 +2,20 @@ import "server-only";
 
 import { headers } from "next/headers";
 
-import { formatPrice } from "@/lib/format";
+import { formatDateAtelier, formatPrice } from "@/lib/format";
 // The payload shape is shared with the WhatsApp notifier now — see order.ts for
 // why it lives on its own rather than here.
 import type { NewOrderNotification } from "@/lib/notify/order";
 import { normalizePhone } from "@/lib/phone";
 
-// New-order notifications to the shop owner's Telegram.
+// Everything that reaches the shop owner's Telegram, in one file.
 //
-// Why this exists: orders land in Supabase and sit in /admin/commandes with
-// status `nouvelle` until someone happens to look. This is a cash-on-delivery
-// shop, so the step that turns an order into a sale is the owner phoning the
-// customer to confirm — and a customer who isn't called back promptly is a
-// customer who reconsiders. This gets the order onto her phone in about a
-// second, with everything that call needs.
+// Why this exists at all: orders land in Supabase and sit in /admin/commandes
+// with status `nouvelle` until someone happens to look. This is a cash-on-
+// delivery shop, so the step that turns an order into a sale is the owner
+// phoning the customer to confirm — and a customer who isn't called back
+// promptly is a customer who reconsiders. This gets the order onto her phone
+// in about a second, with everything that call needs.
 //
 // Why Telegram over email or WhatsApp: free with no per-message cost, instant,
 // no dependency to add, and no approval process. WhatsApp's Cloud API needs a
@@ -26,9 +26,14 @@ import { normalizePhone } from "@/lib/phone";
 //
 // Deliberately no delivery guarantee — no retry, no queue, no `notified_at`
 // column. A failed send is logged and lost, which is acceptable because it is
-// recoverable by design: the order is already safe in the database and shows
-// as `nouvelle` in the admin whether or not this succeeds. The notification is
-// a convenience on top of the record, never the record itself.
+// recoverable by design: the thing is already safe in the database whether or
+// not this succeeds. The notification is a convenience on top of the record,
+// never the record itself.
+//
+// Workshop registrations (notifyNewRegistration, at the bottom) live here
+// rather than in a third module: one token, one place to look when the
+// question is "what pings my phone?", and — the actual reason — the send
+// itself, with its 8s deadline and its catch-all, then exists exactly once.
 
 const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 const CHAT_ID = process.env.TELEGRAM_CHAT_ID;
@@ -55,19 +60,19 @@ const DELIVERY_LABEL: Record<"domicile" | "stopdesk", string> = {
   stopdesk: "Stopdesk",
 };
 
-// The site's own origin, for a tappable link straight to the order in the
+// The site's own origin, for a tappable link straight to the thing in the
 // admin. Derived from the request rather than a seventh env var — capi.ts
 // already proves request APIs are readable inside `after()`.
 //
 // Isolated in its own try/catch on purpose: outside a request context
 // `headers()` throws, and that must cost the link, not the whole message.
-async function adminOrderUrl(orderId: number): Promise<string | null> {
+async function lienAdmin(chemin: string): Promise<string | null> {
   try {
     const headerList = await headers();
     const host = headerList.get("host");
     if (!host) return null;
     const proto = headerList.get("x-forwarded-proto") ?? "https";
-    return `${proto}://${host}/admin/commandes/${orderId}`;
+    return `${proto}://${host}${chemin}`;
   } catch {
     return null;
   }
@@ -133,29 +138,79 @@ export function buildOrderMessage(
     : message;
 }
 
-// Never throws and never returns a failure the caller has to handle — same
-// contract as sendPurchaseEvent, and for the same reason: the order is already
-// written by the time this runs, so a notification must not be able to turn a
-// completed sale into an error or delay the customer's confirmation page.
-// Problems go to the Netlify function log.
-export async function notifyNewOrder(order: NewOrderNotification): Promise<void> {
+// ── Les inscriptions aux ateliers ────────────────────────────────────────────
+
+/** Ce qu'un message d'inscription a besoin de porter. */
+export type NewRegistrationNotification = {
+  workshopId: number;
+  workshopTitle: string;
+  startsAt: string;
+  firstName: string;
+  lastName: string;
+  phone: string;
+};
+
+// Exported for the same reason as buildOrderMessage: the escaping can be
+// checked without sending anything to a real phone.
+export function buildRegistrationMessage(
+  registration: NewRegistrationNotification,
+  adminUrl: string | null,
+): string {
+  // The workshop title is the owner's own text, but it is escaped anyway —
+  // one rule for every value that reaches this message, so nobody has to
+  // decide later which ones are safe.
+  const lines = [
+    `🎨 <b>Nouvelle inscription — ${escapeHtml(registration.workshopTitle)}</b>`,
+    "",
+    `👤 ${escapeHtml(`${registration.firstName} ${registration.lastName}`)}`,
+    `📞 ${escapeHtml(registration.phone)}`,
+    `📅 ${escapeHtml(formatDateAtelier(registration.startsAt))}`,
+  ];
+
+  const international = normalizePhone(registration.phone);
+  if (international) {
+    lines.push("", `📱 https://wa.me/${international}`);
+  }
+  if (adminUrl) {
+    lines.push(`🔗 ${adminUrl}`);
+  }
+
+  const message = lines.join("\n");
+  return message.length > MAX_MESSAGE_LENGTH
+    ? message.slice(0, MAX_MESSAGE_LENGTH)
+    : message;
+}
+
+// ── L'envoi, une seule fois ──────────────────────────────────────────────────
+
+/**
+ * Envoie un message au Telegram de la patronne. Ne lève jamais.
+ *
+ * Le corps de cet envoi vivait dans notifyNewOrder ; il en est sorti quand les
+ * inscriptions ont eu besoin du même. Deux copies auraient été deux endroits
+ * où régler un problème de réseau — et surtout deux occasions d'oublier le
+ * `catch` qui empêche une panne Telegram de faire échouer une inscription déjà
+ * enregistrée.
+ *
+ * `etiquette` sert uniquement au journal : elle dit QUELLE notification a
+ * échoué, ce qu'un numéro de commande seul ne dit pas.
+ */
+async function envoyerMessageTelegram(texte: string, etiquette: string): Promise<void> {
   // Same discipline as the pixel and the CAPI: no token or no chat means do
   // nothing at all, so local development never messages the owner.
   if (!BOT_TOKEN || !CHAT_ID) return;
 
   try {
-    const text = buildOrderMessage(order, await adminOrderUrl(order.orderId));
-
     const response = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         chat_id: CHAT_ID,
-        text,
+        text: texte,
         parse_mode: "HTML",
         // The message ends with a wa.me and an admin link; without this
         // Telegram appends a preview card for one of them and buries the
-        // order details above the fold.
+        // details above the fold.
         disable_web_page_preview: true,
       }),
       // 8s, not 5s, and the extra 3s is not padding. This budget has to cover
@@ -166,9 +221,9 @@ export async function notifyNewOrder(order: NewOrderNotification): Promise<void>
       // a local quirk.
       //
       // Safe to be this generous: it runs inside `after()`, so no customer is
-      // waiting on it, and it runs concurrently with the CAPI call rather than
-      // after it, so the pair still finishes inside Netlify's 10s default
-      // rather than needing 16s.
+      // waiting on it, and it runs concurrently with the other notifiers
+      // rather than after them, so the set still finishes inside Netlify's 10s
+      // default rather than needing 16s.
       signal: AbortSignal.timeout(8000),
     });
 
@@ -178,11 +233,37 @@ export async function notifyNewOrder(order: NewOrderNotification): Promise<void>
       // with a user" — a bot cannot message someone who has never pressed
       // Start in its chat.
       console.error(
-        `[telegram] Order #${order.orderId} notification rejected (${response.status}):`,
+        `[telegram] ${etiquette} rejected (${response.status}):`,
         await response.text(),
       );
     }
   } catch (error) {
-    console.error(`[telegram] Order #${order.orderId} notification failed:`, error);
+    console.error(`[telegram] ${etiquette} failed:`, error);
   }
+}
+
+// Never throws and never returns a failure the caller has to handle — same
+// contract as sendPurchaseEvent, and for the same reason: the order is already
+// written by the time this runs, so a notification must not be able to turn a
+// completed sale into an error or delay the customer's confirmation page.
+// Problems go to the Netlify function log.
+export async function notifyNewOrder(order: NewOrderNotification): Promise<void> {
+  const texte = buildOrderMessage(order, await lienAdmin(`/admin/commandes/${order.orderId}`));
+  await envoyerMessageTelegram(texte, `Order #${order.orderId} notification`);
+}
+
+// Same contract as notifyNewOrder, and it matters just as much here: the
+// registration is in the database before this runs, so a Telegram outage must
+// never turn a successful sign-up into an error message for the visitor.
+export async function notifyNewRegistration(
+  registration: NewRegistrationNotification,
+): Promise<void> {
+  const texte = buildRegistrationMessage(
+    registration,
+    await lienAdmin(`/admin/ateliers/${registration.workshopId}`),
+  );
+  await envoyerMessageTelegram(
+    texte,
+    `Inscription atelier #${registration.workshopId}`,
+  );
 }

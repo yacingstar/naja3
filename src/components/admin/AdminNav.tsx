@@ -10,6 +10,7 @@ import { usePathname } from "next/navigation";
 const ONGLETS = [
   { href: "/admin", label: "Accueil" },
   { href: "/admin/commandes", label: "Commandes" },
+  { href: "/admin/ateliers", label: "Ateliers" },
   { href: "/admin/statistiques", label: "Statistiques" },
   { href: "/admin/produits", label: "Produits" },
   { href: "/admin/livraison", label: "Livraison" },
