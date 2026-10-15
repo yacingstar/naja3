@@ -86,12 +86,19 @@ export default async function AdminAtelierPage({
 
         {/* Ce que ce nombre veut dire, écrit noir sur blanc : les places sont
             une annonce, pas une limite. Sans cette phrase, un 13 sur 12 se lit
-            comme un bug alors que c'est le comportement voulu. */}
+            comme un bug alors que c'est le comportement voulu.
+            Le chiffre est mis dedans plutôt qu'écrit en toutes lettres : c'est
+            ce nombre-là qui est la frontière de la liste d'attente, et il se
+            lit d'un coup d'œil sur une capture d'écran. */}
         {atelier.seats != null && atelier.inscrits > atelier.seats ? (
           <p className="mt-3 rounded-2xl border-2 border-encre bg-[#ffd166] px-4 py-3 text-sm font-medium">
-            Plus d&apos;inscrits que de places annoncées — c&apos;est possible,
-            les places ne bloquent rien. À vous de décider si vous ouvrez une
-            deuxième session.
+            {atelier.inscrits - atelier.seats}{" "}
+            {atelier.inscrits - atelier.seats === 1
+              ? "personne est au-delà des"
+              : "personnes sont au-delà des"}{" "}
+            {atelier.seats} places annoncées — c&apos;est votre liste
+            d&apos;attente. Les places ne bloquent rien : elles se disent, et
+            vous décidez.
           </p>
         ) : null}
       </section>
