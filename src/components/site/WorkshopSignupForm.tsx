@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { inscrireAtelier } from "@/app/(site)/atelier/actions";
+import { formatPrice } from "@/lib/format";
 import { analyserTelephone } from "@/lib/phone";
 
 // L'inscription à un atelier. Deux champs, et rien d'autre.
@@ -20,10 +21,16 @@ export function WorkshopSignupForm({
   workshopId,
   dateTexte,
   location,
+  deposit,
+  moyensDePaiement,
 }: {
   workshopId: number;
   dateTexte: string;
   location: string;
+  // L'acompte à verser d'avance, en DA. Zéro = aucun, et le formulaire
+  // redevient un simple « c'est noté ».
+  deposit: number;
+  moyensDePaiement: string;
 }) {
   const [nomComplet, setNomComplet] = useState("");
   const [phone, setPhone] = useState("");
@@ -41,10 +48,26 @@ export function WorkshopSignupForm({
         <p className="font-heading text-3xl leading-tight font-semibold">
           C&apos;est noté !
         </p>
-        <p className="mt-3 leading-relaxed text-encre/80">
-          Votre place est réservée. On vous appelle pour confirmer — répondez
-          surtout, c&apos;est ce coup de fil qui valide l&apos;inscription.
-        </p>
+
+        {/* Le message disait « votre place est réservée » et c'était faux dès
+            qu'un acompte existe : l'inscription est enregistrée, la place ne
+            l'est pas encore. Dire la vérité ici vaut mieux qu'un client qui se
+            pointe le jour J en croyant avoir payé. */}
+        {deposit > 0 ? (
+          <p className="mt-3 leading-relaxed text-encre/80">
+            Votre inscription est enregistrée.{" "}
+            <strong className="font-semibold">
+              Il reste à verser l&apos;acompte de {formatPrice(deposit)}
+            </strong>{" "}
+            pour que votre place soit tenue. {moyensDePaiement} On vous appelle
+            pour vous donner les coordonnées.
+          </p>
+        ) : (
+          <p className="mt-3 leading-relaxed text-encre/80">
+            Votre place est réservée. On vous appelle pour confirmer — répondez
+            surtout, c&apos;est ce coup de fil qui valide l&apos;inscription.
+          </p>
+        )}
         <dl className="mt-5 space-y-1.5 border-t-2 border-encre/15 pt-5 text-sm">
           <div className="flex flex-wrap gap-x-2">
             <dt className="font-medium text-encre/60">Quand :</dt>
@@ -96,6 +119,17 @@ export function WorkshopSignupForm({
       <p className="mt-1.5 text-sm text-encre/65">
         Deux champs, et on vous rappelle pour confirmer votre place.
       </p>
+
+      {/* L'acompte est rappelé ICI, juste avant les champs, et pas seulement
+          dans la liste des informations plus haut : c'est au moment de remplir
+          qu'on décide si on est d'accord. Le découvrir après coup serait une
+          mauvaise surprise au téléphone. */}
+      {deposit > 0 ? (
+        <p className="mt-3 rounded-2xl border-2 border-encre/15 bg-papier/70 px-4 py-3 text-sm leading-relaxed font-medium">
+          {formatPrice(deposit)} à verser d&apos;avance pour valider votre
+          place. {moyensDePaiement}
+        </p>
+      ) : null}
 
       <div className="mt-5 space-y-4">
         {/* Un seul champ de nom, comme sur le bon de commande : le serveur

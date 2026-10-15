@@ -19,6 +19,8 @@ export type WorkshopInput = {
   endsAt: string;
   location: string;
   price: number;
+  // L'acompte à verser d'avance pour valider une place, en DA. Zéro = aucun.
+  deposit: number;
   seats: number | null;
 };
 
@@ -64,6 +66,11 @@ function preparer(input: WorkshopInput):
   // numérique est une saisie normale, pas une faute.
   const price = Number.isFinite(input.price) ? Math.max(0, Math.round(input.price)) : 0;
 
+  // Même traitement que le prix, et pour la même raison : un acompte illisible
+  // vaut « pas d'acompte » plutôt qu'un refus, parce que le champ est
+  // facultatif et que le vider est la façon normale de dire « il n'y en a pas ».
+  const deposit = Number.isFinite(input.deposit) ? Math.max(0, Math.round(input.deposit)) : 0;
+
   // `null` et pas `0` : zéro place annoncée et « je n'annonce rien » ne veulent
   // pas dire la même chose, et la colonne les distingue (voir la migration).
   //
@@ -91,6 +98,7 @@ function preparer(input: WorkshopInput):
       ends_at: endsAt,
       location: input.location.trim(),
       price,
+      deposit,
       seats,
     },
   };

@@ -18,6 +18,18 @@ const PHOTO = "/atelier/veilleuse-atelier.webp";
 const PHOTO_LARGEUR = 1198;
 const PHOTO_HAUTEUR = 1311;
 
+// Comment on règle l'acompte.
+//
+// Écrit ici, en clair dans le code, et pas dans un champ de l'admin : ce sont
+// les canaux de la boutique, pas une propriété d'un atelier. Ils ne changent
+// pas d'un atelier à l'autre, et les dupliquer dans chaque ligne de la base
+// serait trois copies à corriger le jour où l'un d'eux disparaît.
+//
+// Le jour où les coordonnées exactes (numéro CCP, RIB) seront à donner, elles
+// rejoindront ce texte — c'est le seul endroit à toucher.
+const MOYENS_DE_PAIEMENT =
+  "Par CCP, virement bancaire, ou au bureau d'Invent.";
+
 // La page dépend de l'heure : elle montre « le prochain atelier », et le
 // formulaire se ferme le jour venu. Prerendue et servie depuis le CDN comme
 // l'accueil, donc — sans quoi chaque visiteur coûterait une fonction
@@ -116,6 +128,18 @@ function Contenu({ workshop, ouvert }: { workshop: Workshop; ouvert: boolean }) 
           <Fait libelle="Prix">
             {workshop.price === 0 ? "Gratuit" : `${formatPrice(workshop.price)} la place`}
           </Fait>
+          {/* L'acompte juste sous le prix, et avant les places : c'est l'ordre
+              dans lequel on se pose la question. Et il est écrit « à verser
+              d'avance » plutôt que « acompte » tout court, parce que c'est la
+              seule chose qu'on veut savoir en le lisant. */}
+          {workshop.deposit > 0 ? (
+            <Fait libelle="Acompte">
+              {formatPrice(workshop.deposit)} à verser d&apos;avance
+              <span className="block font-medium text-encre/70">
+                {MOYENS_DE_PAIEMENT}
+              </span>
+            </Fait>
+          ) : null}
           {workshop.seats != null ? (
             <Fait libelle="Places">
               {workshop.seats} place{workshop.seats > 1 ? "s" : ""} seulement
@@ -133,6 +157,8 @@ function Contenu({ workshop, ouvert }: { workshop: Workshop; ouvert: boolean }) 
               workshopId={workshop.id}
               dateTexte={`${jour} — ${horaire}`}
               location={workshop.location}
+              deposit={workshop.deposit}
+              moyensDePaiement={MOYENS_DE_PAIEMENT}
             />
           ) : (
             <div className="rounded-[2.5rem] border-[3px] border-encre/25 bg-encre/5 p-6 sm:p-8">

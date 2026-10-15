@@ -19,6 +19,7 @@ type ExistingWorkshop = {
   endsAt: string | null;
   location: string;
   price: number;
+  deposit: number;
   seats: number | null;
 };
 
@@ -41,6 +42,9 @@ export function WorkshopForm({ workshop }: { workshop?: ExistingWorkshop }) {
   );
   const [location, setLocation] = useState(workshop?.location ?? "");
   const [price, setPrice] = useState(String(workshop?.price ?? ""));
+  const [deposit, setDeposit] = useState(
+    workshop?.deposit ? String(workshop.deposit) : "",
+  );
   const [seats, setSeats] = useState(workshop?.seats != null ? String(workshop.seats) : "");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -61,6 +65,7 @@ export function WorkshopForm({ workshop }: { workshop?: ExistingWorkshop }) {
       // — 0 place et « je n'annonce rien » ne s'écrivent pas pareil — d'où le
       // test explicite plus haut.
       price: Number(price) || 0,
+      deposit: Number(deposit) || 0,
       seats: seats.trim() === "" ? null : Number(seats),
     };
 
@@ -184,10 +189,29 @@ export function WorkshopForm({ workshop }: { workshop?: ExistingWorkshop }) {
             value={price}
             onChange={(e) => setPrice(e.target.value)}
             className="input"
-            placeholder="1500"
+            placeholder="4500"
           />
         </label>
 
+        <label className="block">
+          <span className="mb-1 flex items-baseline justify-between gap-2">
+            <span className="text-sm font-medium text-encre/70">Acompte (DA)</span>
+            <span className="text-xs text-encre/45">0 = aucun</span>
+          </span>
+          <input
+            type="number"
+            min={0}
+            step={100}
+            value={deposit}
+            onChange={(e) => setDeposit(e.target.value)}
+            className="input"
+            placeholder="2000"
+          />
+        </label>
+
+        {/* Troisième champ numérique de la même famille, donc dans la même
+            grille — il tombe seul sur la deuxième ligne, en demi-largeur, ce
+            qui est exactement le poids qu'il mérite. */}
         <label className="block">
           <span className="mb-1 flex items-baseline justify-between gap-2">
             <span className="text-sm font-medium text-encre/70">Places</span>
@@ -199,10 +223,19 @@ export function WorkshopForm({ workshop }: { workshop?: ExistingWorkshop }) {
             value={seats}
             onChange={(e) => setSeats(e.target.value)}
             className="input"
-            placeholder="12"
+            placeholder="8"
           />
         </label>
       </div>
+
+      {/* L'acompte n'est pas une décoration : c'est lui qui fait la différence
+          entre « je m'inscris » et « ma place est tenue ». Écrit ici pour que
+          personne ne le laisse à zéro en croyant remplir un champ optionnel. */}
+      <p className="-mt-2 text-xs text-encre/45">
+        Le montant à verser d&apos;avance pour valider une place. S&apos;il est
+        supérieur à zéro, la page le dit au visiteur et le rappelle après
+        l&apos;inscription.
+      </p>
 
       {/* Le nombre de places est une ANNONCE, pas une limite : il ne ferme rien.
           Écrit ici pour que personne — la patronne dans six mois, ou moi —
