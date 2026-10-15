@@ -121,6 +121,7 @@ export default async function AdminAtelierPage({
               endsAt: atelier.endsAt,
               location: atelier.location,
               price: atelier.price,
+              deposit: atelier.deposit,
               seats: atelier.seats,
             }}
           />

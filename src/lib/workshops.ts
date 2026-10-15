@@ -17,6 +17,13 @@ export type Workshop = {
   location: string;
   // Entier en DA. Zéro veut dire gratuit — la page écrit « Gratuit ».
   price: number;
+  // L'acompte à verser pour valider une inscription, en DA. Zéro veut dire
+  // qu'il n'y en a pas — et c'est la valeur par défaut, donc un atelier dont
+  // personne n'a rien saisi reste exact.
+  //
+  // Ce n'est pas un détail d'affichage : c'est ce qui empêche le bouton
+  // « Réserver ma place » de promettre une place qui n'est pas encore tenue.
+  deposit: number;
   // Nombre de places AFFICHÉ. null = aucune limite annoncée. Ne bloque rien :
   // voir la note de la migration.
   seats: number | null;
@@ -38,10 +45,12 @@ type WorkshopRow = {
   ends_at: string | null;
   location: string;
   price: number;
+  deposit: number;
   seats: number | null;
 };
 
-const COLONNES = "id, title, description, starts_at, ends_at, location, price, seats";
+const COLONNES =
+  "id, title, description, starts_at, ends_at, location, price, deposit, seats";
 
 function versWorkshop(row: WorkshopRow): Workshop {
   return {
@@ -52,6 +61,11 @@ function versWorkshop(row: WorkshopRow): Workshop {
     endsAt: row.ends_at,
     location: row.location,
     price: row.price,
+    // `?? 0` par prudence : si la migration de l'acompte n'a pas encore été
+    // appliquée, la colonne est absente et PostgREST renvoie `undefined` — la
+    // page doit continuer à s'afficher sans acompte plutôt que d'écrire
+    // « NaN DA ».
+    deposit: row.deposit ?? 0,
     seats: row.seats,
   };
 }

@@ -26,6 +26,8 @@ export type AdminWorkshopListItem = {
   startsAt: string;
   location: string;
   price: number;
+  // L'acompte demandé pour valider une place, en DA. Zéro = aucun.
+  deposit: number;
   seats: number | null;
   // Les inscrits qui comptent : les annulés ne sont pas dedans. C'est la règle
   // de compteCommeInscrit (src/lib/registrationStatus.ts), appliquée ici pour
@@ -63,13 +65,14 @@ type WorkshopRow = {
   ends_at: string | null;
   location: string;
   price: number;
+  deposit: number;
   seats: number | null;
   created_at: string;
   workshop_registrations: RegistrationRow[] | null;
 };
 
 const CHAMPS =
-  "id, title, description, starts_at, ends_at, location, price, seats, created_at, " +
+  "id, title, description, starts_at, ends_at, location, price, deposit, seats, created_at, " +
   // Sans espaces dans les parenthèses imbriquées : PostgREST refuse dès qu'il y
   // a un deuxième niveau (PGRST100) — même remarque que getOrders.
   "workshop_registrations(status)";
@@ -93,6 +96,9 @@ function versListeItem(row: WorkshopRow, maintenant: number): AdminWorkshopListI
     startsAt: row.starts_at,
     location: row.location,
     price: row.price,
+    // `?? 0` : si la migration de l'acompte n'est pas encore passée, la colonne
+    // est absente et l'admin doit continuer à s'afficher sans acompte.
+    deposit: row.deposit ?? 0,
     seats: row.seats,
     inscrits: inscriptions.filter((i) => compteCommeInscrit(i.status)).length,
     annules: inscriptions.filter((i) => !compteCommeInscrit(i.status)).length,
