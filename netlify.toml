@@ -15,7 +15,11 @@
   # must never reach a bundle; it is currently held server-side by the
   # `server-only` import in src/lib/supabase/admin.ts, and leaving the scanner
   # armed means the build fails loudly if that ever stops being true.
-  SECRETS_SCAN_OMIT_KEYS = "NEXT_PUBLIC_SUPABASE_ANON_KEY,NEXT_PUBLIC_SUPABASE_URL"
+  #
+  # NEXT_PUBLIC_TIKTOK_PIXEL_ID is in the same position: a pixel ID is printed
+  # in every visitor's browser by design, so it is not a secret. Listed here
+  # so an alphanumeric ID can never trip the scanner and block a deploy.
+  SECRETS_SCAN_OMIT_KEYS = "NEXT_PUBLIC_SUPABASE_ANON_KEY,NEXT_PUBLIC_SUPABASE_URL,NEXT_PUBLIC_TIKTOK_PIXEL_ID"
 
   # Turbopack's persistent build cache records the env it was built with, so
   # META_CAPI_ACCESS_TOKEN's value turns up inside .next/cache/turbopack/*.sst

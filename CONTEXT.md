@@ -3616,3 +3616,32 @@ screen edge would be worse than not showing it, because it would look read.
 code is live but does nothing until the four variables exist — and `/admin` says
 so out loud, which is the one place this project has ever made a
 notification-shaped silence visible.
+
+## Forty-ninth round: a TikTok pixel beside Meta's
+
+Client asked for a TikTok pixel next to the Meta one. Same conventions, no new
+mechanism:
+
+- **`NEXT_PUBLIC_TIKTOK_PIXEL_ID`**, blank = off, blank locally on purpose —
+  the Meta rule. It must be added in the Netlify UI; until it is, this round
+  changes nothing on the live site.
+- **`TikTokPixel.tsx`** is TikTok's base code without its trailing
+  `ttq.page()`, for the reason MetaPixel drops its inline PageView.
+- **The page-view tracker moved out of `MetaPixel` into `PageViewTracker.tsx`**
+  and now fires every configured pixel. Left inside MetaPixel, a TikTok-only
+  setup would have had no page views at all. It is rendered after both pixels
+  in `(site)/layout.tsx` so `fbq`/`ttq` exist when its first effect runs.
+- **`analytics.ts` fans out**; none of the call sites changed. TikTok gets
+  `ViewContent`, `AddToCart`, `InitiateCheckout` and `Purchase` (its current
+  standard name; `CompletePayment` is the legacy one), with the same
+  `order-<id>` as `event_id` for de-duplication.
+- **`netlify.toml`**: the TikTok ID joins `SECRETS_SCAN_OMIT_KEYS` — public by
+  design, and an alphanumeric ID could otherwise trip the scanner.
+- Not done: TikTok's server-side Events API (the `capi.ts` equivalent).
+  Optional; the browser pixel works without it.
+- To check: that TikTok accepts `DZD` — watch Pixel Helper for an
+  "invalid currency" warning on the first real events.
+
+Verified with fake IDs under `next dev`: both base scripts load, `init`/`load`
+run once, and a client-side navigation adds one page view to each pixel.
+`tsc` and `eslint src/` clean.
