@@ -3645,3 +3645,34 @@ mechanism:
 Verified with fake IDs under `next dev`: both base scripts load, `init`/`load`
 run once, and a client-side navigation adds one page view to each pixel.
 `tsc` and `eslint src/` clean.
+
+## Forty-sixth round: the shop order is decided, not computed
+
+*« Je veux la dernière veilleuse que j'ai mise, Okasa, en premier. Puis Nomura,
+Japandi, Champignon, Capricorne, Akari. Puis Nami et Origami. »*
+
+That order follows no rule: not age, not price, not the alphabet — Akari is
+newer than Nami and still goes ahead of it. It is a display order, and a
+display order is chosen.
+
+**Not by rewriting `created_at` again.** The thirty-third round swapped two
+products' timestamps and its own note called that the throwaway version. Doing
+it across eight products would have erased eight real creation dates, Okasa's
+included — added the same morning — and flipped the admin list, which sorts on
+the same column.
+
+So the order lives in `ORDRE_VITRINE`, a list of slugs in `products.ts`, applied
+as a stable sort over a query that now comes back **newest first**. A product
+absent from the list sorts to the **front**: if it is not listed it has just
+been added in the admin, and a new lamp is what you want seen. That is exactly
+the complaint that started this — Okasa had landed last.
+
+**The proper fix is still a `position` column plus a reordering control in the
+admin**, so she can do this herself. It needs DDL, which PostgREST cannot run:
+the migration has to go through the Supabase SQL editor, as `20260917200001`
+did. Offered, not done — she has not asked to reorder more than twice in three
+months, and the list costs nothing until she does.
+
+Verified against the real catalogue before deploying: `/boutique` serves okasa,
+nomura, japandi, champignon, capricorne, akari, nami, origami, and the homepage
+configurator opens on Okasa.

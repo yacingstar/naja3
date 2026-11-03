@@ -124,6 +124,46 @@ function cardColors(colors: ProductRow["product_colors"]): FeaturedProductColor[
 const CARD_SELECT =
   "id, slug, name, description, price, product_colors ( id, color_name, color_hex, color_hex_2, in_stock, cutout_photo_url, product_photos ( url, position ) )";
 
+// L'ordre de la vitrine, choisi à la main par la patronne (3 novembre 2026).
+//
+// Ce n'est aucune règle calculable : ni l'ancienneté, ni le prix, ni
+// l'alphabet. Akari est plus récente que Nami et passe pourtant devant. C'est
+// un ordre de présentation, et un ordre de présentation se décide.
+//
+// ── Pourquoi ici et pas dans la base ────────────────────────────────────────
+// La table `products` n'a pas de colonne d'ordre. En septembre, pour échanger
+// deux veilleuses, on avait réécrit leurs `created_at` — et la note de ce
+// round-là disait déjà que c'était la version jetable, parce qu'une date de
+// création qui ment reste une date de création qui ment : elle sert aussi à
+// trier la liste de l'admin, et plus rien ne dit quand un produit a été ajouté.
+// Le refaire sur huit produits aurait effacé huit vraies dates, dont celle
+// d'Okasa, ajoutée aujourd'hui.
+//
+// La bonne solution reste une colonne `position` plus un réglage dans l'admin,
+// pour qu'elle puisse réordonner seule. Cela demande une modification de la
+// base qu'elle doit approuver et appliquer ; en attendant, la liste ci-dessous
+// fait le travail sans rien abîmer.
+const ORDRE_VITRINE = [
+  "okasa",
+  "nomura",
+  "japandi",
+  "champignon",
+  "capricorne",
+  "akari",
+  "nami",
+  "origami",
+];
+
+// Une veilleuse absente de la liste passe DEVANT toutes les autres : si elle
+// n'y est pas, c'est qu'elle vient d'être ajoutée dans l'admin, et une
+// nouveauté se montre. C'est exactement ce qui a motivé cette demande — Okasa
+// venait d'arriver et se retrouvait en dernier. Entre deux inconnues, la plus
+// récente d'abord (voir l'ordre de la requête).
+function rangVitrine(slug: string): number {
+  const i = ORDRE_VITRINE.indexOf(slug);
+  return i === -1 ? -1 : i;
+}
+
 // Real data from day one — no mock catalog. Returns an empty list until
 // products exist (Phase 5 admin panel), and callers handle that gracefully
 // rather than showing fake content.
@@ -139,20 +179,26 @@ export const getProducts = cache(async (): Promise<FeaturedProduct[]> => {
   const { data, error } = await supabase
     .from("products")
     .select(CARD_SELECT)
-    .order("created_at", { ascending: true })
+    // Plus récente d'abord : c'est l'ordre de repli pour toute veilleuse qui
+    // n'est pas encore dans ORDRE_VITRINE. Le tri ci-dessous est stable, donc
+    // les inconnues gardent cet ordre entre elles.
+    .order("created_at", { ascending: false })
     .returns<ProductRow[]>();
 
   if (error || !data) return [];
 
-  return data.map((product) => ({
-    id: product.id,
-    slug: product.slug,
-    name: product.name,
-    description: product.description,
-    price: product.price,
-    photoUrl: cardPhotoUrl(product.product_colors ?? []),
-    colors: cardColors(product.product_colors ?? []),
-  }));
+  return data
+    .slice()
+    .sort((a, b) => rangVitrine(a.slug) - rangVitrine(b.slug))
+    .map((product) => ({
+      id: product.id,
+      slug: product.slug,
+      name: product.name,
+      description: product.description,
+      price: product.price,
+      photoUrl: cardPhotoUrl(product.product_colors ?? []),
+      colors: cardColors(product.product_colors ?? []),
+    }));
 });
 
 type ProductDetailRow = {
