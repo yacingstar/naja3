@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "photos:verifier": "node scripts/nettoyer-photos.mjs",
+    "photos:nettoyer": "node scripts/nettoyer-photos.mjs --vraiment"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.4",

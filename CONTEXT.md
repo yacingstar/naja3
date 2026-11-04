@@ -3742,3 +3742,8 @@ with both guards: it re-reads the live rows and refuses to delete anything
 still referenced, and refuses to delete anything without a verified local
 backup. Until it runs the bucket is **182.20 MB across 240 files** — the new
 copies sit alongside the old. Afterwards: **8.47 MB across 99 files.**
+
+Runnable as `npm run photos:verifier` (shows what would go, touches nothing)
+and `npm run photos:nettoyer`. The script asks Netlify for the service_role
+key at each run rather than reading it from a file — that key bypasses every
+RLS policy and has no business sitting on disk.

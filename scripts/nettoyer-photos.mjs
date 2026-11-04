@@ -8,9 +8,12 @@
 // un coup de balai ponctuel, pas une tâche récurrente. Il reste là parce qu'il
 // est sûr à relancer : s'il n'y a rien à supprimer, il ne supprime rien.
 //
-//   netlify env:get SUPABASE_SERVICE_ROLE_KEY > cle.txt
-//   SBKEY=cle.txt node scripts/nettoyer-photos.mjs          # liste seulement
-//   SBKEY=cle.txt node scripts/nettoyer-photos.mjs --vraiment # supprime
+//   npm run photos:verifier    # liste ce qui serait supprimé, sans rien toucher
+//   npm run photos:nettoyer    # supprime pour de bon
+//
+// La clé service_role est lue depuis Netlify au lancement (`netlify env:get`),
+// jamais écrite sur le disque. SBKEY=<fichier> reste accepté pour la fournir
+// autrement.
 //
 // Deux garde-fous, dans cet ordre :
 //   1. la liste des fichiers vivants est relue dans la base À L'INSTANT, pas
@@ -25,6 +28,7 @@
 // supprimer dans cette fenêtre casse les photos du site. Vérifier d'abord que
 // najadz.com sert bien les nouvelles URLs.
 
+import { execSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 
@@ -33,12 +37,38 @@ const BUCKET = "product-photos";
 const SAUVEGARDE = process.env.SAUVEGARDE ?? "C:/Users/Pc/naja3-photos-backup/supprimes";
 const POUR_DE_VRAI = process.argv.includes("--vraiment");
 
-const cleFichier = process.env.SBKEY;
-if (!cleFichier || !fs.existsSync(cleFichier)) {
-  console.error("SBKEY doit pointer vers un fichier contenant la clé service_role.");
+function lireCle() {
+  const fichier = process.env.SBKEY;
+  if (fichier && fs.existsSync(fichier)) return fs.readFileSync(fichier, "utf8").trim();
+  // Demandée à Netlify à chaque lancement plutôt que posée dans un fichier :
+  // la clé service_role contourne toutes les règles RLS, elle n'a rien à faire
+  // sur le disque. Le CLI installé globalement d'abord, `npx` en secours.
+  //
+  // Passé au shell comme une seule chaîne, et jamais en (commande, arguments)
+  // avec `shell: true` : cette combinaison-là concatène les arguments sans les
+  // échapper, et Node la déprécie pour cette raison. Sous Windows le shell est
+  // obligatoire, le CLI y étant un `.cmd` que `execFile` refuse de lancer
+  // directement depuis Node 20 (EINVAL). Rien n'est interpolé ici.
+  for (const commande of [
+    "netlify env:get SUPABASE_SERVICE_ROLE_KEY",
+    "npx --no-install netlify env:get SUPABASE_SERVICE_ROLE_KEY",
+  ]) {
+    try {
+      const out = execSync(commande, { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }).trim();
+      if (out) return out;
+    } catch {
+      // commande absente ou en échec : on tente la suivante
+    }
+  }
+  return "";
+}
+
+const cle = lireCle();
+if (!cle || cle.includes(" ")) {
+  console.error("Clé service_role introuvable. Vérifiez que `netlify status` fonctionne,");
+  console.error("ou passez SBKEY=<fichier contenant la clé>.");
   process.exit(1);
 }
-const cle = fs.readFileSync(cleFichier, "utf8").trim();
 const entetes = { apikey: cle, Authorization: `Bearer ${cle}` };
 const json = { ...entetes, "Content-Type": "application/json" };
 const PREFIXE = `${URL_BASE}/storage/v1/object/public/${BUCKET}/`;
