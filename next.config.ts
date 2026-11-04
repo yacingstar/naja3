@@ -48,6 +48,23 @@ const nextConfig: NextConfig = {
         search: "",
       },
     ],
+    // Every distinct width in a srcset is its own cache entry, and filling it
+    // costs one fetch of the full original from Supabase Storage. The defaults
+    // offer fourteen of them — up to 3840px — which is what pushed cached
+    // egress to 21GB against a 5GB allowance in November 2026.
+    //
+    // Nothing above 1600 can pay for itself: that is the longest edge anything
+    // in the bucket has (see compressImage.ts and the November re-encode), so
+    // a 1920, 2048 or 3840 variant re-fetches the same original to hand back
+    // the same pixels under a bigger name. The list stops where the sources do.
+    //
+    // Seven widths instead of fourteen, chosen to still land close above the
+    // real layouts: a 390px phone at 2x wants 780 and gets 828; a catalogue
+    // card at 400px CSS 2x gets 828; the product stage at ~700px CSS 2x gets
+    // 1600. Changing either list invalidates every cached variant, so it is
+    // not a knob to fiddle with.
+    deviceSizes: [640, 828, 1080, 1600],
+    imageSizes: [128, 256, 384],
     // Next 16 turned `qualities` into an allowlist (default `[75]`); a
     // `quality` prop outside it gets coerced to the nearest allowed value,
     // and a direct hit on the optimizer endpoint with another value 400s.
