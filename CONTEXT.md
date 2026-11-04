@@ -3747,3 +3747,42 @@ Runnable as `npm run photos:verifier` (shows what would go, touches nothing)
 and `npm run photos:nettoyer`. The script asks Netlify for the service_role
 key at each run rather than reading it from a file — that key bypasses every
 RLS policy and has no business sitting on disk.
+
+### What the usage page actually said
+
+The screenshot settled it, and it was not what either of us assumed:
+
+| | |
+|---|---|
+| **Cached Egress** | **21.097 / 5 GB — 422 %** |
+| Storage Size | 0.152 / 1 GB (15 %) |
+| Database Size | 0.029 / 0.5 GB (6 %) |
+| Egress | 0.273 / 5 GB (5 %) |
+
+Storage was never close to its limit. The quota being blown is **egress**:
+bytes leaving Storage, which for this project means originals being fetched to
+build image variants from. That does not change the work above — it changes
+why it was the right work. Average original went from ~1 MB to ~85 KB, so the
+same traffic that produced 21 GB lands around 1 GB.
+
+Verified while looking: nothing bypasses the optimizer (one request that looks
+like a direct Storage hit is a `/_next/image` URL with the Storage address in
+its query string), the proxy does not match `/_next/image` (`/admin/:path*`
+only), and a full scroll of the homepage is 13 images for 417 KB.
+
+What it did turn up: the default srcset offered **fourteen widths, up to
+3840**, against sources that are now 1600 at the longest edge. Every distinct
+width is its own cache entry and costs one fetch of the full original, and
+1920/2048/3840 could only ever return the same pixels under a bigger name.
+`deviceSizes` and `imageSizes` are now seven widths that stop where the
+sources stop.
+
+One thing measured but *not* explained: `/_next/image` responses come back
+`cache-status: "Netlify Edge"; fwd=miss` with `age: 0` on every repeat
+request, including back-to-back ones for an identical URL. The response does
+carry `cache-control: public,31536000` and Netlify's own
+`netlify-vary` header, so this is the Image CDN layer rather than a missing
+header on our side. Worth a proper look if egress stays high after a full
+billing period on the new sizes — a `Netlify-CDN-Cache-Control` with the
+`durable` directive would be the thing to try, and it should be tried
+deliberately, not guessed at.
