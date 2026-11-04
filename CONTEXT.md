@@ -3676,3 +3676,69 @@ months, and the list costs nothing until she does.
 Verified against the real catalogue before deploying: `/boutique` serves okasa,
 nomura, japandi, champignon, capricorne, akari, nami, origami, and the homepage
 configurator opens on Okasa.
+
+## Forty-seventh round: 178 MB of photos become 8 MB
+
+*« Supabase m'affiche que c'est trop volumineux et je ne veux pas ajouter plus
+d'argent. Compresse tout ce qui est possible. »*
+
+Supabase was not what was complaining. The string she saw —
+**"Photo trop volumineuse ou connexion interrompue"** — is this repo's own, in
+`ColorRow.tsx`, shown when a Server Action upload is rejected before it ever
+reaches `uploadPhoto`. A phone photo here is 5712x4284 and 3-5MB; Netlify caps
+a function request body at 6MB, and multipart overhead puts a 5MB file over it.
+So the admin had quietly stopped accepting her newest photos.
+
+The same fact explained the storage bill. Measured, not assumed:
+
+| | files | size |
+|---|---|---|
+| in Storage | 180 | 178.81 MB |
+| still referenced by a row | 99 | 78.66 MB |
+| **referenced by nothing** | **81** | **100.15 MB** |
+
+Fifty-six percent of the bucket was photos replaced months ago. `uploadCutoutPhoto`
+and `deletePhoto` both clean up after themselves *today*, so this was a historical
+leak, already closed — a one-time sweep, not a recurring chore.
+
+### What was done
+
+Every one of the 180 objects was downloaded to
+`C:/Users/Pc/naja3-photos-backup/originaux` and byte-count-verified first.
+Then the 99 live ones were re-encoded with sharp at **1600px, WebP q82,
+alphaQuality 90** (39 already-optimal WebPs left alone — re-encoding WebP to
+WebP only costs quality), uploaded under new paths, and the rows repointed one
+at a time with `Prefer: return=representation`. **78.66 MB -> 8.47 MB.**
+
+Two things worth remembering from doing it:
+
+- A file already named `.webp` produced a *new* path identical to its old one,
+  so 26 were silently **overwritten in place** by `x-upsert`. Nothing was lost,
+  but it breaks the immutability that `PHOTO_CACHE_CONTROL = 31536000` is
+  honest only because of. They were re-uploaded under stamped names.
+- The storefront is prerendered with `revalidate = 300`. For five minutes after
+  the rows changed, the live HTML still pointed at the old URLs — **deleting
+  them in that window would have broken the shop.** Production was confirmed
+  serving `.webp` before anything was scheduled for deletion.
+
+### The cause, fixed where it starts
+
+`src/lib/compressImage.ts` resizes and re-encodes in the browser, before the
+bytes cross the wire — which is the only place that can help with Netlify's
+request cap at all, and costs the serverless function nothing. It applies the
+EXIF orientation tag (`imageOrientation: "from-image"`; drawing to a canvas
+otherwise throws it away and portrait phone photos land sideways), keeps the
+alpha channel, and returns the original file untouched if the browser cannot
+encode WebP or if the result is not smaller. Verified in a real browser:
+a 2.36 MB cutout -> 72 ko with corner alpha still 0, a 3.70 MB phone JPEG ->
+80 ko and correctly rotated to portrait.
+
+### Still pending: the deletion
+
+141 objects (81 orphans + 60 replaced originals) were staged for deletion and
+**the delete was refused by the permission classifier as a cloud mass-delete**.
+It was not worked around. `scripts/nettoyer-photos.mjs` holds the whole thing
+with both guards: it re-reads the live rows and refuses to delete anything
+still referenced, and refuses to delete anything without a verified local
+backup. Until it runs the bucket is **182.20 MB across 240 files** — the new
+copies sit alongside the old. Afterwards: **8.47 MB across 99 files.**

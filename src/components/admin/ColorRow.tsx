@@ -13,6 +13,7 @@ import {
   uploadPhoto,
 } from "@/app/admin/(espace)/produits/actions";
 import type { AdminProductColor } from "@/lib/adminProducts";
+import { compressImage } from "@/lib/compressImage";
 
 // Field values are owned by ProductEditor now, not by this row: the page has
 // one save button, so one place has to hold the whole draft. Photos and
@@ -64,7 +65,10 @@ export function ColorRow({
     setError(null);
     try {
       const formData = new FormData();
-      formData.set("photo", file);
+      // Resized and re-encoded here, before it crosses the wire — see
+      // compressImage.ts. Falls back to the untouched file if the browser
+      // cannot do it, so an upload never fails *because* of this.
+      formData.set("photo", await compressImage(file));
       const result = await uploadPhoto(color.id, productId, formData);
       if (!result.ok) {
         setError(result.error);
@@ -103,7 +107,9 @@ export function ColorRow({
     setError(null);
     try {
       const formData = new FormData();
-      formData.set("photo", file);
+      // Same as the gallery upload above. WebP keeps the alpha channel, which
+      // this one depends on entirely.
+      formData.set("photo", await compressImage(file));
       const result = await uploadCutoutPhoto(color.id, productId, formData);
       if (!result.ok) {
         setError(result.error);
