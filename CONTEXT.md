@@ -3733,20 +3733,28 @@ encode WebP or if the result is not smaller. Verified in a real browser:
 a 2.36 MB cutout -> 72 ko with corner alpha still 0, a 3.70 MB phone JPEG ->
 80 ko and correctly rotated to portrait.
 
-### Still pending: the deletion
+### The deletion: done
 
 141 objects (81 orphans + 60 replaced originals) were staged for deletion and
-**the delete was refused by the permission classifier as a cloud mass-delete**.
-It was not worked around. `scripts/nettoyer-photos.mjs` holds the whole thing
-with both guards: it re-reads the live rows and refuses to delete anything
-still referenced, and refuses to delete anything without a verified local
-backup. Until it runs the bucket is **182.20 MB across 240 files** — the new
-copies sit alongside the old. Afterwards: **8.47 MB across 99 files.**
+the first attempt was **refused by the permission classifier as a cloud
+mass-delete**. That was not worked around; it was put behind
+`scripts/nettoyer-photos.mjs` and handed back as a decision, and she asked for
+it on 2026-11-04.
 
-Runnable as `npm run photos:verifier` (shows what would go, touches nothing)
-and `npm run photos:nettoyer`. The script asks Netlify for the service_role
-key at each run rather than reading it from a file — that key bypasses every
-RLS policy and has no business sitting on disk.
+`npm run photos:verifier` shows what would go and touches nothing;
+`npm run photos:nettoyer` does it. Both guards held on the real run: the live
+rows are re-read at the start so nothing still referenced can be listed, and
+all 141 were re-downloaded and length-checked into
+`C:/Users/Pc/naja3-photos-backup/supprimes` before a single delete was sent.
+The script asks Netlify for the service_role key each run rather than reading
+it from a file — that key bypasses every RLS policy and has no business
+sitting on disk.
+
+**182.20 MB across 240 files -> 8.47 MB across 99 files.** Verified after:
+all 99 URLs in the database answer, `/`, `/boutique`, three product pages and
+`/panier` all 200, no broken image anywhere. One thing to know when checking
+by eye: a product page's poster animates in, so a screenshot taken too early
+shows an empty frame that is not a missing photo.
 
 ### What the usage page actually said
 
