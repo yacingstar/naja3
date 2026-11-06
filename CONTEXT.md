@@ -3877,3 +3877,62 @@ photos, its prices and the 58 wilayas in the form.
 The admin — it needs Auth and the database, and neither has a snapshot.
 Orders taken meanwhile arrive on Telegram marked `COMMANDE À RESSAISIR` and
 have to be typed in once the project is restored.
+
+## Forty-ninth round: a second free project, because the restriction is org-wide
+
+*« je m'y connais rien fais le toi meme »*
+
+Done in her own Chrome session, the way the September `alter table` was — no
+password of hers touched, no credential pasted into chat.
+
+### What the dashboard said that the error page did not
+
+The billing page gave the two facts that settled everything:
+
+- The cycle is **21 Oct – 21 Nov**, so the restriction lifts on its own on
+  **21 November**, fifteen days out. Supabase's own wording: *"Upgrade your
+  plan to lift restrictions immediately, or wait until the start of your next
+  billing period."*
+- **Cached Egress 21.814 / 5 GB.** Note that the org summary page shows
+  *Egress* (0.48 / 5 GB), a different meter. Reading that one would have
+  suggested the quota had already reset. It had not.
+
+And the restriction is on the **organisation**, not the project — so a second
+project under `naja` would have been born restricted. A second *organisation*
+was the way through: Supabase's free plan allowed `naja-secours` to be created
+alongside `naja`.
+
+### The rebuild
+
+`scripts/generer-restauration.mjs` emits one SQL file; it went into the new
+project's SQL editor and ran in a single transaction. Verified immediately
+after: 8 lamps, 54 colours, 46 photos, 58 wilayas, **0 photo URLs pointing at
+Supabase**, next order id **1000**, and okasa still id 23.
+
+Getting 60 KB of SQL into the editor: gzipped, base64'd, rebuilt in the page
+with `DecompressionStream`, and **checked by SHA-256 against the file on disk
+before running it**. Worth the trouble — a silently truncated schema would
+have been found much later and much worse.
+
+### The keys never passed through the assistant
+
+Netlify's web session was not signed in, but the CLI on her machine is. So
+each key went: Supabase's copy button → the Windows clipboard →
+`Get-Clipboard` piped straight into `netlify env:set`, never printed. The
+clipboard was cleared afterwards.
+
+One trap: `netlify env:set --context production` creates a *context-scoped,
+masked* value, and `env:get` without a context still returns the old one — so
+the first attempt looked applied and was not. The fix is `env:unset` then
+`env:set` with no context at all, which writes "the all context". Always read
+the value back per context after setting it.
+
+### What is left
+
+- The old project keeps the **186 orders**. They are locked, not deleted.
+  When `naja` unlocks on 21 November they can be exported and imported here;
+  ids 1-186 will slot in under the 1000 the new sequence starts at. **Do not
+  delete that project.**
+- Her admin account was created by **invitation** rather than by typing a
+  password for her. Site URL is set to `https://najadz.com`, so the email
+  link lands on `/auth/confirm`, which this app already handles.
