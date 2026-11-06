@@ -49,3 +49,6 @@ next-env.d.ts
 # time, so it is a local artifact only. Revisit if netlify/edge-functions/
 # ever gains real code.
 deno.lock
+
+# Mot de passe admin déposé localement, jamais versionné
+MOT-DE-PASSE-ADMIN.txt
