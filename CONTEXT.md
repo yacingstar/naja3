@@ -3933,6 +3933,16 @@ the value back per context after setting it.
   When `naja` unlocks on 21 November they can be exported and imported here;
   ids 1-186 will slot in under the 1000 the new sequence starts at. **Do not
   delete that project.**
-- Her admin account was created by **invitation** rather than by typing a
-  password for her. Site URL is set to `https://najadz.com`, so the email
-  link lands on `/auth/confirm`, which this app already handles.
+- The admin account is **not** under the address she signs in to Supabase
+  with; a failed reset attempt revealed the real one. Check with her rather
+  than assuming, and keep it out of this file.
+- It was created through the Auth admin API with `email_confirm: true` and
+  **no password**, so she sets her own through « Mot de passe oublié ».
+  Sending the invitation email from the dashboard was refused by the
+  permission classifier; creating the account without an email reaches the
+  same place and sends nothing on her behalf. Site URL is
+  `https://najadz.com`, so the recovery link lands on `/auth/confirm`, which
+  this app already handles.
+- The old-project error she saw on the reset page came from **her browser
+  cache**, not the configuration: the deployed bundle already pointed at
+  `vgifrbdkscfycoohbfmu`. Check the served JS before chasing env vars.
