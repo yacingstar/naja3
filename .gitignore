@@ -52,3 +52,6 @@ deno.lock
 
 # Mot de passe admin déposé localement, jamais versionné
 MOT-DE-PASSE-ADMIN.txt
+
+# Classeur de suivi de la patronne : contiendra des donnees de clientes
+Commandes-et-sponsors.xlsx
