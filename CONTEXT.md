@@ -3794,3 +3794,86 @@ header on our side. Worth a proper look if egress stays high after a full
 billing period on the new sizes — a `Netlify-CDN-Cache-Control` with the
 `durable` directive would be the thing to try, and it should be tried
 deliberately, not guessed at.
+
+## Forty-eighth round: Supabase cut the project off, and the shop kept selling
+
+*« tu as rien reglé et mon site est down »*
+
+She was right. Two days after the egress work, Supabase restricted the
+project: `402` on REST, Storage and Auth alike —
+
+> Service for this project is restricted due to the following violations:
+> exceed_cached_egress_quota. The project owner must upgrade their plan or
+> remove spend caps to restore service.
+
+**The round before had told her there was nothing to pay and the counter would
+reset on its own.** The compression and the srcset work did cut future
+consumption roughly twentyfold, but none of that touches 21 GB already spent,
+and Supabase does not wait for the period to end. That was the wrong thing to
+reassure her about.
+
+### The failure mode was worse than being down
+
+`/` and `/boutique` answered **200 with no lamps**. The eight product pages
+answered **404**, because `getProductBySlug` returned null and the page called
+`notFound()`. Nothing anywhere said "we are broken" — the shop simply looked
+empty, with TikTok ads still pointing at it.
+
+That is now treated as the bug it is: **an empty result counts as a failure,
+not as an empty catalogue.** This shop always has products; zero means
+something is wrong.
+
+### What could be recovered, and from where
+
+No code can lift the restriction — the quota is spent, only the cycle reset or
+a paid plan restores it. But nothing of hers was actually lost:
+
+- **The catalogue** was still on disk, in the prerendered RSC payloads of the
+  last `npm run build` (`.next/server/app/**/*.rsc`): 8 lamps, 54 colours, 46
+  photos, every description, and the 58 wilaya delivery rates.
+  `scripts/extraire-catalogue.mjs` parses that flight format — note the `T`
+  text chunks count their length in **bytes**, so the parser works on a Buffer;
+  on a string every accent shifts everything after it.
+- **The photos** were in the local backups from the 4th and 5th.
+  `scripts/rapatrier-photos.mjs` put all 99 (8.47 MB) into `public/veilleuses`
+  and relinked the catalogue to them.
+
+### Supabase now serves no images at all
+
+Which is the permanent fix, not a patch. The egress that caused this was
+Storage fetches; the shop's photos are 8.47 MB and change a few times a year,
+so they belong in the deploy. Netlify serves them, Supabase goes back to being
+what this site needs it for — a database for orders.
+
+This is, in substance, what her friend meant by Cloudinary. Same move, no new
+account.
+
+### An order still goes through
+
+`src/lib/commandeSecours.ts`. `placeOrder` now distinguishes "no such wilaya"
+(`data` null, no error) from "the database did not answer" (`error` set), at
+all three points where it touches Supabase, and on the second it reprices the
+basket from the snapshot and sends the order to the owner's phone.
+
+Awaited, not handed to `after()`, and that is the whole design: on the normal
+path the order is already written before any notification fires, so a failed
+send costs nothing. Here **the message is the record.** A customer cannot be
+shown a confirmation until it has left. If it cannot be sent she is told to
+write on Instagram, rather than being handed "merci de réessayer" — which is
+what she got all morning, and what makes a customer leave.
+
+The message says in its first line that the order is **not** in the admin and
+must be re-entered by hand. Stock comes from the snapshot, so a colour sold
+out since the outage will still go through: refusing a real order on stale
+data costs more than one phone call.
+
+Verified against the live outage, which is the only honest way to test this: a
+production build prerendered all eight product pages while Supabase returned
+402, and after deploy `bb56eaa` every page on najadz.com answers 200 with its
+photos, its prices and the 58 wilayas in the form.
+
+### Still broken until Supabase returns
+
+The admin — it needs Auth and the database, and neither has a snapshot.
+Orders taken meanwhile arrive on Telegram marked `COMMANDE À RESSAISIR` and
+have to be typed in once the project is restored.
