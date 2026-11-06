@@ -1,0 +1,1083 @@
+{
+ "genereLe": "2026-11-06T00:29:18.560Z",
+ "source": "pages pré-générées de .next, catalogue du 2026-11-04",
+ "produits": [
+  {
+   "id": 9,
+   "slug": "akari",
+   "name": "Akari",
+   "price": 3000,
+   "description": "Sous son abat-jour blanc délicatement plissé, façon jupe de danseuse, Akari cache une base toute en rondeur. Posée sur une table de chevet ou un coin de salon, elle diffuse une lueur douce et enveloppante — le genre de lumière qui donne envie de rester encore un peu. Imprimée à la main, pièce par pièce : la vôtre aura toujours son petit grain de caractère à elle.",
+   "colors": [
+    {
+     "id": 10,
+     "colorName": "Rouge",
+     "colorHex": "#d40608",
+     "colorHex2": null,
+     "cutoutPhotoUrl": "/veilleuses/10/cutout-1787496750202-15-c1793831055269.webp",
+     "inStock": true,
+     "photos": [
+      {
+       "url": "/veilleuses/10/1787496291694-Image_Codex_23_ao_t_2026__15_42_25-w1920.webp",
+       "position": 0
+      }
+     ]
+    },
+    {
+     "id": 8,
+     "colorName": "Bleu Nuit",
+     "colorHex": "#1b2058",
+     "colorHex2": null,
+     "cutoutPhotoUrl": "/veilleuses/8/cutout-1787496728306-19-c1793831055269.webp",
+     "inStock": true,
+     "photos": [
+      {
+       "url": "/veilleuses/8/1787496198492-Image_Codex_23_ao_t_2026__15_39_05-w1920.webp",
+       "position": 0
+      }
+     ]
+    },
+    {
+     "id": 13,
+     "colorName": "Vert",
+     "colorHex": "#2c6755",
+     "colorHex2": null,
+     "cutoutPhotoUrl": "/veilleuses/13/cutout-1787496793452-20-c1793831055269.webp",
+     "inStock": true,
+     "photos": [
+      {
+       "url": "/veilleuses/13/1787496268854-Image_Codex_23_ao_t_2026__15_39_00-w1920.webp",
+       "position": 0
+      }
+     ]
+    },
+    {
+     "id": 9,
+     "colorName": "Beige",
+     "colorHex": "#e2c9ab",
+     "colorHex2": null,
+     "cutoutPhotoUrl": "/veilleuses/9/cutout-1787496738453-18-c1793831055269.webp",
+     "inStock": true,
+     "photos": [
+      {
+       "url": "/veilleuses/9/1787496223388-Image_Codex_23_ao_t_2026__15_40_03-w1920.webp",
+       "position": 0
+      }
+     ]
+    },
+    {
+     "id": 12,
+     "colorName": "Rouge Rose",
+     "colorHex": "#e81b2c",
+     "colorHex2": null,
+     "cutoutPhotoUrl": "/veilleuses/12/cutout-1787496780548-17-c1793831055269.webp",
+     "inStock": false,
+     "photos": [
+      {
+       "url": "/veilleuses/12/1787496247925-Image_Codex_23_ao_t_2026__15_41_02-w1920.webp",
+       "position": 0
+      }
+     ]
+    },
+    {
+     "id": 11,
+     "colorName": "Rose",
+     "colorHex": "#f6c6ce",
+     "colorHex2": null,
+     "cutoutPhotoUrl": "/veilleuses/11/cutout-1787496765365-16-c1793831055269.webp",
+     "inStock": false,
+     "photos": [
+      {
+       "url": "/veilleuses/11/1787496315234-Image_Codex_23_ao_t_2026__15_43_18-w1920.webp",
+       "position": 0
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": 10,
+   "slug": "japandi",
+   "name": "Japandi",
+   "price": 3300,
+   "description": "Avec sa silhouette de champignon et ses fines cannelures verticales, Japandi ressemble à une petite lanterne qu'on aurait cueillie au clair de lune. Une fois allumée, elle s'illumine de l'intérieur et transforme la pièce en un coin tout doux, façon veilleuse un peu magique. Ligne épurée, forme qui ne passe pas inaperçue : le mariage parfait entre minimalisme et caractère. Imprimée à la main, pièce par pièce — la vôtre aura toujours son petit grain de caractère à elle.",
+   "colors": [
+    {
+     "id": 17,
+     "colorName": "Blanc",
+     "colorHex": "#ffffff",
+     "colorHex2": null,
+     "cutoutPhotoUrl": "/veilleuses/17/cutout-1787498198091-5-c1793831055269.webp",
+     "inStock": true,
+     "photos": [
+      {
+       "url": "/veilleuses/17/1787498417639-Image_Codex_23_ao_t_2026__16_17_01-w1920.webp",
+       "position": 0
+      }
+     ]
+    },
+    {
+     "id": 48,
+     "colorName": "Bleu",
+     "colorHex": "#042cee",
+     "colorHex2": null,
+     "cutoutPhotoUrl": "/veilleuses/48/cutout-1787917639814-lk_lkl-c1793831055269.webp",
+     "inStock": true,
+     "photos": [
+      {
+       "url": "/veilleuses/48/1787957742960-IMG_6617-c1793831055269.webp",
+       "position": 0
+      }
+     ]
+    },
+    {
+     "id": 14,
+     "colorName": "Rouge",
+     "colorHex": "#f70e01",
+     "colorHex2": null,
+     "cutoutPhotoUrl": "/veilleuses/14/cutout-1787498247423-4-c1793831055269.webp",
+     "inStock": true,
+     "photos": [
+      {
+       "url": "/veilleuses/14/1787498285182-Image_Codex_23_ao_t_2026__16_16_00-w1920.webp",
+       "position": 0
+      }
+     ]
+    },
+    {
+     "id": 18,
+     "colorName": "Vert",
+     "colorHex": "#c5c406",
+     "colorHex2": null,
+     "cutoutPhotoUrl": "/veilleuses/18/cutout-1787498225863-3-c1793831055269.webp",
+     "inStock": true,
+     "photos": [
+      {
+       "url": "/veilleuses/18/1787498440293-Image_Codex_23_ao_t_2026__16_19_22-w1920.webp",
+       "position": 0
+      }
+     ]
+    },
+    {
+     "id": 75,
+     "colorName": "Orange",
+     "colorHex": "#ff6a00",
+     "colorHex2": null,
+     "cutoutPhotoUrl": "/veilleuses/75/cutout-1791625916124-IMG_7730.webp",
+     "inStock": true,
+     "photos": [
+      {
+       "url": "/veilleuses/75/1791625909135-IMG_7731.webp",
+       "position": 0
+      }
+     ]
+    },
+    {
+     "id": 16,
+     "colorName": "Fuchsia",
+     "colorHex": "#ee2a8c",
+     "colorHex2": null,
+     "cutoutPhotoUrl": "/veilleuses/16/cutout-1787498548155-2-c1793831055269.webp",
+     "inStock": true,
+     "photos": [
+      {
+       "url": "/veilleuses/16/1787498572831-Image_Codex_23_ao_t_2026__16_20_40-w1920.webp",
+       "position": 0
+      }
+     ]
+    },
+    {
+     "id": 15,
+     "colorName": "Bleu turquoise",
+     "colorHex": "#01dfb3",
+     "colorHex2": null,
+     "cutoutPhotoUrl": "/veilleuses/15/cutout-1787498522438-1-c1793831055269.webp",
+     "inStock": false,
+     "photos": [
+      {
+       "url": "/veilleuses/15/1787498392661-Image_Codex_23_ao_t_2026__16_16_05-w1920.webp",
+       "position": 0
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": 11,
+   "slug": "champignon",
+   "name": "Champignon",
+   "price": 3300,
+   "description": "Avec son chapeau généreusement plissé posé sur un pied tout rond, Champignon a des airs de champignon sorti tout droit d'un sous-bois enchanté. Sa silhouette compacte et ses courbes douces en font la compagne parfaite d'une table de chevet ou d'une étagère, où elle diffuse une lumière chaleureuse dès qu'on l'allume. Un brin espiègle, elle apporte tout de suite une touche de fantaisie à la pièce. Imprimée à la main, pièce par pièce — la vôtre aura toujours son petit grain de caractère à elle.",
+   "colors": [
+    {
+     "id": 21,
+     "colorName": "Vert",
+     "colorHex": "#c8c439",
+     "colorHex2": null,
+     "cutoutPhotoUrl": "/veilleuses/21/cutout-1787766169446-Untitled_-_26_ao_t_2026___18.41.27-c1793831055269.webp",
+     "inStock": true,
+     "photos": [
+      {
+       "url": "/veilleuses/21/1787497508555-Image_Codex_23_ao_t_2026__16_03_47-w1920.webp",
+       "position": 0
+      }
+     ]
+    },
+    {
+     "id": 20,
+     "colorName": "Rouge",
+     "colorHex": "#f72514",
+     "colorHex2": null,
+     "cutoutPhotoUrl": "/veilleuses/20/cutout-1787766217084-Untitled_-_26_ao_t_2026___18.40.29-c1793831055269.webp",
+     "inStock": true,
+     "photos": [
+      {
+       "url": "/veilleuses/20/1787497474671-Image_Codex_23_ao_t_2026__16_02_50-w1920.webp",
+       "position": 0
+      }
+     ]
+    },
+    {
+     "id": 22,
+     "colorName": "Blanc",
+     "colorHex": "#f3f1f0",
+     "colorHex2": null,
+     "cutoutPhotoUrl": "/veilleuses/22/cutout-1787497308548-10-c1793831055269.webp",
+     "inStock": true,
+     "photos": [
+      {
+       "url": "/veilleuses/22/1787497904823-Image_Codex_23_ao_t_2026__16_11_08-w1920.webp",
+       "position": 0
+      }
+     ]
+    },
+    {
+     "id": 23,
+     "colorName": "Fuchsia",
+     "colorHex": "#fb15ba",
+     "colorHex2": null,
+     "cutoutPhotoUrl": "/veilleuses/23/cutout-1787766173302-Untitled_-_26_ao_t_2026___18.41.55-c1793831055269.webp",
+     "inStock": true,
+     "photos": [
+      {
+       "url": "/veilleuses/23/1787497686790-Image_Codex_23_ao_t_2026__16_07_28-w1920.webp",
+       "position": 0
+      }
+     ]
+    },
+    {
+     "id": 49,
+     "colorName": "bleu",
+     "colorHex": "#065ede",
+     "colorHex2": null,
+     "cutoutPhotoUrl": "/veilleuses/49/cutout-1788607155050-Firefly_RemoveBackground.webp",
+     "inStock": true,
+     "photos": [
+      {
+       "url": "/veilleuses/49/1788607151366-Image_Codex_5_sept._2026__12_18_54.webp",
+       "position": 0
+      }
+     ]
+    },
+    {
+     "id": 79,
+     "colorName": "Orange",
+     "colorHex": "#ff6a00",
+     "colorHex2": null,
+     "cutoutPhotoUrl": "/veilleuses/79/cutout-1792659847369-3BEC1B18-4E49-4447-8761-01B2FE064ACC.webp",
+     "inStock": true,
+     "photos": []
+    },
+    {
+     "id": 80,
+     "colorName": "Rose",
+     "colorHex": "#e57783",
+     "colorHex2": null,
+     "cutoutPhotoUrl": "/veilleuses/80/cutout-1792659994999-02928440-8F44-4D9B-A256-6E80A9AF5863.webp",
+     "inStock": true,
+     "photos": []
+    },
+    {
+     "id": 19,
+     "colorName": "Bleu turquoise",
+     "colorHex": "#32f0d1",
+     "colorHex2": null,
+     "cutoutPhotoUrl": "/veilleuses/19/cutout-1787766159228-Untitled_-_26_ao_t_2026___18.41.43-c1793831055269.webp",
+     "inStock": false,
+     "photos": [
+      {
+       "url": "/veilleuses/19/1787497544916-Image_Codex_23_ao_t_2026__16_04_47-w1920.webp",
+       "position": 0
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": 12,
+   "slug": "capricorne",
+   "name": "Capricorne",
+   "price": 3400,
+   "description": "Cannelée du sommet à la base, Capricorne adopte une silhouette droite et assurée, comme une petite colonne posée sur un socle bien ancré. Une fois allumée, la lumière traverse ses fines rainures et enveloppe la pièce d'une clarté douce et homogène. Discrète le jour, apaisante le soir : elle trouve sa place aussi bien sur un bureau qu'une table de nuit. Imprimée à la main, pièce par pièce — la vôtre aura toujours son petit grain de caractère à elle.",
+   "colors": [
+    {
+     "id": 26,
+     "colorName": "Vert",
+     "colorHex": "#c1c310",
+     "colorHex2": null,
+     "cutoutPhotoUrl": "/veilleuses/26/cutout-1787496989864-14-c1793831055269.webp",
+     "inStock": true,
+     "photos": [
+      {
+       "url": "/veilleuses/26/1787479481852-ChatGPT_Image_22_ao_t_2026__13_59_41-w1920.webp",
+       "position": 0
+      }
+     ]
+    },
+    {
+     "id": 25,
+     "colorName": "Rouge",
+     "colorHex": "#f50f07",
+     "colorHex2": null,
+     "cutoutPhotoUrl": "/veilleuses/25/cutout-1787496970319-13-w1920-c1793831055269.webp",
+     "inStock": true,
+     "photos": [
+      {
+       "url": "/veilleuses/25/1787479391149-ChatGPT_Image_22_ao_t_2026__13_59_36-w1920-w1920.webp",
+       "position": 0
+      }
+     ]
+    },
+    {
+     "id": 24,
+     "colorName": "Blanche",
+     "colorHex": "#fef8ef",
+     "colorHex2": null,
+     "cutoutPhotoUrl": "/veilleuses/24/cutout-1787496949504-12-c1793831055269.webp",
+     "inStock": true,
+     "photos": [
+      {
+       "url": "/veilleuses/24/1787479215009-ChatGPT_Image_22_ao_t_2026__13_59_39-w1920.webp",
+       "position": 0
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": 19,
+   "slug": "nami",
+   "name": "Nami",
+   "price": 3400,
+   "description": "Trois volumes tout ronds et finement cannelés, empilés les uns sur les autres comme des vagues figées, posés sur un socle carré bien droit. Une fois allumée, Nami ne se contente pas de s'illuminer : sa lumière s'échappe entre les plis et dessine de jolis motifs sur le mur et la table autour d'elle. Douce et sculpturale à la fois, elle fait autant office de lampe que de petite pièce déco. Imprimée à la main, pièce par pièce — la vôtre aura toujours son petit grain de caractère à elle.",
+   "colors": [
+    {
+     "id": 41,
+     "colorName": "Gris",
+     "colorHex": "#969696",
+     "colorHex2": null,
+     "cutoutPhotoUrl": "/veilleuses/41/cutout-1787498876589-nami-c1793831055269.webp",
+     "inStock": false,
+     "photos": [
+      {
+       "url": "/veilleuses/41/1787498901791-Image_Codex_23_ao_t_2026__16_24_27-w1920.webp",
+       "position": 0
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": 21,
+   "slug": "origami",
+   "name": "Origami",
+   "price": 3000,
+   "description": "Origami est une veilleuse sculpturale aux lignes facettées, inspirée de l’art du pliage. Sa lumière douce et chaleureuse sublime ses formes géométriques et crée une atmosphère élégante, apaisante et contemporaine.",
+   "colors": [
+    {
+     "id": 44,
+     "colorName": "Rouge",
+     "colorHex": "#e4001e",
+     "colorHex2": null,
+     "cutoutPhotoUrl": "/veilleuses/44/cutout-1787567624614-ChatGPT_Image_24_ao_t_2026__11_30_47-c1793831055269.webp",
+     "inStock": true,
+     "photos": [
+      {
+       "url": "/veilleuses/44/1787499635119-Image_Codex_23_ao_t_2026__16_36_50-w1920.webp",
+       "position": 0
+      }
+     ]
+    },
+    {
+     "id": 47,
+     "colorName": "Blanc & bleu",
+     "colorHex": "#0125f1",
+     "colorHex2": null,
+     "cutoutPhotoUrl": "/veilleuses/47/cutout-1787567700911-ChatGPT_Image_24_ao_t_2026__11_30_43-c1793831055269.webp",
+     "inStock": true,
+     "photos": [
+      {
+       "url": "/veilleuses/47/1787499680618-Image_Codex_23_ao_t_2026__16_39_56-w1920.webp",
+       "position": 0
+      }
+     ]
+    },
+    {
+     "id": 46,
+     "colorName": "Bleu",
+     "colorHex": "#0125f1",
+     "colorHex2": null,
+     "cutoutPhotoUrl": "/veilleuses/46/cutout-1787567757885-24-c1793831055269.webp",
+     "inStock": true,
+     "photos": [
+      {
+       "url": "/veilleuses/46/1787499657416-Image_Codex_23_ao_t_2026__16_37_58-w1920.webp",
+       "position": 0
+      }
+     ]
+    },
+    {
+     "id": 45,
+     "colorName": "Blanc & Rouge",
+     "colorHex": "#e4001e",
+     "colorHex2": null,
+     "cutoutPhotoUrl": "/veilleuses/45/cutout-1787567663807-ChatGPT_Image_24_ao_t_2026__11_30_40-c1793831055269.webp",
+     "inStock": true,
+     "photos": [
+      {
+       "url": "/veilleuses/45/1787499965664-Image_Codex_23_ao_t_2026__16_41_02-w1920.webp",
+       "position": 0
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": 22,
+   "slug": "nomura",
+   "name": "nomura",
+   "price": 3200,
+   "description": "Lumière chaude, zéro éblouissement. Son abat-jour nervuré diffuse une lueur enveloppante qui adoucit la pièce sans agresser les yeux — celle qu'on allume à 22 h, quand le plafonnier est trop violent. Posée sur la table de nuit ou le bureau, elle suffit.\n\nImprimée en 3D dans mon atelier, 28cm cm. Se branche sur secteur, câble de 1.20m avec interrupteur. Plusieurs coloris disponibles.",
+   "colors": [
+    {
+     "id": 66,
+     "colorName": "Blanc/Bleu",
+     "colorHex": "#ffffff",
+     "colorHex2": "#0b95ed",
+     "cutoutPhotoUrl": "/veilleuses/66/cutout-1789662417354-Image_Codex_17_sept._2026__17_26_27-w1199.webp",
+     "inStock": true,
+     "photos": []
+    },
+    {
+     "id": 60,
+     "colorName": "Orange",
+     "colorHex": "#fb691b",
+     "colorHex2": null,
+     "cutoutPhotoUrl": "/veilleuses/60/cutout-1789653239696-Image_Codex_17_sept._2026__14_53_42-w1199.webp",
+     "inStock": true,
+     "photos": [
+      {
+       "url": "/veilleuses/60/1792330379597-IMG_7913.webp",
+       "position": 0
+      }
+     ]
+    },
+    {
+     "id": 62,
+     "colorName": "Blanc",
+     "colorHex": "#ffffff",
+     "colorHex2": null,
+     "cutoutPhotoUrl": "/veilleuses/62/cutout-1789653464701-Image_Codex_17_sept._2026__14_57_09-w1199.webp",
+     "inStock": true,
+     "photos": [
+      {
+       "url": "/veilleuses/62/1792330395197-IMG_7911.webp",
+       "position": 0
+      }
+     ]
+    },
+    {
+     "id": 72,
+     "colorName": "Bleu/Rose",
+     "colorHex": "#ec5571",
+     "colorHex2": "#0eb6f9",
+     "cutoutPhotoUrl": "/veilleuses/72/cutout-1789670901017-Image_Codex_17_sept._2026__19_47_59-w1199.webp",
+     "inStock": true,
+     "photos": []
+    },
+    {
+     "id": 63,
+     "colorName": "Rose",
+     "colorHex": "#eb6b83",
+     "colorHex2": null,
+     "cutoutPhotoUrl": "/veilleuses/63/cutout-1789653591126-Image_Codex_17_sept._2026__14_59_36-w1199.webp",
+     "inStock": true,
+     "photos": []
+    },
+    {
+     "id": 67,
+     "colorName": "Blanc/Rose",
+     "colorHex": "#ffffff",
+     "colorHex2": "#ed586e",
+     "cutoutPhotoUrl": "/veilleuses/67/cutout-1789662471600-Image_Codex_17_sept._2026__17_27_37-w1199.webp",
+     "inStock": true,
+     "photos": []
+    },
+    {
+     "id": 74,
+     "colorName": "Blanc/Rouge",
+     "colorHex": "#ffffff",
+     "colorHex2": "#e81b17",
+     "cutoutPhotoUrl": "/veilleuses/74/cutout-1789671477980-Image_Codex_17_sept._2026__19_57_48-w1199.webp",
+     "inStock": true,
+     "photos": []
+    },
+    {
+     "id": 71,
+     "colorName": "Bleu/Orange",
+     "colorHex": "#059bec",
+     "colorHex2": "#ee5f0d",
+     "cutoutPhotoUrl": "/veilleuses/71/cutout-1789670772799-Image_Codex_17_sept._2026__19_45_39-w1199.webp",
+     "inStock": true,
+     "photos": [
+      {
+       "url": "/veilleuses/71/1792330459580-IMG_7926.webp",
+       "position": 0
+      }
+     ]
+    },
+    {
+     "id": 77,
+     "colorName": "Orange/vert",
+     "colorHex": "#ff9a20",
+     "colorHex2": "#78a34c",
+     "cutoutPhotoUrl": "/veilleuses/77/cutout-1791883048406-Lampe_champignon_orange_et_verte_rainur_e.webp",
+     "inStock": true,
+     "photos": [
+      {
+       "url": "/veilleuses/77/1792330468621-IMG_7927.webp",
+       "position": 0
+      }
+     ]
+    },
+    {
+     "id": 76,
+     "colorName": "Rose clair",
+     "colorHex": "#ee95a7",
+     "colorHex2": null,
+     "cutoutPhotoUrl": "/veilleuses/76/cutout-1791882562904-Lampe_champignon_rose_pliss_e.webp",
+     "inStock": true,
+     "photos": []
+    },
+    {
+     "id": 78,
+     "colorName": "Rose/blanc",
+     "colorHex": "#ffb0c2",
+     "colorHex2": "#ffffff",
+     "cutoutPhotoUrl": "/veilleuses/78/cutout-1791893450631-Lampe_champignon_rose_pliss_e__1_.webp",
+     "inStock": true,
+     "photos": []
+    },
+    {
+     "id": 68,
+     "colorName": "Blanc/Vert",
+     "colorHex": "#ffffff",
+     "colorHex2": "#6d902a",
+     "cutoutPhotoUrl": "/veilleuses/68/cutout-1789664866538-Image_Codex_17_sept._2026__18_07_31-w1200.webp",
+     "inStock": true,
+     "photos": []
+    },
+    {
+     "id": 69,
+     "colorName": "Vert/Rose",
+     "colorHex": "#5b7d18",
+     "colorHex2": "#ee5181",
+     "cutoutPhotoUrl": "/veilleuses/69/cutout-1789665266232-Image_Codex_17_sept._2026__18_10_19-w1199.webp",
+     "inStock": true,
+     "photos": []
+    },
+    {
+     "id": 64,
+     "colorName": "Vert",
+     "colorHex": "#739831",
+     "colorHex2": null,
+     "cutoutPhotoUrl": "/veilleuses/64/cutout-1789653653916-Image_Codex_17_sept._2026__15_00_37-w1200.webp",
+     "inStock": true,
+     "photos": [
+      {
+       "url": "/veilleuses/64/1792330416451-IMG_7924.webp",
+       "position": 0
+      }
+     ]
+    },
+    {
+     "id": 73,
+     "colorName": "Rouge",
+     "colorHex": "#c70506",
+     "colorHex2": null,
+     "cutoutPhotoUrl": "/veilleuses/73/cutout-1789653998016-Image_Codex_17_sept._2026__15_06_19-w1199.webp",
+     "inStock": true,
+     "photos": []
+    },
+    {
+     "id": 65,
+     "colorName": "Blanc/Orange",
+     "colorHex": "#ffffff",
+     "colorHex2": "#fa730a",
+     "cutoutPhotoUrl": "/veilleuses/65/cutout-1789662328453-Image_Codex_17_sept._2026__16_55_19-w1199.webp",
+     "inStock": true,
+     "photos": []
+    },
+    {
+     "id": 70,
+     "colorName": "Orange/Rose",
+     "colorHex": "#f3741a",
+     "colorHex2": "#f97088",
+     "cutoutPhotoUrl": "/veilleuses/70/cutout-1789670214019-Image_Codex_17_sept._2026__19_36_25-w1199.webp",
+     "inStock": true,
+     "photos": [
+      {
+       "url": "/veilleuses/70/1792330450450-IMG_7925.webp",
+       "position": 0
+      }
+     ]
+    },
+    {
+     "id": 61,
+     "colorName": "bleu",
+     "colorHex": "#13a8fe",
+     "colorHex2": null,
+     "cutoutPhotoUrl": "/veilleuses/61/cutout-1789653341539-Image_Codex_17_sept._2026__14_55_21-w1199.webp",
+     "inStock": true,
+     "photos": [
+      {
+       "url": "/veilleuses/61/1792330404384-IMG_7912.webp",
+       "position": 0
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": 23,
+   "slug": "okasa",
+   "name": "Okasa",
+   "price": 3400,
+   "description": "Vous cherchez une déco originale que personne d’autre n’a chez lui ? Okasa est faite pour vous.\n\nInspirée des samouraïs japonais, cette veilleuse reprend la forme de leur chapeau traditionnel et les plis de leur tenue. Résultat : un objet élégant et différent, qui attire tous les regards dès qu’on entre dans la pièce.\n\nLe soir, allumez-la et laissez sa lumière chaude et douce remplir votre chambre ou votre salon. Fini l’éclairage blanc qui fatigue les yeux. Avec Okasa, vous créez une ambiance calme et cosy, parfaite pour se détendre après une longue journée, discuter autour d’un thé ou s’endormir tranquillement.\n\nSa finition effet pierre et ses plis bien dessinés lui donnent un rendu haut de gamme, comme les luminaires des magasins de déco à l’étranger, mais à un prix accessible.\n\nC’est aussi une idée cadeau parfaite : pour un anniversaire, un mariage, une nouvelle maison ou simplement pour faire plaisir à quelqu’un qui aime les belles choses. Un cadeau qui sort de l’ordinaire et qu’on garde longtemps.\n\n✨ Design unique inspiré du Japon\n✨ Lumière chaude et apaisante\n✨ Finition effet pierre, rendu haut de gamme\n✨ Idéale pour chambre, salon, bureau ou chambre d’enfant\n✨ Fabriquée avec soin, pièce par pièce",
+   "colors": [
+    {
+     "id": 87,
+     "colorName": "Bleu",
+     "colorHex": "#2abeff",
+     "colorHex2": null,
+     "cutoutPhotoUrl": "/veilleuses/87/cutout-1793814894553-76E0F068-ED99-4312-9C18-96A5BC5A9C77.webp",
+     "inStock": true,
+     "photos": [
+      {
+       "url": "/veilleuses/87/1793814899390-ABFB9A22-F0E0-4C57-A68D-7726317842D2.webp",
+       "position": 0
+      }
+     ]
+    },
+    {
+     "id": 86,
+     "colorName": "Rose",
+     "colorHex": "#ffc2e5",
+     "colorHex2": null,
+     "cutoutPhotoUrl": "/veilleuses/86/cutout-1793722752575-Lampe_pliss_e_rose_poudr_.webp",
+     "inStock": true,
+     "photos": [
+      {
+       "url": "/veilleuses/86/1793719654300-IMG_8472.webp",
+       "position": 0
+      },
+      {
+       "url": "/veilleuses/86/1793719677541-IMG_8468.webp",
+       "position": 1
+      }
+     ]
+    },
+    {
+     "id": 84,
+     "colorName": "Orange",
+     "colorHex": "#f88112",
+     "colorHex2": null,
+     "cutoutPhotoUrl": "/veilleuses/84/cutout-1793722748693-Lampe_orange_pliss_e_sur_fond_transparent.webp",
+     "inStock": true,
+     "photos": [
+      {
+       "url": "/veilleuses/84/1793719649280-IMG_8470.webp",
+       "position": 0
+      },
+      {
+       "url": "/veilleuses/84/1793719673199-IMG_8467.webp",
+       "position": 1
+      }
+     ]
+    },
+    {
+     "id": 82,
+     "colorName": "Blanc",
+     "colorHex": "#ffffff",
+     "colorHex2": null,
+     "cutoutPhotoUrl": null,
+     "inStock": true,
+     "photos": [
+      {
+       "url": "/veilleuses/82/1793790018186-687D0BCC-F409-45DE-92A9-4351CF7FB117.webp",
+       "position": 0
+      }
+     ]
+    },
+    {
+     "id": 81,
+     "colorName": "Marbre",
+     "colorHex": "#dcd6d0",
+     "colorHex2": null,
+     "cutoutPhotoUrl": "/veilleuses/81/cutout-1793721344210-Lampe_pliss_e_en_c_ramique_ivoire.webp",
+     "inStock": true,
+     "photos": [
+      {
+       "url": "/veilleuses/81/1793719645210-IMG_8471.webp",
+       "position": 0
+      },
+      {
+       "url": "/veilleuses/81/1793719663365-IMG_8466.webp",
+       "position": 1
+      }
+     ]
+    },
+    {
+     "id": 83,
+     "colorName": "noir",
+     "colorHex": "#000000",
+     "colorHex2": null,
+     "cutoutPhotoUrl": "/veilleuses/83/cutout-1793722771528-Lampe_noire_pliss_e_moderne.webp",
+     "inStock": true,
+     "photos": [
+      {
+       "url": "/veilleuses/83/1793719628639-IMG_8473.webp",
+       "position": 0
+      },
+      {
+       "url": "/veilleuses/83/1793719639801-IMG_8469.webp",
+       "position": 1
+      }
+     ]
+    },
+    {
+     "id": 85,
+     "colorName": "Rouge",
+     "colorHex": "#f8121d",
+     "colorHex2": null,
+     "cutoutPhotoUrl": "/veilleuses/85/cutout-1793728079430-55D80A6A-26F8-4191-9497-9631F00BEACE.webp",
+     "inStock": true,
+     "photos": [
+      {
+       "url": "/veilleuses/85/1793727798885-IMG_8507.webp",
+       "position": 0
+      },
+      {
+       "url": "/veilleuses/85/1793728085302-EC888781-EDA4-4F82-84B8-72E150401347.webp",
+       "position": 2
+      }
+     ]
+    }
+   ]
+  }
+ ],
+ "cartes": null,
+ "livraison": [
+  {
+   "wilaya": "01 Adrar",
+   "domicilePrice": 1000,
+   "stopdeskPrice": 800
+  },
+  {
+   "wilaya": "02 Chlef",
+   "domicilePrice": 700,
+   "stopdeskPrice": 600
+  },
+  {
+   "wilaya": "03 Laghouat",
+   "domicilePrice": 850,
+   "stopdeskPrice": 700
+  },
+  {
+   "wilaya": "04 Oum El Bouaghi",
+   "domicilePrice": 700,
+   "stopdeskPrice": 600
+  },
+  {
+   "wilaya": "05 Batna",
+   "domicilePrice": 700,
+   "stopdeskPrice": 600
+  },
+  {
+   "wilaya": "06 Béjaïa",
+   "domicilePrice": 700,
+   "stopdeskPrice": 600
+  },
+  {
+   "wilaya": "07 Biskra",
+   "domicilePrice": 850,
+   "stopdeskPrice": 700
+  },
+  {
+   "wilaya": "08 Béchar",
+   "domicilePrice": 1000,
+   "stopdeskPrice": 800
+  },
+  {
+   "wilaya": "09 Blida",
+   "domicilePrice": 550,
+   "stopdeskPrice": 450
+  },
+  {
+   "wilaya": "10 Bouira",
+   "domicilePrice": 700,
+   "stopdeskPrice": 600
+  },
+  {
+   "wilaya": "11 Tamanrasset",
+   "domicilePrice": 1500,
+   "stopdeskPrice": 1300
+  },
+  {
+   "wilaya": "12 Tébessa",
+   "domicilePrice": 850,
+   "stopdeskPrice": 700
+  },
+  {
+   "wilaya": "13 Tlemcen",
+   "domicilePrice": 700,
+   "stopdeskPrice": 600
+  },
+  {
+   "wilaya": "14 Tiaret",
+   "domicilePrice": 700,
+   "stopdeskPrice": 600
+  },
+  {
+   "wilaya": "15 Tizi Ouzou",
+   "domicilePrice": 700,
+   "stopdeskPrice": 600
+  },
+  {
+   "wilaya": "16 Alger",
+   "domicilePrice": 500,
+   "stopdeskPrice": 400
+  },
+  {
+   "wilaya": "17 Djelfa",
+   "domicilePrice": 850,
+   "stopdeskPrice": 700
+  },
+  {
+   "wilaya": "18 Jijel",
+   "domicilePrice": 700,
+   "stopdeskPrice": 600
+  },
+  {
+   "wilaya": "19 Sétif",
+   "domicilePrice": 700,
+   "stopdeskPrice": 600
+  },
+  {
+   "wilaya": "20 Saïda",
+   "domicilePrice": 700,
+   "stopdeskPrice": 600
+  },
+  {
+   "wilaya": "21 Skikda",
+   "domicilePrice": 700,
+   "stopdeskPrice": 600
+  },
+  {
+   "wilaya": "22 Sidi Bel Abbès",
+   "domicilePrice": 700,
+   "stopdeskPrice": 600
+  },
+  {
+   "wilaya": "23 Annaba",
+   "domicilePrice": 700,
+   "stopdeskPrice": 600
+  },
+  {
+   "wilaya": "24 Guelma",
+   "domicilePrice": 700,
+   "stopdeskPrice": 600
+  },
+  {
+   "wilaya": "25 Constantine",
+   "domicilePrice": 700,
+   "stopdeskPrice": 600
+  },
+  {
+   "wilaya": "26 Médéa",
+   "domicilePrice": 700,
+   "stopdeskPrice": 600
+  },
+  {
+   "wilaya": "27 Mostaganem",
+   "domicilePrice": 700,
+   "stopdeskPrice": 600
+  },
+  {
+   "wilaya": "28 M'Sila",
+   "domicilePrice": 700,
+   "stopdeskPrice": 600
+  },
+  {
+   "wilaya": "29 Mascara",
+   "domicilePrice": 700,
+   "stopdeskPrice": 600
+  },
+  {
+   "wilaya": "30 Ouargla",
+   "domicilePrice": 850,
+   "stopdeskPrice": 700
+  },
+  {
+   "wilaya": "31 Oran",
+   "domicilePrice": 700,
+   "stopdeskPrice": 600
+  },
+  {
+   "wilaya": "32 El Bayadh",
+   "domicilePrice": 1000,
+   "stopdeskPrice": 800
+  },
+  {
+   "wilaya": "33 Illizi",
+   "domicilePrice": 1500,
+   "stopdeskPrice": 1300
+  },
+  {
+   "wilaya": "34 Bordj Bou Arréridj",
+   "domicilePrice": 700,
+   "stopdeskPrice": 600
+  },
+  {
+   "wilaya": "35 Boumerdès",
+   "domicilePrice": 550,
+   "stopdeskPrice": 450
+  },
+  {
+   "wilaya": "36 El Tarf",
+   "domicilePrice": 700,
+   "stopdeskPrice": 600
+  },
+  {
+   "wilaya": "37 Tindouf",
+   "domicilePrice": 1500,
+   "stopdeskPrice": 1300
+  },
+  {
+   "wilaya": "38 Tissemsilt",
+   "domicilePrice": 700,
+   "stopdeskPrice": 600
+  },
+  {
+   "wilaya": "39 El Oued",
+   "domicilePrice": 850,
+   "stopdeskPrice": 700
+  },
+  {
+   "wilaya": "40 Khenchela",
+   "domicilePrice": 700,
+   "stopdeskPrice": 600
+  },
+  {
+   "wilaya": "41 Souk Ahras",
+   "domicilePrice": 700,
+   "stopdeskPrice": 600
+  },
+  {
+   "wilaya": "42 Tipaza",
+   "domicilePrice": 550,
+   "stopdeskPrice": 450
+  },
+  {
+   "wilaya": "43 Mila",
+   "domicilePrice": 700,
+   "stopdeskPrice": 600
+  },
+  {
+   "wilaya": "44 Aïn Defla",
+   "domicilePrice": 700,
+   "stopdeskPrice": 600
+  },
+  {
+   "wilaya": "45 Naâma",
+   "domicilePrice": 1000,
+   "stopdeskPrice": 800
+  },
+  {
+   "wilaya": "46 Aïn Témouchent",
+   "domicilePrice": 700,
+   "stopdeskPrice": 600
+  },
+  {
+   "wilaya": "47 Ghardaïa",
+   "domicilePrice": 850,
+   "stopdeskPrice": 700
+  },
+  {
+   "wilaya": "48 Relizane",
+   "domicilePrice": 700,
+   "stopdeskPrice": 600
+  },
+  {
+   "wilaya": "49 Timimoun",
+   "domicilePrice": 1000,
+   "stopdeskPrice": 800
+  },
+  {
+   "wilaya": "50 Bordj Badji Mokhtar",
+   "domicilePrice": 1000,
+   "stopdeskPrice": 800
+  },
+  {
+   "wilaya": "51 Ouled Djellal",
+   "domicilePrice": 850,
+   "stopdeskPrice": 700
+  },
+  {
+   "wilaya": "52 Béni Abbès",
+   "domicilePrice": 1000,
+   "stopdeskPrice": 850
+  },
+  {
+   "wilaya": "53 In Salah",
+   "domicilePrice": 1500,
+   "stopdeskPrice": 1300
+  },
+  {
+   "wilaya": "54 In Guezzam",
+   "domicilePrice": 1500,
+   "stopdeskPrice": 1300
+  },
+  {
+   "wilaya": "55 Touggourt",
+   "domicilePrice": 850,
+   "stopdeskPrice": 700
+  },
+  {
+   "wilaya": "56 Djanet",
+   "domicilePrice": 1500,
+   "stopdeskPrice": 1300
+  },
+  {
+   "wilaya": "57 El M'Ghair",
+   "domicilePrice": 850,
+   "stopdeskPrice": 700
+  },
+  {
+   "wilaya": "58 El Meniaa",
+   "domicilePrice": 850,
+   "stopdeskPrice": 700
+  }
+ ],
+ "photosLocales": true
+}

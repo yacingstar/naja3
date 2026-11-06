@@ -6,6 +6,7 @@ import { cache } from "react";
 // on every product page, reading cookies here would make all six of them
 // re-render per request and turn their `revalidate` into a no-op.
 import { createPublicClient } from "@/lib/supabase/public";
+import { tarifsDeSecours } from "@/lib/catalogueSecours";
 
 export type DeliveryRate = {
   wilaya: string;
@@ -32,7 +33,11 @@ export const getDeliveryRates = cache(async function getDeliveryRates(): Promise
     .select("wilaya, domicile_price, stopdesk_price")
     .order("wilaya", { ascending: true });
 
-  if (error || !data) return [];
+  // Une liste vide n'est pas un état valide : sans wilaya dans le menu,
+  // personne ne peut commander, et la page n'a pas l'air cassée pour autant.
+  // Le 6 novembre 2026 c'est exactement ce qu'a produit la restriction
+  // Supabase. On retombe sur la copie figée — voir catalogueSecours.ts.
+  if (error || !data || data.length === 0) return tarifsDeSecours();
 
   return data.map((rate) => ({
     wilaya: rate.wilaya,

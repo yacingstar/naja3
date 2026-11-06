@@ -3,6 +3,7 @@ import { cache } from "react";
 // is identical for every visitor, and reading cookies here would force every
 // storefront page to re-render per request, making `revalidate` a no-op.
 import { createPublicClient } from "@/lib/supabase/public";
+import { produitDeSecoursParSlug, produitsDeSecours } from "@/lib/catalogueSecours";
 
 export type FeaturedProductColor = {
   id: number;
@@ -185,7 +186,18 @@ export const getProducts = cache(async (): Promise<FeaturedProduct[]> => {
     .order("created_at", { ascending: false })
     .returns<ProductRow[]>();
 
-  if (error || !data) return [];
+  // Zéro produit est traité comme une panne, pas comme un catalogue vide, et
+  // c'est voulu : le 6 novembre 2026 Supabase a restreint le projet et la
+  // boutique a répondu 200 sans une seule veilleuse. Une erreur franche aurait
+  // été visible ; une boutique vide ne l'est pas. Cette maison a toujours des
+  // produits — s'il n'y en a aucun, quelque chose est cassé.
+  if (error || !data || data.length === 0) {
+    const secours = produitsDeSecours();
+    if (secours.length > 0) {
+      return secours.slice().sort((a, b) => rangVitrine(a.slug) - rangVitrine(b.slug));
+    }
+    return [];
+  }
 
   return data
     .slice()
@@ -230,7 +242,9 @@ export async function getProductBySlug(slug: string): Promise<ProductDetail | nu
     .maybeSingle()
     .returns<ProductDetailRow>();
 
-  if (error || !data) return null;
+  // Même raisonnement que dans getProducts : sans ce repli, une base
+  // injoignable transforme les huit fiches produit en 404.
+  if (error || !data) return produitDeSecoursParSlug(slug);
 
   return {
     id: data.id,

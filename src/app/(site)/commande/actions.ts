@@ -7,6 +7,7 @@ import { notifyNewOrder } from "@/lib/notify/telegram";
 import { notifyNewOrderOnWhatsApp } from "@/lib/notify/whatsapp";
 import { analyserTelephone, decouperNom } from "@/lib/phone";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { passerCommandeDeSecours } from "@/lib/commandeSecours";
 
 export type PlaceOrderInput = {
   // Un seul champ côté cliente. Le découpage en prénom / nom se fait ici, et
@@ -79,11 +80,23 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
 
   const supabase = createAdminClient();
 
-  const { data: rate } = await supabase
+  // Tout ce dont le secours a besoin pour reconstituer la commande sans la
+  // base. Rassemblé ici parce que ces quatre valeurs sont le fruit du
+  // découpage et de la validation ci-dessus, et qu'il serait absurde de les
+  // refaire ailleurs.
+  const identite = { firstName, lastName, phone, commune, note };
+
+  const { data: rate, error: rateError } = await supabase
     .from("delivery_rates")
     .select("wilaya, domicile_price, stopdesk_price")
     .eq("wilaya", input.wilaya)
     .maybeSingle();
+
+  // Une erreur ici ne veut pas dire « wilaya inconnue » — ça, c'est `rate`
+  // null sans erreur. Ça veut dire que la base n'a pas répondu du tout, et
+  // c'est le premier endroit où on s'en aperçoit, puisque c'est la première
+  // requête. Voir commandeSecours.ts.
+  if (rateError) return passerCommandeDeSecours(input, identite);
 
   if (!rate) return { ok: false, error: "Wilaya invalide." };
 
@@ -97,13 +110,16 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
   const productIds = [...new Set(input.items.map((i) => i.productId))];
   const colorIds = [...new Set(input.items.map((i) => i.colorId))];
 
-  const [{ data: products }, { data: colors }] = await Promise.all([
+  const [{ data: products, error: productsError }, { data: colors, error: colorsError }] = await Promise.all([
     supabase.from("products").select("id, slug, name, price").in("id", productIds),
     supabase
       .from("product_colors")
       .select("id, product_id, color_name, in_stock")
       .in("id", colorIds),
   ]);
+
+  // La base a lâché entre deux requêtes : même traitement que plus haut.
+  if (productsError || colorsError) return passerCommandeDeSecours(input, identite);
 
   const orderItems: Array<{
     product_id: number;
@@ -165,9 +181,10 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
     .select("id, order_total")
     .single();
 
-  if (orderError || !order) {
-    return { ok: false, error: "Une erreur est survenue, merci de réessayer." };
-  }
+  // Le dernier endroit où la base peut nous lâcher, et le plus coûteux : la
+  // cliente a tout rempli. Plutôt que de lui demander de recommencer, la
+  // commande part sur le téléphone de la patronne.
+  if (orderError || !order) return passerCommandeDeSecours(input, identite);
 
   const { error: itemsError } = await supabase.from("order_items").insert(
     orderItems.map((item) => ({
