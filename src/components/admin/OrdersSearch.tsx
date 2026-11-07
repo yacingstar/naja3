@@ -20,6 +20,10 @@ import type { OrderListItem } from "@/lib/orders";
 // est de chercher ce qui est affiché, et une liste qu'on voit sans pouvoir la
 // fouiller serait une drôle de moitié de fonctionnalité. « akari » retrouve
 // donc les commandes qui en contiennent.
+//
+// Les deux notes sont entrées dans la liste à leur tour (voir OrderNotes), et
+// la même règle les fait entrer ici : « gravé », « rappeler », « 17h »
+// retrouvent les commandes qui portent ces mots-là.
 function nu(s: string): string {
   return s
     .normalize("NFD")
@@ -36,6 +40,7 @@ export function OrdersSearch({ orders }: { orders: OrderListItem[] }) {
     return orders.filter((o) =>
       nu(
         `${o.customerFirstName} ${o.customerLastName} ${o.wilaya} ${o.commune} #${o.id} ${o.id} ` +
+          `${o.notesClient ?? ""} ${o.internalNotes ?? ""} ` +
           o.items.map((i) => `${i.productName} ${i.colorName}`).join(" "),
       ).includes(terme),
     );

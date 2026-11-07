@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { OrderNotes } from "@/components/admin/OrderNotes";
 import { PreparedCheckbox } from "@/components/admin/PreparedCheckbox";
 import { StatusBadge } from "@/components/admin/StatusBadge";
 import { LampMark } from "@/components/LampMark";
@@ -46,6 +47,8 @@ export function OrderRow({
     commune: string;
     orderTotal: number;
     status: OrderStatus;
+    notesClient: string | null;
+    internalNotes: string | null;
     preparedAt: string | null;
     preparationAvailable: boolean;
     items: Array<{
@@ -116,6 +119,16 @@ export function OrderRow({
           </span>
         ) : null}
       </Link>
+
+      {/* Sous le contenu de la commande et au-dessus de la case : ce qu'elle a
+          commandé, puis ce qu'elle a dit, puis ce que j'en ai noté, puis
+          prête ou pas. C'est l'ordre dans lequel une commande se prépare. */}
+      <OrderNotes
+        orderId={order.id}
+        notesClient={order.notesClient}
+        internalNotes={order.internalNotes}
+      />
+
       {order.status !== "expédiée" && order.status !== "livrée" && order.status !== "annulée" ? (
         <PreparedCheckbox orderId={order.id} preparedAt={order.preparedAt} available={order.preparationAvailable} />
       ) : null}

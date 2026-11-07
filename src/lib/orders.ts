@@ -33,6 +33,11 @@ export type OrderListItem = {
   // couleur, et il fallait jusqu'ici ouvrir chaque commande l'une après
   // l'autre, puis revenir en arrière. La liste EST l'écran de préparation.
   items: OrderItemSummary[];
+  // Les deux notes, dans la liste elles aussi — « pour que je rate aucune
+  // remarque ». Une remarque de cliente qu'il faut ouvrir la fiche pour lire
+  // est une remarque qu'on manque un jour chargé. Voir OrderNotes.
+  notesClient: string | null;
+  internalNotes: string | null;
   preparedAt: string | null;
   preparationAvailable: boolean;
 };
@@ -74,6 +79,8 @@ type OrderListRow = {
   wilaya: string;
   commune: string;
   order_total: number;
+  notes_client: string | null;
+  internal_notes: string | null;
   order_items: Array<{
     quantity: number;
     products: { name: string } | null;
@@ -106,6 +113,8 @@ export async function getOrders(status?: OrderStatus): Promise<OrderListItem[]> 
     wilaya: order.wilaya,
     commune: order.commune,
     orderTotal: order.order_total,
+    notesClient: order.notes_client,
+    internalNotes: order.internal_notes,
     preparedAt: order.prepared_at ?? null,
     preparationAvailable: Object.prototype.hasOwnProperty.call(order, "prepared_at"),
     items: (order.order_items ?? []).map((item) => ({
