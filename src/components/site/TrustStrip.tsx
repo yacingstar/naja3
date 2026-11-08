@@ -1,6 +1,5 @@
 import type { SVGProps } from "react";
 import { Reveal } from "@/components/site/Reveal";
-import { instagramUrl, whatsappUrl } from "@/lib/contact";
 
 // Hand-rolled, not lucide-react (not a project dependency yet, and four
 // icons doesn't justify adding one). Same visual grammar throughout so
@@ -50,17 +49,20 @@ const ITEMS = [
   { Icon: CashIcon, text: "Paiement à la livraison" },
   { Icon: TruckIcon, text: "Livraison dans toute l'Algérie" },
   { Icon: HeartIcon, text: "Fait main en Algérie", hand: true },
-  // Links to whichever channel is configured, preferring WhatsApp once a
-  // number exists (a reply lands in a thread the customer already watches);
-  // Instagram DM until then. With neither it stays plain text rather than
-  // promising a reply we have no way to receive.
-  {
-    Icon: ChatIcon,
-    text: "Une question ? Écrivez-nous",
-    href:
-      whatsappUrl("Bonjour ! J'ai une question à propos de vos lampes.") ??
-      instagramUrl,
-  },
+  // Ce lien pointait vers Instagram (« Écrivez-nous », message pré-rédigé).
+  // Mesuré sur la page d'atterrissage d'une pub, sur un écran de téléphone :
+  // il tombait à 1 220 px du haut — le deuxième écran — alors que le
+  // formulaire de commande commence à 6 357 px, le huitième. La première
+  // chose cliquable que rencontrait un visiteur venu d'une publicité était
+  // donc une invitation à écrire, six écrans avant la possibilité de
+  // commander. Et comme ce visiteur arrive dans le navigateur interne
+  // d'Instagram, le lien le renvoyait dans l'application, sur un profil où
+  // la seule action évidente est « Message ». Il ne revenait pas.
+  //
+  // Il pointe maintenant vers la FAQ de la même page, qui est juste
+  // au-dessus du formulaire : la question trouve sa réponse, et le chemin
+  // continue vers la commande au lieu de sortir du site.
+  { Icon: ChatIcon, text: "Une question ? La réponse est plus bas", href: "#faq" },
 ];
 
 // Sits in the plain --papier gap between Hero's rounded-bottom close and
@@ -91,9 +93,10 @@ export function TrustStrip() {
                   </span>
                 </>
               );
-              // Only the contact item is ever a link, and only when a channel
-              // is configured — the other three are statements of fact with
-              // nowhere to go.
+              // Only the contact item is ever a link — the other three are
+              // statements of fact with nowhere to go. It stays INSIDE the
+              // page (an anchor, no target="_blank") : voir le commentaire
+              // d'ITEMS, sortir du site était tout le problème.
               const inner = "flex flex-col items-center gap-2 text-center sm:flex-row sm:justify-center sm:gap-2.5";
               return (
                 <li
@@ -103,8 +106,6 @@ export function TrustStrip() {
                   {item.href ? (
                     <a
                       href={item.href}
-                      target="_blank"
-                      rel="noreferrer"
                       className={`${inner} w-full rounded-full transition hover:text-encre/60`}
                     >
                       {label}

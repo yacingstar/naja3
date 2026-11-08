@@ -103,6 +103,38 @@ export function ProductLanding({
     trackViewContent({ id: product.slug, name: product.name, value: product.price });
   }, [product.slug, product.name, product.price]);
 
+  // La barre d'achat collante, sur téléphone uniquement.
+  //
+  // Mesuré sur un écran de 375 × 812 : cette page fait 8 506 px de haut et le
+  // formulaire de commande commence à 6 357 px — le huitième écran. Le bouton
+  // « Commander » du hero disparaît dès le premier défilement, et il ne reste
+  // plus rien à toucher pendant six écrans. Sur la campagne Okasa, 1 462
+  // visites de page n'ont produit que 56 débuts de commande : 96 % des gens
+  // n'atteignaient jamais le formulaire. Ceux qui le commencent le terminent
+  // une fois sur deux, donc le formulaire n'était pas le problème — le chemin
+  // jusqu'à lui l'était.
+  //
+  // Elle s'efface dès que le formulaire est atteint, sinon elle recouvrirait
+  // le pied de page ; et elle n'apparaît qu'après 400 px, pour ne pas doubler
+  // le bouton du hero quand il est encore à l'écran.
+  const [barreVisible, setBarreVisible] = useState(false);
+  useEffect(() => {
+    function majBarre() {
+      const cible = document.getElementById("commander");
+      const atteint = cible
+        ? window.scrollY + window.innerHeight > cible.offsetTop + 80
+        : false;
+      setBarreVisible(window.scrollY > 400 && !atteint);
+    }
+    majBarre();
+    window.addEventListener("scroll", majBarre, { passive: true });
+    window.addEventListener("resize", majBarre);
+    return () => {
+      window.removeEventListener("scroll", majBarre);
+      window.removeEventListener("resize", majBarre);
+    };
+  }, []);
+
   return (
     <main className="pb-24">
       {/* ── Hero ─────────────────────────────────────────────────────── */}
@@ -327,6 +359,25 @@ export function ProductLanding({
           rates={rates}
         />
       </section>
+
+      {/* Voir le commentaire de `barreVisible` : le formulaire est au
+          huitième écran, il faut un chemin vers lui à tout moment. */}
+      <div
+        aria-hidden={!barreVisible}
+        className={`fixed inset-x-0 bottom-0 z-40 px-4 pt-3 transition-transform duration-300 sm:hidden ${
+          barreVisible ? "translate-y-0" : "pointer-events-none translate-y-full"
+        }`}
+        style={{ paddingBottom: "calc(0.75rem + env(safe-area-inset-bottom))" }}
+      >
+        <a
+          href="#commander"
+          tabIndex={barreVisible ? undefined : -1}
+          className="flex min-h-12 items-center justify-between gap-3 rounded-full bg-lueur px-6 py-3 font-heading text-sm text-encre shadow-[0_12px_32px_-10px_rgba(0,0,0,.45)]"
+        >
+          <span>{formatPrice(product.price)}</span>
+          <span>Commander</span>
+        </a>
+      </div>
     </main>
   );
 }

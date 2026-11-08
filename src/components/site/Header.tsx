@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { CartLink } from "@/components/site/CartLink";
 import { InstagramIcon } from "@/components/site/Icons";
@@ -35,8 +36,20 @@ import { instagramUrl } from "@/lib/contact";
 const NAV_PILL =
   "rounded-full bg-papier/85 px-4 py-2 shadow-sm transition hover:bg-lueur/25";
 
+// Les pages /lampe/… sont celles sur lesquelles une publicité dépose un
+// visiteur froid, et ce visiteur arrive presque toujours depuis le
+// navigateur interne d'Instagram. Dans ce contexte l'icône Instagram de
+// l'en-tête n'est pas un lien social : c'est un bouton de sortie, affiché en
+// permanence (l'en-tête est `fixed`) au-dessus d'une page dont le formulaire
+// de commande n'arrive qu'au huitième écran. Touchée, elle rend la main à
+// l'application, sur un profil où la seule action évidente est « Message ».
+// Elle reste partout ailleurs — sur l'accueil et la boutique, le visiteur
+// n'est pas au milieu d'un achat.
+const estPageDePub = (chemin: string | null) => Boolean(chemin?.startsWith("/lampe/"));
+
 export function Header() {
   const [scrolled, setScrolled] = useState(false);
+  const pageDePub = estPageDePub(usePathname());
 
   useEffect(() => {
     let ticking = false;
@@ -94,7 +107,7 @@ export function Header() {
         <div className="flex items-center gap-2 sm:gap-3">
           {/* Renders only once a real handle exists in src/lib/contact.ts —
               an icon linking nowhere is worse than no icon. */}
-          {instagramUrl ? (
+          {instagramUrl && !pageDePub ? (
             <a
               href={instagramUrl}
               target="_blank"
