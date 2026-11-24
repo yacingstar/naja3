@@ -93,7 +93,7 @@ export function BoutiqueClient({ produits }: { produits: FeaturedProduct[] }) {
           ref={titre}
           className="mt-3 font-heading text-[48px] leading-[.9] font-bold tracking-[-.03em] sm:text-[72px]"
         >
-          {["Toutes", "les", "veilleuses."].map((mot) => (
+          {["Toute", "la", "collection."].map((mot) => (
             <span key={mot} className="mr-[.22em] inline-block">
               {mot}
             </span>

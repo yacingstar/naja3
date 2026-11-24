@@ -20,7 +20,24 @@ export type PlaceOrderInput = {
   commune: string;
   deliveryMethod: "domicile" | "stopdesk";
   note: string;
-  items: Array<{ productId: number; colorId: number; quantity: number }>;
+  items: Array<{
+    productId: number;
+    colorId: number;
+    quantity: number;
+    // Les pièces d'un produit personnalisable (l'horloge), telles que
+    // choisies dans le configurateur. Le client n'envoie que le nom de la
+    // teinte : le libellé et la couleur réelle sont relus en base plus bas,
+    // comme le prix. Rien de ce qui s'affiche ou se facture ne vient d'ici.
+    parts?: Array<{ slot: string; name: string }>;
+  }>;
+};
+
+// Une pièce telle qu'elle sera écrite dans la commande, et relue ensuite.
+export type OrderItemPart = {
+  slot: string;
+  label: string;
+  name: string;
+  hex: string;
 };
 
 export type OrderSummary = {
@@ -41,6 +58,7 @@ export type OrderSummary = {
     colorName: string;
     quantity: number;
     priceAtOrder: number;
+    parts?: OrderItemPart[];
   }>;
 };
 
@@ -110,12 +128,26 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
   const productIds = [...new Set(input.items.map((i) => i.productId))];
   const colorIds = [...new Set(input.items.map((i) => i.colorId))];
 
-  const [{ data: products, error: productsError }, { data: colors, error: colorsError }] = await Promise.all([
+  const [
+    { data: products, error: productsError },
+    { data: colors, error: colorsError },
+    { data: parts },
+    { data: filaments },
+  ] = await Promise.all([
     supabase.from("products").select("id, slug, name, price").in("id", productIds),
     supabase
       .from("product_colors")
       .select("id, product_id, color_name, in_stock")
       .in("id", colorIds),
+    // Les pièces des produits commandés, et la palette. Pas de `error` levée
+    // ici : un produit sans pièce est le cas normal (toutes les veilleuses),
+    // et ces deux tables ne doivent pas pouvoir faire tomber une commande de
+    // veilleuse si elles manquent.
+    supabase
+      .from("product_parts")
+      .select("product_id, slot, label, position")
+      .in("product_id", productIds),
+    supabase.from("filament_colors").select("name, hex, in_stock"),
   ]);
 
   // La base a lâché entre deux requêtes : même traitement que plus haut.
@@ -126,6 +158,7 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
     product_color_id: number;
     quantity: number;
     price_at_order: number;
+    custom_colors: OrderItemPart[] | null;
     productName: string;
     productSlug: string;
     colorName: string;
@@ -149,11 +182,51 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
       };
     }
 
+    // Les pièces du produit, s'il en a. Chaque pièce doit avoir reçu une
+    // teinte, et cette teinte doit exister et être en stock : une horloge à
+    // qui il manque une couleur n'est pas imprimable, et la laisser passer
+    // ferait arriver sur le téléphone de la patronne une commande qu'elle ne
+    // pourrait pas lancer.
+    const piecesDuProduit = (parts ?? [])
+      .filter((p) => p.product_id === product.id)
+      .sort((a, b) => a.position - b.position);
+
+    let custom: OrderItemPart[] | null = null;
+    if (piecesDuProduit.length > 0) {
+      const choisies: OrderItemPart[] = [];
+      for (const piece of piecesDuProduit) {
+        const choix = item.parts?.find((p) => p.slot === piece.slot);
+        const filament = choix
+          ? (filaments ?? []).find((f) => f.name === choix.name)
+          : undefined;
+        if (!filament) {
+          return {
+            ok: false,
+            error: `Choisissez une couleur pour « ${piece.label} ».`,
+          };
+        }
+        if (!filament.in_stock) {
+          return {
+            ok: false,
+            error: `La couleur "${filament.name}" n'est plus disponible.`,
+          };
+        }
+        choisies.push({
+          slot: piece.slot,
+          label: piece.label,
+          name: filament.name,
+          hex: filament.hex,
+        });
+      }
+      custom = choisies;
+    }
+
     orderItems.push({
       product_id: product.id,
       product_color_id: color.id,
       quantity: item.quantity,
       price_at_order: product.price,
+      custom_colors: custom,
       productName: product.name,
       productSlug: product.slug,
       colorName: color.color_name,
@@ -193,6 +266,7 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
       product_color_id: item.product_color_id,
       quantity: item.quantity,
       price_at_order: item.price_at_order,
+      custom_colors: item.custom_colors,
     })),
   );
 
@@ -223,6 +297,7 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
       colorName: item.colorName,
       quantity: item.quantity,
       price_at_order: item.price_at_order,
+      parts: item.custom_colors ?? undefined,
     })),
   };
 
@@ -278,6 +353,7 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
         colorName: item.colorName,
         quantity: item.quantity,
         priceAtOrder: item.price_at_order,
+        parts: item.custom_colors ?? undefined,
       })),
     },
   };

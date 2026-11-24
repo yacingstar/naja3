@@ -37,6 +37,23 @@ const nextConfig: NextConfig = {
   // Private LAN ranges only, and dev-only — `next start` and any deployment
   // ignore this setting entirely.
   allowedDevOrigins: ["192.168.*.*", "10.*.*.*", "172.16.*.*", "172.17.*.*"],
+  turbopack: {
+    // La racine du projet, dite explicitement.
+    //
+    // Turbopack la devine en remontant les dossiers jusqu'à un fichier de
+    // verrouillage (`package-lock.json` & co — voir
+    // node_modules/next/dist/docs/.../next-config-js/turbopack.md). Or il
+    // traîne un package-lock.json dans C:\Users\Pc, vestige d'un `npm install
+    // gsap` lancé un jour dans le dossier personnel : Turbopack prenait donc
+    // tout le dossier utilisateur pour racine, et `next/font/google` ne se
+    // résolvait plus du tout — `next dev` répondait 500 sur toutes les pages
+    // avec « Can't resolve @vercel/turbopack-next/internal/font/google/font ».
+    //
+    // Next cherche ce fichier de configuration dans le dossier courant, donc
+    // ce dossier EST la racine, par construction. Rien à voir avec le site
+    // déployé, qui n'a jamais été touché par ce bug.
+    root: process.cwd(),
+  },
   images: {
     remotePatterns: [
       {

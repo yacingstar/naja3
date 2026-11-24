@@ -9,6 +9,15 @@ import {
   useState,
 } from "react";
 
+// Les couleurs choisies pièce par pièce, pour un produit personnalisable
+// (l'horloge). Absent sur une veilleuse, qui n'a qu'un coloris.
+export type CartPart = {
+  slot: string;
+  label: string;
+  name: string;
+  hex: string;
+};
+
 export type CartItem = {
   productId: number;
   productSlug: string;
@@ -18,13 +27,14 @@ export type CartItem = {
   unitPrice: number;
   photoUrl: string | null;
   quantity: number;
+  parts?: CartPart[];
 };
 
 type CartContextValue = {
   items: CartItem[];
   addItem: (item: Omit<CartItem, "quantity">, quantity: number) => void;
-  updateQuantity: (productId: number, colorId: number, quantity: number) => void;
-  removeItem: (productId: number, colorId: number) => void;
+  updateQuantity: (key: string, quantity: number) => void;
+  removeItem: (key: string) => void;
   clear: () => void;
   totalQuantity: number;
   totalPrice: number;
@@ -33,8 +43,16 @@ type CartContextValue = {
 const CartContext = createContext<CartContextValue | null>(null);
 const STORAGE_KEY = "naja-cart";
 
-function keyOf(productId: number, colorId: number) {
-  return `${productId}:${colorId}`;
+// Ce qui fait qu'une ligne du panier est la même qu'une autre.
+//
+// Le produit et son coloris n'y suffisent plus : une horloge noir / blanc /
+// rouge et une horloge rouge / blanc / noir sont le même produit, le même
+// coloris « Sur mesure », et deux objets différents. Les couleurs choisies
+// entrent donc dans la clé, sinon la seconde incrémenterait la première et
+// la cliente recevrait deux fois la même.
+export function cleLigne(item: Pick<CartItem, "productId" | "colorId" | "parts">): string {
+  const pieces = (item.parts ?? []).map((p) => `${p.slot}=${p.name}`).join(",");
+  return `${item.productId}:${item.colorId}${pieces ? ":" + pieces : ""}`;
 }
 
 // The cart never decides what gets charged — it's just what's displayed
@@ -62,36 +80,27 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   const addItem = useCallback((item: Omit<CartItem, "quantity">, quantity: number) => {
     setItems((current) => {
-      const key = keyOf(item.productId, item.colorId);
-      const existing = current.find((i) => keyOf(i.productId, i.colorId) === key);
+      const key = cleLigne(item);
+      const existing = current.find((i) => cleLigne(i) === key);
       if (existing) {
         return current.map((i) =>
-          keyOf(i.productId, i.colorId) === key
-            ? { ...i, quantity: i.quantity + quantity }
-            : i,
+          cleLigne(i) === key ? { ...i, quantity: i.quantity + quantity } : i,
         );
       }
       return [...current, { ...item, quantity }];
     });
   }, []);
 
-  const updateQuantity = useCallback(
-    (productId: number, colorId: number, quantity: number) => {
-      const key = keyOf(productId, colorId);
-      setItems((current) =>
-        quantity <= 0
-          ? current.filter((i) => keyOf(i.productId, i.colorId) !== key)
-          : current.map((i) =>
-              keyOf(i.productId, i.colorId) === key ? { ...i, quantity } : i,
-            ),
-      );
-    },
-    [],
-  );
+  const updateQuantity = useCallback((key: string, quantity: number) => {
+    setItems((current) =>
+      quantity <= 0
+        ? current.filter((i) => cleLigne(i) !== key)
+        : current.map((i) => (cleLigne(i) === key ? { ...i, quantity } : i)),
+    );
+  }, []);
 
-  const removeItem = useCallback((productId: number, colorId: number) => {
-    const key = keyOf(productId, colorId);
-    setItems((current) => current.filter((i) => keyOf(i.productId, i.colorId) !== key));
+  const removeItem = useCallback((key: string) => {
+    setItems((current) => current.filter((i) => cleLigne(i) !== key));
   }, []);
 
   const clear = useCallback(() => setItems([]), []);

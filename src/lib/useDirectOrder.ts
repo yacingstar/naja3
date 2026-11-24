@@ -7,6 +7,7 @@ import { trackAddToCart, trackInitiateCheckout } from "@/lib/analytics";
 import type { DeliveryRate } from "@/lib/deliveryRates";
 import { stashOrder } from "@/lib/lastOrder";
 import { analyserTelephone } from "@/lib/phone";
+import type { CartPart } from "@/lib/cart";
 import type { ProductColorDetail } from "@/lib/products";
 
 // Everything a one-product, no-cart order needs, minus the markup.
@@ -31,12 +32,16 @@ export type DirectOrderProduct = {
 export function useDirectOrder({
   product,
   selectedColor,
+  parts,
   rates,
 }: {
   product: DirectOrderProduct;
   // Owned by the page, not by this hook — on both pages the chosen colour also
   // drives the photograph, so the selection has to live above the form.
   selectedColor: ProductColorDetail | undefined;
+  // Les couleurs pièce par pièce d'un produit personnalisable, choisies au
+  // même endroit et pour la même raison : elles pilotent le dessin.
+  parts?: CartPart[];
   rates: DeliveryRate[];
 }) {
   const router = useRouter();
@@ -148,7 +153,16 @@ export function useDirectOrder({
       commune,
       deliveryMethod,
       note,
-      items: [{ productId: product.id, colorId: selectedColor.id, quantity }],
+      items: [
+        {
+          productId: product.id,
+          colorId: selectedColor.id,
+          quantity,
+          // Seulement le nom de la teinte : le serveur relit le libellé et la
+          // couleur réelle dans filament_colors, comme il relit le prix.
+          parts: parts?.map((p) => ({ slot: p.slot, name: p.name })),
+        },
+      ],
     });
 
     if (!result.ok) {

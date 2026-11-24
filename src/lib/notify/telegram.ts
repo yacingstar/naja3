@@ -101,10 +101,17 @@ export function buildOrderMessage(
   ];
 
   for (const item of order.items) {
-    const label = `${escapeHtml(item.productName)} (${escapeHtml(item.colorName)})`;
+    // Un produit personnalisable annonce ses pièces à la place de son
+    // coloris : « Sur mesure » ne dit pas quelles bobines charger.
+    const label = item.parts?.length
+      ? escapeHtml(item.productName)
+      : `${escapeHtml(item.productName)} (${escapeHtml(item.colorName)})`;
     lines.push(
       `${item.quantity} × ${label} — ${formatPrice(item.price_at_order * item.quantity)}`,
     );
+    for (const part of item.parts ?? []) {
+      lines.push(`    ${escapeHtml(part.label)} : <b>${escapeHtml(part.name)}</b>`);
+    }
   }
 
   lines.push(

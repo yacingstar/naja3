@@ -75,7 +75,14 @@ const DELIVERY_LABEL: Record<"domicile" | "stopdesk", string> = {
 // sentence, and nothing errors.
 export function buildTemplateParams(order: NewOrderNotification): string[] {
   const items = order.items
-    .map((item) => `${item.quantity} × ${item.productName} (${item.colorName})`)
+    .map((item) => {
+      // Même règle que sur Telegram : les pièces remplacent le coloris quand
+      // le produit est personnalisable.
+      const detail = item.parts?.length
+        ? item.parts.map((p) => `${p.label} ${p.name}`).join(", ")
+        : item.colorName;
+      return `${item.quantity} × ${item.productName} (${detail})`;
+    })
     .join(", ");
 
   return [

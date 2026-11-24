@@ -4,7 +4,12 @@ import { CarteProduit } from "@/components/boutique/CarteProduit";
 import { FondDoux } from "@/components/accueil/FondDoux";
 import { ProductDetail } from "@/components/site/ProductDetail";
 import { getDeliveryRates } from "@/lib/deliveryRates";
-import { getProductBySlug, getProducts } from "@/lib/products";
+import {
+  getFilamentColors,
+  getProductBySlug,
+  getProductCustomisation,
+  getProducts,
+} from "@/lib/products";
 
 const RELATED_COUNT = 3;
 
@@ -39,6 +44,12 @@ export default async function ProductPage({
 
   if (!product) notFound();
 
+  // Les pièces du produit et la palette des bobines, lues à part : un produit
+  // normal n'en a pas, et ces deux lectures ne doivent pas pouvoir faire
+  // tomber une fiche de veilleuse — voir le commentaire dans lib/products.ts.
+  const customisation = await getProductCustomisation(product.id);
+  const palette = customisation ? await getFilamentColors() : [];
+
   // "Vous aimerez aussi" — the page used to end at the description, which
   // left a dead end on the one page most likely to be someone's entry
   // point from a shared link. Anything but this product, capped at three
@@ -63,6 +74,8 @@ export default async function ProductPage({
             description: product.description,
           }}
           colors={product.colors}
+          customisation={customisation}
+          palette={palette}
           rates={rates}
         />
       </div>

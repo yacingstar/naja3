@@ -12,6 +12,17 @@ export type OrderItemSummary = {
   colorHex: string | null;
   colorHex2: string | null;
   quantity: number;
+  // Les couleurs pièce par pièce d'un produit personnalisable, figées au
+  // moment de la commande (voir la migration 20261124090000). Vide sur une
+  // veilleuse. C'est ce qu'elle lit pour savoir quelles bobines charger.
+  parts: OrderItemPart[];
+};
+
+export type OrderItemPart = {
+  slot: string;
+  label: string;
+  name: string;
+  hex: string;
 };
 
 export type OrderListItem = {
@@ -83,6 +94,7 @@ type OrderListRow = {
   internal_notes: string | null;
   order_items: Array<{
     quantity: number;
+    custom_colors: OrderItemPart[] | null;
     products: { name: string } | null;
     product_colors: { color_name: string; color_hex: string | null; color_hex_2: string | null } | null;
   }>;
@@ -95,7 +107,7 @@ export async function getOrders(status?: OrderStatus): Promise<OrderListItem[]> 
     .select(
       // Sans espaces dans les parenthèses imbriquées : PostgREST refuse
       // « order_items ( … ) » dès qu'il y a un deuxième niveau (PGRST100).
-      "*,order_items(quantity,products(name),product_colors(color_name,color_hex,color_hex_2))",
+      "*,order_items(quantity,custom_colors,products(name),product_colors(color_name,color_hex,color_hex_2))",
     )
     .order("created_at", { ascending: false });
 
@@ -123,6 +135,7 @@ export async function getOrders(status?: OrderStatus): Promise<OrderListItem[]> 
       colorHex: item.product_colors?.color_hex ?? null,
       colorHex2: item.product_colors?.color_hex_2 ?? null,
       quantity: item.quantity,
+      parts: item.custom_colors ?? [],
     })),
   }));
 }
@@ -148,6 +161,7 @@ export type OrderDetail = {
     colorName: string;
     quantity: number;
     priceAtOrder: number;
+    parts: OrderItemPart[];
   }>;
 };
 
@@ -155,6 +169,7 @@ type OrderItemRow = {
   id: number;
   quantity: number;
   price_at_order: number;
+  custom_colors: OrderItemPart[] | null;
   products: { name: string } | null;
   product_colors: { color_name: string } | null;
 };
@@ -172,7 +187,9 @@ export async function getOrderById(id: number): Promise<OrderDetail | null> {
 
   const { data: items } = await supabase
     .from("order_items")
-    .select("id, quantity, price_at_order, products ( name ), product_colors ( color_name )")
+    .select(
+      "id, quantity, price_at_order, custom_colors, products ( name ), product_colors ( color_name )",
+    )
     .eq("order_id", id)
     .returns<OrderItemRow[]>();
 
@@ -197,6 +214,7 @@ export async function getOrderById(id: number): Promise<OrderDetail | null> {
       colorName: item.product_colors?.color_name ?? "(couleur supprimée)",
       quantity: item.quantity,
       priceAtOrder: item.price_at_order,
+      parts: item.custom_colors ?? [],
     })),
   };
 }

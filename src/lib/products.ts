@@ -28,6 +28,10 @@ export type FeaturedProductColor = {
 export type FeaturedProduct = {
   id: number;
   slug: string;
+  // Le dessin qui remplace la photo pour un produit personnalisable
+  // (« horloge-duo »), null ou absent pour une veilleuse photographiée.
+  // Optionnel : le catalogue de secours, écrit à la main, n'en a pas.
+  preview?: string | null;
   name: string;
   // Cards show a short blurb now (aardvarkbookclub.com-style catalog
   // card), so this is selected for card queries too — not just the
@@ -75,6 +79,7 @@ export type ProductDetail = {
 type ProductRow = {
   id: number;
   slug: string;
+  preview: string | null;
   name: string;
   description: string;
   price: number;
@@ -123,7 +128,7 @@ function cardColors(colors: ProductRow["product_colors"]): FeaturedProductColor[
 }
 
 const CARD_SELECT =
-  "id, slug, name, description, price, product_colors ( id, color_name, color_hex, color_hex_2, in_stock, cutout_photo_url, product_photos ( url, position ) )";
+  "id, slug, preview, name, description, price, product_colors ( id, color_name, color_hex, color_hex_2, in_stock, cutout_photo_url, product_photos ( url, position ) )";
 
 // L'ordre de la vitrine, choisi à la main par la patronne (3 novembre 2026).
 //
@@ -205,6 +210,7 @@ export const getProducts = cache(async (): Promise<FeaturedProduct[]> => {
     .map((product) => ({
       id: product.id,
       slug: product.slug,
+      preview: product.preview,
       name: product.name,
       description: product.description,
       price: product.price,
@@ -269,3 +275,74 @@ export async function getProductBySlug(slug: string): Promise<ProductDetail | nu
       .sort((a, b) => Number(b.inStock) - Number(a.inStock)),
   };
 }
+
+// ── Les produits à plusieurs couleurs ────────────────────────────────────
+//
+// L'horloge s'imprime en trois pièces et la cliente choisit la couleur de
+// chacune. Voir la migration 20261124090000 pour le modèle : la palette est
+// commune à tout le site, les pièces appartiennent au produit.
+//
+// DEUX REQUÊTES SÉPARÉES, et c'est délibéré. Ajouter `preview` et
+// `product_parts(…)` au select du catalogue aurait suffi — mais le jour où
+// la migration n'est pas encore appliquée, PostgREST répond en erreur sur
+// la colonne inconnue, et getProducts traite une erreur comme une panne : la
+// boutique entière basculerait sur le catalogue de secours. Isolées, ces
+// deux lectures échouent toutes seules et ne coûtent qu'un produit normal,
+// à un coloris, ce qu'étaient toutes les veilleuses avant.
+
+export type FilamentColor = {
+  id: number;
+  name: string;
+  hex: string;
+  inStock: boolean;
+};
+
+export type ProductPart = {
+  // Quelle partie du dessin cette pièce teinte — voir HorlogeApercu.
+  slot: string;
+  // Ce que la cliente lit : « Fond arrière », « Repères et aiguilles ».
+  label: string;
+};
+
+export type ProductCustomisation = {
+  // Le dessin à montrer à la place d'une photo, ou null si le produit est
+  // photographié comme les veilleuses.
+  preview: string | null;
+  parts: ProductPart[];
+};
+
+export const getFilamentColors = cache(async (): Promise<FilamentColor[]> => {
+  const supabase = createPublicClient();
+  const { data, error } = await supabase
+    .from("filament_colors")
+    .select("id, name, hex, in_stock")
+    .eq("in_stock", true)
+    .order("position", { ascending: true })
+    .returns<Array<{ id: number; name: string; hex: string; in_stock: boolean }>>();
+
+  if (error || !data) return [];
+  return data.map((c) => ({ id: c.id, name: c.name, hex: c.hex, inStock: c.in_stock }));
+});
+
+export const getProductCustomisation = cache(
+  async (productId: number): Promise<ProductCustomisation | null> => {
+    const supabase = createPublicClient();
+    const { data, error } = await supabase
+      .from("products")
+      .select("preview, product_parts ( slot, label, position )")
+      .eq("id", productId)
+      .maybeSingle()
+      .returns<{
+        preview: string | null;
+        product_parts: Array<{ slot: string; label: string; position: number }>;
+      }>();
+
+    if (error || !data) return null;
+    const parts = (data.product_parts ?? [])
+      .slice()
+      .sort((a, b) => a.position - b.position)
+      .map((p) => ({ slot: p.slot, label: p.label }));
+    if (parts.length === 0) return null;
+    return { preview: data.preview, parts };
+  },
+);

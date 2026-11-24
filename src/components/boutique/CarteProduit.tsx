@@ -4,6 +4,12 @@ import Image from "next/image";
 import Link from "next/link";
 import type { FeaturedProduct } from "@/lib/products";
 import { LampMark } from "@/components/LampMark";
+import { HorlogeApercu } from "@/components/site/HorlogeApercu";
+
+// Les teintes dans lesquelles l'horloge se montre au catalogue : celles du
+// modèle d'origine, et celles que le configurateur propose en arrivant sur la
+// fiche. La carte et la première vue de la page montrent donc le même objet.
+const HORLOGE_CATALOGUE = { fond: "#1b4d2e", avant: "#46b65a", aiguilles: "#1b4d2e" };
 
 // La carte du nouveau registre : bloc de couleur plate, trait épais, la forme
 // en gros et en bas de casse, le prix en face.
@@ -62,7 +68,13 @@ export function CarteProduit({
       style={{ background: FONDS[index % FONDS.length], perspective: 900 }}
     >
       <span className="flex h-[230px] items-center justify-center sm:h-[260px]">
-        {produit.photoUrl ? (
+        {produit.preview === "horloge-duo" ? (
+          <HorlogeApercu
+            {...HORLOGE_CATALOGUE}
+            titre={produit.name}
+            className="h-full w-auto transition duration-300 group-hover:scale-105"
+          />
+        ) : produit.photoUrl ? (
           <Image
             src={produit.photoUrl}
             alt={`Veilleuse ${produit.name}`}
@@ -94,6 +106,15 @@ export function CarteProduit({
         </span>
       ) : null}
 
+      {/* Une pièce personnalisable n'a pas de coloris à aligner : son unique
+          ligne product_colors s'appelle « Sur mesure » et ne dirait rien.
+          Elle annonce ce qu'elle est à la place. */}
+      {produit.preview ? (
+        <span className="mt-3 block text-[13px] font-semibold tracking-[.06em] text-encre/60 uppercase">
+          3 pièces, 10 couleurs au choix
+        </span>
+      ) : (
+      <>
       {/* Les coloris, dessinés comme les lampes qu'ils sont — la même marque
           que le configurateur, la fiche produit et l'admin. */}
       <span className="mt-3 flex flex-wrap items-center gap-1.5">
@@ -118,6 +139,8 @@ export function CarteProduit({
           ? `${produit.colors.length} coloris`
           : `${dispo.length} sur ${produit.colors.length} coloris disponibles`}
       </span>
+      </>
+      )}
     </Link>
   );
 }

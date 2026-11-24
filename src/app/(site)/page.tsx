@@ -20,5 +20,10 @@ export const revalidate = 300;
 // trip. Only the selected photograph is ever downloaded (see Configurateur).
 export default async function HomePage() {
   const produits = await getProducts();
-  return <AccueilClient produits={produits} />;
+  // Le configurateur de l'accueil marche sur des PHOTOS : une par coloris,
+  // qu'il précharge et fait défiler. Un produit personnalisable n'en a aucune
+  // — l'horloge se dessine — alors il reste à la boutique et à sa fiche, où
+  // le dessin est prévu. Lui donner sa place ici est une refonte de l'accueil,
+  // pas un filtre : c'est une décision à prendre avec la patronne.
+  return <AccueilClient produits={produits.filter((p) => !p.preview)} />;
 }

@@ -84,6 +84,9 @@ export function CheckoutForm({ rates }: { rates: DeliveryRate[] }) {
         productId: item.productId,
         colorId: item.colorId,
         quantity: item.quantity,
+        // Les couleurs d'un produit personnalisable voyagent avec sa ligne.
+        // Seulement leur nom : le serveur relit le reste en base.
+        parts: item.parts?.map((p) => ({ slot: p.slot, name: p.name })),
       })),
     });
 

@@ -5,14 +5,21 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { DirectOrderForm } from "@/components/site/DirectOrderForm";
 import { ColorSwatches } from "@/components/site/ColorSwatches";
+import { ConfigurateurPieces, type ChoixPieces } from "@/components/site/ConfigurateurPieces";
+import { HorlogeApercu } from "@/components/site/HorlogeApercu";
 import { ProductStage, type StageView } from "@/components/site/ProductStage";
 import { useReveal } from "@/components/accueil/useReveal";
 import { inkOn, pale } from "@/lib/accueil";
 import { trackViewContent } from "@/lib/analytics";
+import type { CartPart } from "@/lib/cart";
 import type { DeliveryRate } from "@/lib/deliveryRates";
 import { resumeTarifs } from "@/lib/deliveryRatesSummary";
 import { formatPrice } from "@/lib/format";
-import type { ProductColorDetail } from "@/lib/products";
+import type {
+  FilamentColor,
+  ProductColorDetail,
+  ProductCustomisation,
+} from "@/lib/products";
 
 type ProductSummary = {
   id: number;
@@ -49,15 +56,59 @@ const REASSURANCE = [
 export function ProductDetail({
   product,
   colors,
+  customisation,
+  palette,
   rates,
 }: {
   product: ProductSummary;
   colors: ProductColorDetail[];
+  // Non nul quand le produit s'imprime en plusieurs pièces et que la cliente
+  // choisit la couleur de chacune : l'horloge. La photo laisse alors la place
+  // à un dessin qui se repeint — voir HorlogeApercu.
+  customisation?: ProductCustomisation | null;
+  palette?: FilamentColor[];
   rates: DeliveryRate[];
 }) {
   const [selectedColorId, setSelectedColorId] = useState(colors[0]?.id);
   const [photoIndex, setPhotoIndex] = useState(0);
   const zone = useRef<HTMLDivElement>(null);
+
+  // ── Le produit personnalisable ──────────────────────────────────────────
+  const pieces = customisation?.parts ?? [];
+  const bobines = palette ?? [];
+  const surMesure = pieces.length > 0 && bobines.length > 0;
+
+  // Une combinaison de départ qui ressemble à l'objet photographié plutôt
+  // qu'à la première bobine de la liste répétée trois fois : une horloge
+  // toute noire en arrivant ne donne envie de rien. On vise les teintes du
+  // modèle d'origine, et on retombe sur la palette si elles ont disparu.
+  const [choix, setChoix] = useState<ChoixPieces>(() => {
+    const voulu: Record<string, string> = {
+      fond: "Vert foncé",
+      avant: "Vert clair",
+      aiguilles: "Vert foncé",
+    };
+    const depart: ChoixPieces = {};
+    pieces.forEach((part, i) => {
+      depart[part.slot] =
+        bobines.find((c) => c.name === voulu[part.slot]) ??
+        bobines[i % Math.max(bobines.length, 1)];
+    });
+    return depart;
+  });
+
+  // Ce que le panier et la commande recevront : le choix remis dans l'ordre
+  // des pièces, avec son libellé.
+  const partsChoisies: CartPart[] | undefined = surMesure
+    ? pieces
+        .map((part) => {
+          const c = choix[part.slot];
+          return c
+            ? { slot: part.slot, label: part.label, name: c.name, hex: c.hex }
+            : null;
+        })
+        .filter((p): p is CartPart => p !== null)
+    : undefined;
 
   // Seuls les blocs de la colonne de droite sont marqués : la colonne de
   // gauche est en `sticky`, et une transformation GSAP sur un élément collant
@@ -112,7 +163,9 @@ export function ProductDetail({
 
   // La teinte choisie déborde sur le cadre de la photo, comme sur l'accueil :
   // la page prend la couleur de la lampe qu'on est en train de regarder.
-  const teinte = pale(selectedColor?.colorHex ?? null);
+  const teinte = pale(
+    surMesure ? (choix.avant?.hex ?? null) : (selectedColor?.colorHex ?? null),
+  );
 
   // Le coût de la livraison, annoncé AVANT le formulaire et non découvert
   // dedans. Le formulaire ne montre le prix exact qu'une fois la wilaya
@@ -138,22 +191,35 @@ export function ProductDetail({
           {/* Keyed sur le coloris : changer de couleur remonte le bloc, donc
               l'animation d'entrée se rejoue. La photo « arrive » au lieu de se
               substituer silencieusement. */}
-          <div key={selectedColor?.id ?? "vide"} className="naja-photo">
-            <ProductStage
-              view={view}
-              alt={
-                selectedColor
-                  ? `${product.name} — ${selectedColor.colorName}`
-                  : product.name
-              }
-              // Capped at max-w-lg (512px) on desktop; full column width
-              // below that, since the grid collapses to one column.
-              sizes="(min-width: 640px) 512px, 100vw"
+          {surMesure ? (
+            // Le dessin tient lieu de photo, et il n'y en aura pas d'autre :
+            // dix bobines sur trois pièces font mille horloges, dont neuf
+            // cent quatre-vingt-dix-neuf ne seront jamais photographiées.
+            <HorlogeApercu
+              fond={choix.fond?.hex ?? "#1b4d2e"}
+              avant={choix.avant?.hex ?? "#46b65a"}
+              aiguilles={choix.aiguilles?.hex ?? "#1b4d2e"}
+              titre={product.name}
+              className="w-full"
             />
-          </div>
+          ) : (
+            <div key={selectedColor?.id ?? "vide"} className="naja-photo">
+              <ProductStage
+                view={view}
+                alt={
+                  selectedColor
+                    ? `${product.name} — ${selectedColor.colorName}`
+                    : product.name
+                }
+                // Capped at max-w-lg (512px) on desktop; full column width
+                // below that, since the grid collapses to one column.
+                sizes="(min-width: 640px) 512px, 100vw"
+              />
+            </div>
+          )}
         </div>
 
-        {views.length > 1 ? (
+        {!surMesure && views.length > 1 ? (
           <div className="mt-5 flex justify-center gap-3">
             {views.map((v, index) => (
               <button
@@ -190,7 +256,25 @@ export function ProductDetail({
             slip: you pick a colour by looking at the lamp, and each colour
             swaps the photo above. Keeping the two a screen apart made you
             choose blind. The form is told not to repeat the step. */}
-        {colors.length > 0 ? (
+        {surMesure ? (
+          <div className="mt-7">
+            <p className="text-center font-heading text-lg font-semibold">
+              Composez votre horloge
+            </p>
+            <p className="mt-1 text-center text-sm text-encre/60">
+              Une couleur par pièce. Le dessin au-dessus est le vôtre.
+            </p>
+            <ConfigurateurPieces
+              parts={pieces}
+              palette={bobines}
+              choix={choix}
+              onChoisir={(slot, couleur) =>
+                setChoix((actuel) => ({ ...actuel, [slot]: couleur }))
+              }
+              className="mt-4"
+            />
+          </div>
+        ) : colors.length > 0 ? (
           <div className="mt-7">
             <p className="text-center font-heading text-lg font-semibold">
               Choisissez la couleur
@@ -232,19 +316,33 @@ export function ProductDetail({
             {/* Le coloris choisi, écrit sur sa propre couleur — même pastille
                 que dans le configurateur de l'accueil. L'encre est calculée
                 pour rester lisible sur un jaune comme sur un bleu nuit. */}
-            {selectedColor ? (
-              <span
-                key={selectedColor.id}
-                className="naja-pop inline-block rounded-2xl border-2 px-3 py-1 font-heading text-[15px]"
-                style={{
-                  background: selectedColor.colorHex ?? "#e5d9cf",
-                  color: inkOn(selectedColor.colorHex ?? "#e5d9cf"),
-                  borderColor: "rgba(36,28,33,.22)",
-                }}
-              >
-                {selectedColor.colorName}
-              </span>
-            ) : null}
+            {surMesure
+              ? (partsChoisies ?? []).map((part) => (
+                  <span
+                    key={part.slot + part.name}
+                    className="naja-pop inline-block rounded-2xl border-2 px-3 py-1 font-heading text-[15px]"
+                    style={{
+                      background: part.hex,
+                      color: inkOn(part.hex),
+                      borderColor: "rgba(36,28,33,.22)",
+                    }}
+                  >
+                    {part.name}
+                  </span>
+                ))
+              : selectedColor ? (
+                  <span
+                    key={selectedColor.id}
+                    className="naja-pop inline-block rounded-2xl border-2 px-3 py-1 font-heading text-[15px]"
+                    style={{
+                      background: selectedColor.colorHex ?? "#e5d9cf",
+                      color: inkOn(selectedColor.colorHex ?? "#e5d9cf"),
+                      borderColor: "rgba(36,28,33,.22)",
+                    }}
+                  >
+                    {selectedColor.colorName}
+                  </span>
+                ) : null}
           </div>
 
           {/* Le prix de la livraison, juste sous celui de la lampe : c'est la
@@ -286,6 +384,7 @@ export function ProductDetail({
               colors={colors}
               selectedColorId={selectedColor.id}
               onSelectColor={selectColor}
+              parts={partsChoisies}
               showColorStep={false}
               // The one page in the shop that offers the basket as well as the
               // slip — see DirectOrderForm's note.
@@ -309,8 +408,10 @@ export function ProductDetail({
             titre vide en bas de page. */}
         {product.description ? (
           <div data-apparait className="mt-8 border-t-2 border-dashed border-encre/20 pt-6">
+            {/* « cette pièce » et non « cette veilleuse » : la maison
+                n'imprime plus seulement des veilleuses. */}
             <p className="text-[13px] font-semibold tracking-[.06em] text-encre/60 uppercase">
-              À propos de cette veilleuse
+              À propos de cette pièce
             </p>
             <p className="mt-3 max-w-prose leading-relaxed whitespace-pre-line text-encre/75">
               {product.description}

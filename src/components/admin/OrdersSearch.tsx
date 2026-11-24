@@ -41,7 +41,16 @@ export function OrdersSearch({ orders }: { orders: OrderListItem[] }) {
       nu(
         `${o.customerFirstName} ${o.customerLastName} ${o.wilaya} ${o.commune} #${o.id} ${o.id} ` +
           `${o.notesClient ?? ""} ${o.internalNotes ?? ""} ` +
-          o.items.map((i) => `${i.productName} ${i.colorName}`).join(" "),
+          o.items
+            .map(
+              (i) =>
+                `${i.productName} ${i.colorName} ` +
+                // Les couleurs d'une horloge entrent dans la recherche au même
+                // titre que le coloris d'une veilleuse : « rouge » doit
+                // retrouver les horloges rouges.
+                i.parts.map((p) => p.name).join(" "),
+            )
+            .join(" "),
       ).includes(terme),
     );
   }, [orders, q]);

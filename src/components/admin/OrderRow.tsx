@@ -57,6 +57,7 @@ export function OrderRow({
       colorHex: string | null;
       colorHex2: string | null;
       quantity: number;
+      parts: Array<{ slot: string; label: string; name: string; hex: string }>;
     }>;
   };
 }) {
@@ -106,14 +107,33 @@ export function OrderRow({
                     une veilleuse dessinée, teintée de sa couleur — et pour une
                     bicolore, l'abat-jour d'une teinte et le pied de l'autre.
                     C'est ce qu'elle a sous les yeux quand elle choisit la
-                    bobine, donc c'est ce qui doit être dans la liste. */}
-                <LampMark hex={item.colorHex} hex2={item.colorHex2} className="h-5 w-5 shrink-0" />
+                    bobine, donc c'est ce qui doit être dans la liste.
+
+                    Un produit personnalisable n'est pas une veilleuse : à la
+                    place, ses pièces alignées dans l'ordre d'impression, une
+                    pastille et un nom chacune. C'est la liste des bobines à
+                    charger. */}
+                {item.parts.length > 0 ? null : (
+                  <LampMark hex={item.colorHex} hex2={item.colorHex2} className="h-5 w-5 shrink-0" />
+                )}
                 <span className="text-[13px] font-medium whitespace-nowrap text-encre/80">
                   {item.quantity} × {item.productName}
-                  {item.colorName ? (
+                  {item.parts.length === 0 && item.colorName ? (
                     <span className="text-encre/55"> · {item.colorName}</span>
                   ) : null}
                 </span>
+                {item.parts.map((part) => (
+                  <span key={part.slot} className="inline-flex items-center gap-1">
+                    <span
+                      className="inline-block h-3.5 w-3.5 shrink-0 rounded-full border border-encre/30"
+                      style={{ background: part.hex }}
+                      title={`${part.label} : ${part.name}`}
+                    />
+                    <span className="text-[13px] font-medium whitespace-nowrap text-encre/55">
+                      {part.name}
+                    </span>
+                  </span>
+                ))}
               </span>
             ))}
           </span>

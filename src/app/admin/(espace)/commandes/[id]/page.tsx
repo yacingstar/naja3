@@ -86,7 +86,27 @@ export default async function CommandeDetailPage({
               <li key={item.id} className="flex justify-between gap-4 py-3">
                 <span className="font-medium">
                   {item.quantity} × {item.productName}{" "}
-                  <span className="text-encre/60">({item.colorName})</span>
+                  {item.parts.length === 0 ? (
+                    <span className="text-encre/60">({item.colorName})</span>
+                  ) : null}
+                  {/* Les pièces d'un produit personnalisable, dans l'ordre
+                      d'impression : c'est la fiche de préparation de
+                      l'horloge, une bobine par ligne. */}
+                  {item.parts.length > 0 ? (
+                    <span className="mt-1.5 block space-y-1">
+                      {item.parts.map((part) => (
+                        <span key={part.slot} className="flex items-center gap-2">
+                          <span
+                            className="inline-block h-4 w-4 shrink-0 rounded-full border-2 border-encre/25"
+                            style={{ background: part.hex }}
+                          />
+                          <span className="text-encre/70">
+                            {part.label} : <span className="font-semibold text-encre">{part.name}</span>
+                          </span>
+                        </span>
+                      ))}
+                    </span>
+                  ) : null}
                 </span>
                 <span className="whitespace-nowrap">
                   {formatPrice(item.priceAtOrder * item.quantity)}

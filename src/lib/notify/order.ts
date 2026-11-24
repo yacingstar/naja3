@@ -25,5 +25,9 @@ export type NewOrderNotification = {
     colorName: string;
     quantity: number;
     price_at_order: number;
+    // Les couleurs pièce par pièce d'un produit personnalisable. Absent sur
+    // une veilleuse. Sans elles, la patronne lirait « Horloge Duo (Sur
+    // mesure) » et ne saurait pas quelles bobines charger.
+    parts?: Array<{ label: string; name: string }>;
   }>;
 };

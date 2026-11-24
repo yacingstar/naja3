@@ -8,7 +8,7 @@ import { formatPrice } from "@/lib/format";
 import type { ProductColorDetail } from "@/lib/products";
 import { ColorSwatches } from "@/components/site/ColorSwatches";
 import { trackAddToCart } from "@/lib/analytics";
-import { useCart } from "@/lib/cart";
+import { cleLigne, useCart, type CartPart } from "@/lib/cart";
 import {
   MAX_ORDER_QUANTITY,
   useDirectOrder,
@@ -52,10 +52,15 @@ export function DirectOrderForm({
   onSelectColor,
   showColorStep = true,
   withCart = false,
+  parts,
   rates,
 }: {
   product: DirectOrderProduct;
   colors: ProductColorDetail[];
+  // Les couleurs choisies pièce par pièce, pour un produit personnalisable.
+  // Choisies au-dessus, comme le coloris : le dessin de l'horloge dépend
+  // d'elles aussi. Absent sur une veilleuse.
+  parts?: CartPart[];
   // Colour lives in the parent because it also drives the photo alongside
   // this form — see ProductDetail.
   selectedColorId: number | undefined;
@@ -72,13 +77,17 @@ export function DirectOrderForm({
   const [noteOpen, setNoteOpen] = useState(false);
   const [ctaVisible, setCtaVisible] = useState(true);
   const [scrolledIn, setScrolledIn] = useState(false);
-  const [addedColorId, setAddedColorId] = useState<number | null>(null);
+  // La ligne ajoutée, et pas seulement le coloris : sur une horloge le
+  // coloris ne change jamais, alors que changer une teinte doit bien éteindre
+  // le « Ajouté » — sinon il resterait allumé sur une combinaison qui n'est
+  // pas celle qui est dans le panier.
+  const [addedKey, setAddedKey] = useState<string | null>(null);
 
   const submitRef = useRef<HTMLButtonElement>(null);
   const detailsRef = useRef<HTMLDivElement>(null);
 
   const selectedColor = colors.find((c) => c.id === selectedColorId) ?? colors[0];
-  const order = useDirectOrder({ product, selectedColor, rates });
+  const order = useDirectOrder({ product, selectedColor, parts, rates });
 
   // Le plus bas tarif de la grille, pour répondre à « et la livraison ? » avant
   // que la wilaya ne soit choisie. Le calcul du total, lui, ne change pas : il
@@ -103,10 +112,14 @@ export function DirectOrderForm({
   // The 10-per-lamp ceiling the slip enforces applies to the basket too —
   // otherwise the same lamp could be ordered as 10 here and 20 from /panier,
   // which is a limit with no reason behind it.
-  const alreadyInCart = selectedColor
-    ? (items.find(
-        (i) => i.productId === product.id && i.colorId === selectedColor.id,
-      )?.quantity ?? 0)
+  // La ligne de panier que cette page écrirait : produit, coloris, et pour
+  // une horloge les trois teintes. Deux horloges de couleurs différentes sont
+  // deux lignes, donc chacune a ses dix exemplaires — voir cleLigne.
+  const cleCourante = selectedColor
+    ? cleLigne({ productId: product.id, colorId: selectedColor.id, parts })
+    : null;
+  const alreadyInCart = cleCourante
+    ? (items.find((i) => cleLigne(i) === cleCourante)?.quantity ?? 0)
     : 0;
   const roomInCart = MAX_ORDER_QUANTITY - alreadyInCart;
   const canAddToCart = order.inStock && roomInCart > 0;
@@ -115,7 +128,7 @@ export function DirectOrderForm({
   // current selection, so switching to another colour drops the "Ajouté" state
   // by itself instead of claiming the new colour is the one in the basket.
   // Adjusting the quantity keeps it — that colour really is in there.
-  const justAdded = addedColorId !== null && addedColorId === selectedColor?.id;
+  const justAdded = addedKey !== null && addedKey === cleCourante;
 
   function handleAddToCart() {
     if (!selectedColor || !canAddToCart) return;
@@ -129,6 +142,7 @@ export function DirectOrderForm({
         productName: product.name,
         colorId: selectedColor.id,
         colorName: selectedColor.colorName,
+        parts,
         // A display snapshot only. placeOrder re-prices every line from the
         // live catalogue before anything is written — see lib/cart.tsx.
         unitPrice: product.price,
@@ -147,9 +161,9 @@ export function DirectOrderForm({
       quantity,
     });
 
-    setAddedColorId(selectedColor.id);
+    setAddedKey(cleCourante);
     if (addedTimer.current) clearTimeout(addedTimer.current);
-    addedTimer.current = setTimeout(() => setAddedColorId(null), 2500);
+    addedTimer.current = setTimeout(() => setAddedKey(null), 2500);
   }
 
   // The slip sits a long way below the photograph and the description on both

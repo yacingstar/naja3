@@ -67,7 +67,10 @@ export default async function LampLandingPage({
   // "Lampe nº 3" in the hero — the lamp's place in the catalogue, in the same
   // created_at order the shop lists them in, so the number a customer sees
   // here matches the order they'd meet them in on /boutique.
-  const catalogue = await getProducts();
+  // Les veilleuses seules : « Lampe nº 3 » compte des lampes, et l'horloge
+  // arrivée en tête du catalogue décalerait le numéro de toutes les pages de
+  // pub d'un cran sans que personne ne s'en aperçoive.
+  const catalogue = (await getProducts()).filter((item) => !item.preview);
   const position = catalogue.findIndex((item) => item.slug === product.slug);
 
   const { lead, room } = splitProductCopy(product.description);
