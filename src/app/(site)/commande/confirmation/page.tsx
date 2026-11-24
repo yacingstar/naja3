@@ -53,7 +53,13 @@ export default function ConfirmationPage() {
             {order.items.map((item, index) => (
               <li key={index} className="flex justify-between">
                 <span>
-                  {item.quantity} × {item.productName} ({item.colorName})
+                  {item.quantity} × {item.productName}{" "}
+                  {/* Les trois teintes d'une horloge, pas le mot « Sur
+                      mesure » : c'est le dernier écran où la cliente peut
+                      relire ce qu'elle vient de commander. */}
+                  {item.parts?.length
+                    ? `(${item.parts.map((p) => p.name).join(" · ")})`
+                    : `(${item.colorName})`}
                 </span>
                 <span>{formatPrice(item.priceAtOrder * item.quantity)}</span>
               </li>

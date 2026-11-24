@@ -5,7 +5,7 @@ import { useMemo, useState, useEffect } from "react";
 import Link from "next/link";
 import { placeOrder } from "@/app/(site)/commande/actions";
 import { trackInitiateCheckout } from "@/lib/analytics";
-import { useCart } from "@/lib/cart";
+import { cleLigne, useCart } from "@/lib/cart";
 import { formatPrice } from "@/lib/format";
 import { stashOrder } from "@/lib/lastOrder";
 import type { DeliveryRate } from "@/lib/deliveryRates";
@@ -217,9 +217,15 @@ export function CheckoutForm({ rates }: { rates: DeliveryRate[] }) {
         <h2 className="font-heading text-lg">Récapitulatif</h2>
         <ul className="mt-4 space-y-2 text-sm">
           {items.map((item) => (
-            <li key={`${item.productId}:${item.colorId}`} className="flex justify-between">
+            // cleLigne et non « produit:coloris » : deux horloges de couleurs
+            // différentes partagent le même coloris « Sur mesure », et deux
+            // clés identiques dans une liste React, c'est un bug qui attend.
+            <li key={cleLigne(item)} className="flex justify-between">
               <span>
-                {item.quantity} × {item.productName} ({item.colorName})
+                {item.quantity} × {item.productName}{" "}
+                {item.parts?.length
+                  ? `(${item.parts.map((p) => p.name).join(" · ")})`
+                  : `(${item.colorName})`}
               </span>
               <span>{formatPrice(item.unitPrice * item.quantity)}</span>
             </li>
