@@ -57,6 +57,14 @@ export function AccueilClient({
       className="min-h-screen transition-colors duration-700"
       style={{ background: nuit ? "#17131a" : "var(--papier)" }}
     >
+      {/* Les horloges EN PREMIER, avant même le configurateur de veilleuses :
+          c'est la gamme qui vient de sortir, et une nouveauté placée à un
+          écran et demi du haut n'est pas une nouveauté, c'est une archive.
+          Décision de la patronne, le 25 novembre 2026. Le lien discret sous
+          le bouton renvoie les clientes venues pour une veilleuse au
+          configurateur, qui est juste en dessous. */}
+      <BandeauHorloges horloges={horloges} palette={palette} />
+
       <Configurateur
         produits={produits}
         p={p}
@@ -87,8 +95,6 @@ export function AccueilClient({
 
       <div ref={zoneBasse} className="relative">
         <FondDoux teinte={pale(coloris?.colorHex ?? null)} nuit={nuit} />
-
-        <BandeauHorloges horloges={horloges} palette={palette} />
 
         <Etapes encre={encre} encreDouce={encreDouce} />
 

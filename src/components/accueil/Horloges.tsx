@@ -69,7 +69,7 @@ export function BandeauHorloges({
   const encreDouce = encre === "#241c21" ? "rgba(36,28,33,.72)" : "rgba(255,253,247,.78)";
 
   return (
-    <section data-apparait className="mx-5 mt-14 sm:mx-12">
+    <section className="mx-5 mt-4 sm:mx-12 sm:mt-6">
       <div
         className="overflow-hidden rounded-[2.75rem] border-4 border-encre transition-colors duration-700"
         style={{ background: fond }}
@@ -170,6 +170,17 @@ export function BandeauHorloges({
             <p className="mt-2 text-[13px]" style={{ color: encreDouce }}>
               Tournez-la en 3D sur sa fiche.
             </p>
+
+            {/* La sortie pour qui n'est pas venue pour une horloge. Le bloc
+                occupe le premier écran ; sans cette ligne, une cliente qui
+                cherche une veilleuse devrait deviner qu'il y en a en dessous. */}
+            <a
+              href="#composer"
+              className="mt-4 inline-block font-heading text-[15px] font-semibold underline underline-offset-4"
+              style={{ color: encre }}
+            >
+              Ou voir les veilleuses ↓
+            </a>
           </div>
         </div>
       </div>
