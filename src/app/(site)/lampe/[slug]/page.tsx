@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { cache } from "react";
 import { ProductLanding } from "@/components/landing/ProductLanding";
 import { getDeliveryRates } from "@/lib/deliveryRates";
 import { formatPrice } from "@/lib/format";
 import { splitProductCopy } from "@/lib/productCopy";
+import { horlogePourSlug } from "@/lib/horloges";
 import { getProductBySlug, getProducts } from "@/lib/products";
 
 // Same caching posture as /boutique/[slug], and for a sharper version of the
@@ -19,7 +20,11 @@ export const revalidate = 300;
 // deploy.
 export async function generateStaticParams() {
   const products = await getProducts();
-  return products.map((product) => ({ slug: product.slug }));
+  // Pas de page de pub pour une horloge — voir le renvoi plus bas. Inutile
+  // d'en préparer une qui ne fera que rediriger.
+  return products
+    .filter((product) => horlogePourSlug(product.slug) === null)
+    .map((product) => ({ slug: product.slug }));
 }
 
 // The page body and generateMetadata both need the same product, and Next
@@ -63,6 +68,18 @@ export default async function LampLandingPage({
   const [product, rates] = await Promise.all([loadProduct(slug), getDeliveryRates()]);
 
   if (!product) notFound();
+
+  // Une horloge n'a pas de page de pub, et ce n'est pas un oubli : cette page
+  // vend UN objet dans UN coloris, avec un bon de commande qui ne demande
+  // aucune couleur de pièce. Sur une horloge, elle affichait donc un
+  // formulaire qu'on pouvait remplir en entier et que la Server Action
+  // refusait à l'envoi — elle exige une bobine nommée pour chacune des
+  // pièces. La cliente tapait son adresse pour recevoir une erreur.
+  //
+  // Le renvoi vers la fiche garde les liens déjà partagés vivants. Le jour où
+  // la patronne voudra vraiment faire de la pub pour une horloge, il faudra
+  // un configurateur sur cette page-là, pas un formulaire aveugle.
+  if (horlogePourSlug(product.slug)) redirect(`/boutique/${product.slug}`);
 
   // "Lampe nº 3" in the hero — the lamp's place in the catalogue, in the same
   // created_at order the shop lists them in, so the number a customer sees

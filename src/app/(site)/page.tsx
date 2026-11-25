@@ -1,5 +1,5 @@
 import { AccueilClient } from "@/components/accueil/AccueilClient";
-import { getProducts } from "@/lib/products";
+import { getFilamentColors, getProducts } from "@/lib/products";
 
 // Prerender and serve from the CDN, re-rendering at most every 5 minutes.
 //
@@ -19,11 +19,24 @@ export const revalidate = 300;
 // handed to the client, so switching colour is instant and costs no round
 // trip. Only the selected photograph is ever downloaded (see Configurateur).
 export default async function HomePage() {
-  const produits = await getProducts();
+  // La palette est lue ici, et pas devinée dans le code du bandeau : les
+  // pastilles des horloges doivent montrer les bobines que la patronne a
+  // vraiment, et changer avec elles. Lecture isolée et mise en cache par
+  // React, comme sur la fiche produit — voir lib/products.ts.
+  const [produits, palette] = await Promise.all([getProducts(), getFilamentColors()]);
   // Le configurateur de l'accueil marche sur des PHOTOS : une par coloris,
   // qu'il précharge et fait défiler. Un produit personnalisable n'en a aucune
-  // — l'horloge se dessine — alors il reste à la boutique et à sa fiche, où
-  // le dessin est prévu. Lui donner sa place ici est une refonte de l'accueil,
-  // pas un filtre : c'est une décision à prendre avec la patronne.
-  return <AccueilClient produits={produits.filter((p) => !p.preview)} />;
+  // — l'horloge se dessine — alors il n'entre pas dans ce mécanisme-là.
+  //
+  // Il entre en revanche dans la page : les horloges passent à part, et
+  // s'affichent dans leur propre bandeau, avec leur dessin. Une gamme qu'on
+  // lance et qui n'apparaît nulle part sur la page la plus visitée du site
+  // n'est pas lancée.
+  return (
+    <AccueilClient
+      produits={produits.filter((p) => !p.preview)}
+      horloges={produits.filter((p) => p.preview)}
+      palette={palette}
+    />
+  );
 }

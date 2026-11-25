@@ -49,15 +49,49 @@ const estPageDePub = (chemin: string | null) => Boolean(chemin?.startsWith("/lam
 
 export function Header() {
   const [scrolled, setScrolled] = useState(false);
+  // La barre s'efface quand on descend, revient quand on remonte.
+  //
+  // Elle est `fixed` et sans fond : seules ses pastilles sont opaques, et
+  // elles passaient donc PAR-DESSUS le contenu qui défile. Sur un téléphone,
+  // en remplissant le bon de commande, « Boutique » et « Atelier » se
+  // posaient sur le champ Wilaya ; plus bas, elles couvraient trois mots de
+  // la description à chaque écran. Un fond opaque réglerait la lisibilité
+  // mais rendrait la barre à son tour encombrante — soixante-dix pixels pris
+  // en permanence sur un écran qui en a huit cents, pendant qu'on remplit un
+  // formulaire qui en fait mille.
+  //
+  // Descendre, c'est lire ou remplir : la barre ne sert à rien et s'en va.
+  // Remonter, c'est chercher quelque chose : elle revient aussitôt, sans
+  // qu'il faille atteindre le haut de la page.
+  const [cachee, setCachee] = useState(false);
   const pageDePub = estPageDePub(usePathname());
 
   useEffect(() => {
     let ticking = false;
+    // Le dernier sommet connu, pour en déduire le sens. Une variable locale à
+    // l'effet, pas un état : elle change à chaque image et ne doit jamais
+    // redessiner quoi que ce soit par elle-même.
+    let dernierY = window.scrollY;
+
     function handleScroll() {
       if (ticking) return;
       ticking = true;
       requestAnimationFrame(() => {
-        setScrolled(window.scrollY > 16);
+        const y = window.scrollY;
+        setScrolled(y > 16);
+
+        // Le seuil de 6 px absorbe le tremblement du doigt et, sur iOS, le
+        // petit rebond élastique en haut et en bas de page — sans lui, la
+        // barre clignote au lieu de se décider.
+        if (y < 120) {
+          setCachee(false);
+        } else if (y > dernierY + 6) {
+          setCachee(true);
+        } else if (y < dernierY - 6) {
+          setCachee(false);
+        }
+
+        dernierY = y;
         ticking = false;
       });
     }
@@ -67,7 +101,17 @@ export function Header() {
   }, []);
 
   return (
-    <header className="fixed inset-x-0 top-0 z-40">
+    <header
+      // `transform`, jamais la hauteur ni la position : la barre garde sa
+      // boîte, donc le scroll-snap de l'accueil continue de calculer juste
+      // (voir la note plus haut sur le défilement bloqué). `pointer-events`
+      // coupées une fois effacée, pour qu'un doigt posé en haut de l'écran ne
+      // touche pas une pastille devenue invisible.
+      style={{ transform: cachee ? "translateY(-115%)" : "translateY(0)" }}
+      className={`fixed inset-x-0 top-0 z-40 transition-transform duration-300 ${
+        cachee ? "pointer-events-none" : ""
+      }`}
+    >
       <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
         <Link
           href="/"
@@ -85,6 +129,13 @@ export function Header() {
         <nav className="flex items-center gap-2 text-sm font-medium sm:gap-3">
           <Link href="/boutique" className={NAV_PILL}>
             Boutique
+          </Link>
+          {/* « Horloges » visible à toutes les largeurs : c'est la nouvelle
+              gamme, et la cacher derrière un point de rupture sm: reviendrait
+              à la cacher à la quasi-totalité des clientes, qui arrivent
+              d'Instagram sur un téléphone. */}
+          <Link href="/horloges" className={NAV_PILL}>
+            Horloges
           </Link>
           {/* « Atelier » reste visible à TOUTES les largeurs, contrairement à
               « Comment c'est fait » et « FAQ » juste en dessous. Le mot est court,

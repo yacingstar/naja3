@@ -1,11 +1,12 @@
 "use client";
 
 import { useRef, useState } from "react";
-import type { FeaturedProduct } from "@/lib/products";
+import type { FeaturedProduct, FilamentColor } from "@/lib/products";
 import { inkOn, pale } from "@/lib/accueil";
 import { Configurateur } from "@/components/accueil/Configurateur";
 import { Etapes } from "@/components/accueil/Etapes";
 import { Faq } from "@/components/site/Faq";
+import { BandeauHorloges } from "@/components/accueil/Horloges";
 import { FondDoux } from "@/components/accueil/FondDoux";
 import { Retours } from "@/components/accueil/Retours";
 import { Test } from "@/components/accueil/Test";
@@ -16,7 +17,15 @@ const BANDEAU = ["PAYEZ À LA LIVRAISON", "58 WILAYAS", "IMPRIMÉE POUR VOUS", "
 // One state tree for the whole page: the chosen coloris tints every section,
 // and the night switch darkens all of it at once. Splitting the state per
 // section would have meant the page agreeing with itself only by accident.
-export function AccueilClient({ produits }: { produits: FeaturedProduct[] }) {
+export function AccueilClient({
+  produits,
+  horloges = [],
+  palette = [],
+}: {
+  produits: FeaturedProduct[];
+  horloges?: FeaturedProduct[];
+  palette?: FilamentColor[];
+}) {
   const [p, setP] = useState(0);
   const [c, setC] = useState(0);
   const [nuit, setNuit] = useState(false);
@@ -78,6 +87,8 @@ export function AccueilClient({ produits }: { produits: FeaturedProduct[] }) {
 
       <div ref={zoneBasse} className="relative">
         <FondDoux teinte={pale(coloris?.colorHex ?? null)} nuit={nuit} />
+
+        <BandeauHorloges horloges={horloges} palette={palette} />
 
         <Etapes encre={encre} encreDouce={encreDouce} />
 

@@ -32,10 +32,16 @@ export function BoutiqueClient({ produits }: { produits: FeaturedProduct[] }) {
       if (annule || !zone.current) return;
       gsap.registerPlugin(ScrollTrigger);
 
-      // Le titre se lève mot par mot.
+      // Le titre se lève mot par mot, chaque mot glissant hors de sa propre
+      // fenêtre (le `overflow-hidden` du balisage). Sans cette fenêtre, les
+      // mots partaient trente-six pixels plus bas que leur place alors que la
+      // phrase en dessous n'en est qu'à douze : pendant une demi-seconde, à
+      // l'arrivée sur la boutique, « Toute la collection. » s'imprimait
+      // par-dessus « Chacune est imprimée après votre commande ». Sur un
+      // téléphone lent, cette demi-seconde est la première impression.
       if (titre.current) {
         tweens.push(
-          gsap.from(titre.current.querySelectorAll("span"), {
+          gsap.from(titre.current.querySelectorAll("span > span"), {
             y: 36,
             duration: 0.6,
             stagger: 0.07,
@@ -94,8 +100,14 @@ export function BoutiqueClient({ produits }: { produits: FeaturedProduct[] }) {
           className="mt-3 font-heading text-[48px] leading-[.9] font-bold tracking-[-.03em] sm:text-[72px]"
         >
           {["Toute", "la", "collection."].map((mot) => (
-            <span key={mot} className="mr-[.22em] inline-block">
-              {mot}
+            // La fenêtre, puis le mot. `pb` sur la fenêtre pour laisser
+            // passer les jambages sous la ligne de base — sans lui, un « p »
+            // ou un « j » se ferait couper par le masque.
+            <span
+              key={mot}
+              className="mr-[.22em] inline-block overflow-hidden pb-[.12em] align-bottom"
+            >
+              <span className="inline-block">{mot}</span>
             </span>
           ))}
         </h1>

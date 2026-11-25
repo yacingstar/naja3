@@ -4,12 +4,8 @@ import Image from "next/image";
 import Link from "next/link";
 import type { FeaturedProduct } from "@/lib/products";
 import { LampMark } from "@/components/LampMark";
-import { HorlogeApercu } from "@/components/site/HorlogeApercu";
-
-// Les teintes dans lesquelles l'horloge se montre au catalogue : celles du
-// modèle d'origine, et celles que le configurateur propose en arrivant sur la
-// fiche. La carte et la première vue de la page montrent donc le même objet.
-const HORLOGE_CATALOGUE = { fond: "#1b4d2e", avant: "#46b65a", aiguilles: "#1b4d2e" };
+import { ApercuPlat } from "@/components/site/ApercuPlat";
+import { horlogePourSlug } from "@/lib/horloges";
 
 // La carte du nouveau registre : bloc de couleur plate, trait épais, la forme
 // en gros et en bas de casse, le prix en face.
@@ -54,6 +50,11 @@ export function CarteProduit({
     );
   }
 
+  // Le registre, et non le slug écrit en dur : la deuxième horloge est
+  // arrivée, il y en aura une troisième, et une carte qui ne connaît que le
+  // Duo afficherait une photo manquante pour toutes les suivantes.
+  const horloge = horlogePourSlug(produit.slug);
+
   const dispo = produit.colors.filter((c) => c.inStock);
   const montres = produit.colors.slice(0, PASTILLES);
   const reste = produit.colors.length - montres.length;
@@ -68,9 +69,11 @@ export function CarteProduit({
       style={{ background: FONDS[index % FONDS.length], perspective: 900 }}
     >
       <span className="flex h-[230px] items-center justify-center sm:h-[260px]">
-        {produit.preview === "horloge-duo" ? (
-          <HorlogeApercu
-            {...HORLOGE_CATALOGUE}
+        {horloge ? (
+          <ApercuPlat
+            slug={produit.slug}
+            horloge={horloge}
+            couleurs={horloge.vitrine}
             titre={produit.name}
             className="h-full w-auto transition duration-300 group-hover:scale-105"
           />
@@ -109,9 +112,9 @@ export function CarteProduit({
       {/* Une pièce personnalisable n'a pas de coloris à aligner : son unique
           ligne product_colors s'appelle « Sur mesure » et ne dirait rien.
           Elle annonce ce qu'elle est à la place. */}
-      {produit.preview ? (
+      {horloge ? (
         <span className="mt-3 block text-[13px] font-semibold tracking-[.06em] text-encre/60 uppercase">
-          3 pièces, 10 couleurs au choix
+          {horloge.zones.length} pièces à composer
         </span>
       ) : (
       <>

@@ -5,7 +5,9 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { DirectOrderForm } from "@/components/site/DirectOrderForm";
 import { ColorSwatches } from "@/components/site/ColorSwatches";
-import { ConfigurateurPieces, type ChoixPieces } from "@/components/site/ConfigurateurPieces";
+import { ApercuPlat } from "@/components/site/ApercuPlat";
+import { ConfigurateurPieces } from "@/components/site/ConfigurateurPieces";
+import { Horloge3D } from "@/components/site/Horloge3D";
 import { HorlogeApercu } from "@/components/site/HorlogeApercu";
 import { ProductStage, type StageView } from "@/components/site/ProductStage";
 import { useReveal } from "@/components/accueil/useReveal";
@@ -15,6 +17,8 @@ import type { CartPart } from "@/lib/cart";
 import type { DeliveryRate } from "@/lib/deliveryRates";
 import { resumeTarifs } from "@/lib/deliveryRatesSummary";
 import { formatPrice } from "@/lib/format";
+import { horlogePourSlug } from "@/lib/horloges";
+import { useHorloge } from "@/lib/useHorloge";
 import type {
   FilamentColor,
   ProductColorDetail,
@@ -78,27 +82,24 @@ export function ProductDetail({
   const bobines = palette ?? [];
   const surMesure = pieces.length > 0 && bobines.length > 0;
 
-  // Une combinaison de départ qui ressemble à l'objet photographié plutôt
-  // qu'à la première bobine de la liste répétée trois fois : une horloge
-  // toute noire en arrivant ne donne envie de rien. On vise les teintes du
-  // modèle d'origine, et on retombe sur la palette si elles ont disparu.
-  const [choix, setChoix] = useState<ChoixPieces>(() => {
-    const voulu: Record<string, string> = {
-      fond: "Vert foncé",
-      avant: "Vert clair",
-      aiguilles: "Vert foncé",
-    };
-    const depart: ChoixPieces = {};
-    pieces.forEach((part, i) => {
-      depart[part.slot] =
-        bobines.find((c) => c.name === voulu[part.slot]) ??
-        bobines[i % Math.max(bobines.length, 1)];
-    });
-    return depart;
-  });
+  // La forme de l'objet : quelle pièce du modèle 3D porte quelle couleur, où
+  // se place la caméra, quelles combinaisons proposer. Null pour une
+  // veilleuse, et null aussi pour un produit à pièces qui n'aurait pas encore
+  // de modèle — le configurateur fonctionne alors sans la 3D.
+  const horloge = horlogePourSlug(product.slug);
+
+  // Tout l'état du choix — les couleurs, les cases « même couleur que… », les
+  // options, les avertissements — vit dans ce hook. Les couleurs de départ
+  // viennent du registre et non d'une liste écrite ici : une horloge toute
+  // noire en arrivant ne donne envie de rien.
+  const etat = useHorloge({ parts: pieces, palette: bobines, horloge });
+  const choix = etat.choix;
 
   // Ce que le panier et la commande recevront : le choix remis dans l'ordre
   // des pièces, avec son libellé.
+  // Toujours la couleur EFFECTIVE de chaque pièce, y compris celles qui
+  // « suivent » une autre : la patronne lit la commande et doit savoir quoi
+  // mettre dans l'imprimante sans rien avoir à déduire.
   const partsChoisies: CartPart[] | undefined = surMesure
     ? pieces
         .map((part) => {
@@ -164,7 +165,9 @@ export function ProductDetail({
   // La teinte choisie déborde sur le cadre de la photo, comme sur l'accueil :
   // la page prend la couleur de la lampe qu'on est en train de regarder.
   const teinte = pale(
-    surMesure ? (choix.avant?.hex ?? null) : (selectedColor?.colorHex ?? null),
+    surMesure
+      ? (choix[horloge?.teinteSlot ?? "avant"]?.hex ?? null)
+      : (selectedColor?.colorHex ?? null),
   );
 
   // Le coût de la livraison, annoncé AVANT le formulaire et non découvert
@@ -191,10 +194,28 @@ export function ProductDetail({
           {/* Keyed sur le coloris : changer de couleur remonte le bloc, donc
               l'animation d'entrée se rejoue. La photo « arrive » au lieu de se
               substituer silencieusement. */}
-          {surMesure ? (
-            // Le dessin tient lieu de photo, et il n'y en aura pas d'autre :
-            // dix bobines sur trois pièces font mille horloges, dont neuf
-            // cent quatre-vingt-dix-neuf ne seront jamais photographiées.
+          {surMesure && horloge ? (
+            // La 3D tient lieu de photo, et il n'y en aura pas d'autre : onze
+            // bobines sur six pièces font près de deux millions d'horloges,
+            // dont une seule sera photographiée. Et la Télé, double face et
+            // fixée au mur par le côté, ne peut pas se montrer à plat du tout.
+            <Horloge3D
+              horloge={horloge}
+              couleurs={etat.hexParSlot}
+              options={etat.options}
+              titre={product.name}
+              secours={
+                <ApercuPlat
+                  slug={product.slug}
+                  horloge={horloge}
+                  couleurs={etat.hexParSlot}
+                  titre={product.name}
+                  className="h-full w-full"
+                />
+              }
+              className="w-full"
+            />
+          ) : surMesure ? (
             <HorlogeApercu
               fond={choix.fond?.hex ?? "#1b4d2e"}
               avant={choix.avant?.hex ?? "#46b65a"}
@@ -262,15 +283,13 @@ export function ProductDetail({
               Composez votre horloge
             </p>
             <p className="mt-1 text-center text-sm text-encre/60">
-              Une couleur par pièce. Le dessin au-dessus est le vôtre.
+              Une couleur par pièce. L&apos;horloge au-dessus est la vôtre.
             </p>
             <ConfigurateurPieces
               parts={pieces}
               palette={bobines}
-              choix={choix}
-              onChoisir={(slot, couleur) =>
-                setChoix((actuel) => ({ ...actuel, [slot]: couleur }))
-              }
+              horloge={horloge}
+              etat={etat}
               className="mt-4"
             />
           </div>
@@ -293,7 +312,14 @@ export function ProductDetail({
 
       {/* ── Right: everything you decide with ───────────────────────── */}
       <div>
-        <nav aria-label="Fil d'Ariane" className="text-sm text-encre/50">
+        {/* Le fil d'Ariane disparaît sur téléphone. La colonne de droite y
+            passe SOUS la photo : « Boutique / Okasa » s'affichait donc au
+            milieu de la page, entre les couleurs qu'on vient de choisir et le
+            bon de commande — une indication de lieu arrivant bien après qu'on
+            soit arrivé, et quatre-vingts pixels de plus entre la décision et
+            le formulaire. Le retour à la boutique reste dans l'en-tête, qui
+            revient dès qu'on remonte. */}
+        <nav aria-label="Fil d'Ariane" className="hidden text-sm text-encre/50 lg:block">
           <Link href="/boutique" className="transition hover:text-encre">
             Boutique
           </Link>

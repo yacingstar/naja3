@@ -88,6 +88,12 @@ export function DirectOrderForm({
 
   const selectedColor = colors.find((c) => c.id === selectedColorId) ?? colors[0];
   const order = useDirectOrder({ product, selectedColor, parts, rates });
+  // Sorti de l'objet AVANT d'atteindre l'attribut `ref`. Écrit
+  // `ref={order.brancherTelephone}`, le vérificateur tient tout `order`
+  // pour un porteur de ref et refuse ensuite d'en lire quoi que ce soit
+  // pendant le rendu — `order.total` compris, c'est-à-dire le montant
+  // écrit sur le bouton.
+  const { brancherTelephone } = order;
 
   // Le plus bas tarif de la grille, pour répondre à « et la livraison ? » avant
   // que la wilaya ne soit choisie. Le calcul du total, lui, ne change pas : il
@@ -305,6 +311,7 @@ export function DirectOrderForm({
           <div>
             <Field label="Téléphone" hint="On vous appelle pour confirmer">
               <input
+                ref={brancherTelephone}
                 required
                 type="tel"
                 inputMode="tel"

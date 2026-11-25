@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { placeOrder } from "@/app/(site)/commande/actions";
 import { trackAddToCart, trackInitiateCheckout } from "@/lib/analytics";
 import type { DeliveryRate } from "@/lib/deliveryRates";
@@ -63,6 +63,47 @@ export function useDirectOrder({
   // où on la corrige. Une erreur reléguée auprès du bouton oblige à remonter
   // pour comprendre.
   const [erreurTelephone, setErreurTelephone] = useState<string | null>(null);
+
+  // Le champ téléphone, pour pouvoir y RAMENER la cliente.
+  //
+  // Sans ça, le formulaire avait un trou noir : les champs vides sont retenus
+  // par le navigateur (`required`), mais un numéro mal formé — un 021, neuf
+  // chiffres au lieu de dix — passe cette barrière et n'est refusé qu'ici. Le
+  // message s'écrivait alors sous un champ situé à cinq cents pixels au-dessus
+  // du bouton, hors de l'écran d'un téléphone, et `setError(null)` effaçait au
+  // même instant le seul message qui, lui, était visible. Résultat vu de la
+  // cliente : on appuie sur « Commander », et il ne se passe rien. On appuie
+  // encore. On s'en va.
+  //
+  // Le champ est tenu par une fonction de rappel, et c'est elle qui sort d'ici
+  // — pas l'objet `useRef`. Rendre un ref depuis un hook « contamine » tout
+  // l'objet retourné aux yeux de la règle react-hooks/refs, qui interdit alors
+  // de lire `order.total` pendant le rendu : trente-huit erreurs pour une
+  // commodité. Une fonction ne pose pas ce problème, et le formulaire l'écrit
+  // de la même façon : `ref={order.brancherTelephone}`.
+  const champTelephone = useRef<HTMLInputElement | null>(null);
+  const brancherTelephone = useCallback((el: HTMLInputElement | null) => {
+    champTelephone.current = el;
+  }, []);
+
+  // Trois choix, et chacun a sa raison :
+  //
+  // - `center` et non `start` : l'en-tête est fixe, et un champ amené tout en
+  //   haut de l'écran atterrit dessous.
+  // - pas de `smooth` : l'animation a été essayée et écartée. Elle dépend du
+  //   rythme d'affichage, et un onglet ralenti (arrière-plan, téléphone en
+  //   économie d'énergie) l'étire au point qu'il ne se passe visiblement rien
+  //   pendant une seconde ou deux — précisément le défaut qu'on corrige ici.
+  //   Un saut net arrive toujours.
+  // - `preventScroll` sur le focus : sans lui, le navigateur refait son propre
+  //   défilement par-dessus celui qu'on vient de faire, et le champ se
+  //   retrouve collé en haut.
+  function montrerLeTelephone() {
+    const champ = champTelephone.current;
+    if (!champ) return;
+    champ.scrollIntoView({ block: "center" });
+    champ.focus({ preventScroll: true });
+  }
 
   const inStock = Boolean(selectedColor?.inStock);
 
@@ -139,6 +180,7 @@ export function useDirectOrder({
     if (!telephone.ok) {
       setErreurTelephone(telephone.erreur);
       setError(null);
+      montrerLeTelephone();
       return;
     }
 
@@ -198,6 +240,10 @@ export function useDirectOrder({
     phone,
     setPhone,
     erreurTelephone,
+    // À accrocher au champ téléphone : `ref={order.brancherTelephone}`. C'est
+    // ce qui permet de ramener la cliente sur son numéro au lieu de la laisser
+    // devant un bouton qui ne réagit pas.
+    brancherTelephone,
     wilaya,
     changeWilaya,
     commune,

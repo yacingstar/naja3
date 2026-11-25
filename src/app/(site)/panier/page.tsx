@@ -1,9 +1,10 @@
 "use client";
 
 import Link from "next/link";
+import { ApercuPlat } from "@/components/site/ApercuPlat";
 import { BlobPhoto } from "@/components/site/BlobPhoto";
-import { HorlogeApercu } from "@/components/site/HorlogeApercu";
 import { cleLigne, type CartItem, useCart } from "@/lib/cart";
+import { horlogePourSlug } from "@/lib/horloges";
 import { formatPrice } from "@/lib/format";
 
 // Un produit personnalisable n'a pas de photo — il a un dessin, dans les
@@ -11,13 +12,18 @@ import { formatPrice } from "@/lib/format";
 // la fiche produit : elle doit retrouver SON horloge dans son panier, pas
 // l'horloge verte du catalogue.
 function Vignette({ item }: { item: CartItem }) {
-  const couleurs = Object.fromEntries((item.parts ?? []).map((p) => [p.slot, p.hex]));
-  if (item.parts?.length) {
+  // Le dessin se choisit sur le slug, pas sur « ce produit a des pièces » :
+  // les deux horloges n'ont ni les mêmes pièces ni la même silhouette, et la
+  // version précédente dessinait un Duo quoi qu'il arrive — une Télé au
+  // panier serait revenue en Duo vert.
+  const horloge = horlogePourSlug(item.productSlug);
+  if (horloge && item.parts?.length) {
+    const couleurs = Object.fromEntries(item.parts.map((p) => [p.slot, p.hex]));
     return (
-      <HorlogeApercu
-        fond={couleurs.fond ?? "#1b4d2e"}
-        avant={couleurs.avant ?? "#46b65a"}
-        aiguilles={couleurs.aiguilles ?? "#1b4d2e"}
+      <ApercuPlat
+        slug={item.productSlug}
+        horloge={horloge}
+        couleurs={couleurs}
         titre={item.productName}
         className="w-20 shrink-0"
       />
