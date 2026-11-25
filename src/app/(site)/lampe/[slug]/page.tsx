@@ -4,6 +4,7 @@ import { cache } from "react";
 import { ProductLanding } from "@/components/landing/ProductLanding";
 import { getDeliveryRates } from "@/lib/deliveryRates";
 import { formatPrice } from "@/lib/format";
+import { cartePartage } from "@/lib/cartesPartage";
 import { splitProductCopy } from "@/lib/productCopy";
 import { horlogePourSlug } from "@/lib/horloges";
 import { getProductBySlug, getProducts } from "@/lib/products";
@@ -40,20 +41,30 @@ export async function generateMetadata({
   if (!product) return {};
 
   const { lead } = splitProductCopy(product.description);
-  const title = `${product.name} — ${formatPrice(product.price)} | Naja`;
-  // The cutout, not a room shot: this is what shows up as the link preview
-  // when someone shares the ad, and a lamp on a plain ground survives being
-  // cropped to a square thumbnail.
-  const image = product.colors.find((color) => color.cutoutPhotoUrl)?.cutoutPhotoUrl;
+  // Le gabarit du layout racine ajoute déjà « · Naja ». Ce titre finissait
+  // donc par « Ondine — 3 500 DA | Naja · Naja » dans l'onglet et dans tous
+  // les aperçus de lien — vérifié en ligne le 25 novembre 2026.
+  const title = `${product.name} — ${formatPrice(product.price)}`;
+  // La carte préparée, et plus la découpe du catalogue.
+  //
+  // Celle-ci était un .webp sur fond TRANSPARENT : deux façons de mal finir.
+  // Le format d'abord — les aperçus de lien ne s'entendent pas sur le .webp,
+  // et on trouve des cas d'images refusées. Le fond ensuite : faute de savoir
+  // quoi faire de la transparence, un aperçu compose sur du noir, et la
+  // veilleuse ivoire devenait une tache sombre. Voir scripts/cartes-partage.mjs.
+  const image = cartePartage(product.slug);
 
   return {
     title,
     description: lead,
     openGraph: {
+      type: "website",
+      siteName: "Naja",
+      locale: "fr_FR",
+      url: `/lampe/${product.slug}`,
       title,
       description: lead,
-      type: "website",
-      images: image ? [image] : undefined,
+      images: [{ url: image, width: 1200, height: 630 }],
     },
   };
 }

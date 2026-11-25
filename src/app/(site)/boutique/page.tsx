@@ -12,6 +12,19 @@ export const metadata = {
   title: "Toute la collection",
   description:
     "Les veilleuses et les horloges Naja, imprimées en 3D à Alger et fabriquées à la commande. Choisissez la forme et les couleurs. Livraison dans les 58 wilayas, paiement à la livraison.",
+  // Sans ce bloc, la rubrique hériterait du titre d'accueil dans les aperçus
+  // de lien — voir la note du layout racine : une page qui ne redéfinit pas
+  // `openGraph` reprend celui du parent en entier.
+  openGraph: {
+    type: "website",
+    siteName: "Naja",
+    locale: "fr_FR",
+    url: "/boutique",
+    title: "Toute la collection Naja",
+    description:
+      "Les veilleuses et les horloges Naja, imprimées en 3D à Alger et fabriquées à la commande. Livraison dans les 58 wilayas, paiement à la livraison.",
+    images: [{ url: "/og/naja.jpg", width: 1200, height: 630 }],
+  },
 };
 
 export default async function BoutiquePage() {

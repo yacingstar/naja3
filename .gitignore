@@ -55,3 +55,8 @@ MOT-DE-PASSE-ADMIN.txt
 
 # Classeur de suivi de la patronne : contiendra des donnees de clientes
 Commandes-et-sponsors.xlsx
+
+# Même chose : second classeur, mêmes données. Une règle par nom de fichier
+# laisse passer le suivant ; d'où le motif général en dessous.
+Naja-commandes-sponsors.xlsx
+*.xlsx

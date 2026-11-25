@@ -1,9 +1,15 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { cache } from "react";
 import { CarteProduit } from "@/components/boutique/CarteProduit";
 import { FondDoux } from "@/components/accueil/FondDoux";
 import { ProductDetail } from "@/components/site/ProductDetail";
+import { cartePartage } from "@/lib/cartesPartage";
 import { getDeliveryRates } from "@/lib/deliveryRates";
+import { formatPrice } from "@/lib/format";
+import { horlogePourSlug } from "@/lib/horloges";
+import { splitProductCopy } from "@/lib/productCopy";
 import {
   getFilamentColors,
   getProductBySlug,
@@ -30,6 +36,54 @@ export async function generateStaticParams() {
   return products.map((product) => ({ slug: product.slug }));
 }
 
+// Le corps de la page et generateMetadata ont besoin du même produit, et Next
+// les appelle séparément. Le cache de requête de React ramène ça à une seule
+// lecture — même raison qu'à côté, dans /lampe/[slug].
+const chargerProduit = cache(getProductBySlug);
+
+// Ce qui s'affiche quand quelqu'un colle le lien de cette fiche dans un
+// message privé, une story ou une conversation WhatsApp.
+//
+// C'est LA page qui se partage : la patronne vend en message privé, et c'est
+// cette adresse qu'elle envoie. Elle arrivait jusqu'ici sans image et sous le
+// titre d'accueil du site — « Naja — veilleuses imprimées en 3D » posé sur le
+// lien d'une horloge. Pour un objet à 4 500 DA annoncé par un lien nu, le
+// doute est gratuit et il coûte la vente.
+export async function generateMetadata({
+  params,
+}: PageProps<"/boutique/[slug]">): Promise<Metadata> {
+  const { slug } = await params;
+  const product = await chargerProduit(slug);
+  // Pas de produit : pas de balises inventées. La page rendra son 404.
+  if (!product) return {};
+
+  const horloge = horlogePourSlug(product.slug);
+  // Le gabarit du layout ajoute « · Naja » derrière : ne pas le remettre ici.
+  const titre = `${product.name} — ${formatPrice(product.price)}`;
+  // Les deux premières phrases de la description écrite dans l'admin, les
+  // mêmes que la page de pub utilise pour son chapeau. La patronne écrit donc
+  // son aperçu de lien sans le savoir, en écrivant sa fiche.
+  const { lead } = splitProductCopy(product.description);
+  const description = horloge
+    ? `${lead} ${horloge.zones.length} pièces dont vous choisissez la couleur. Livraison dans les 58 wilayas, paiement à la livraison.`
+    : `${lead} Livraison dans les 58 wilayas, paiement à la livraison.`;
+
+  return {
+    title: titre,
+    description,
+    alternates: { canonical: `/boutique/${product.slug}` },
+    openGraph: {
+      type: "website",
+      siteName: "Naja",
+      locale: "fr_FR",
+      url: `/boutique/${product.slug}`,
+      title: titre,
+      description,
+      images: [{ url: cartePartage(product.slug), width: 1200, height: 630 }],
+    },
+  };
+}
+
 export default async function ProductPage({
   params,
 }: PageProps<"/boutique/[slug]">) {
@@ -38,7 +92,7 @@ export default async function ProductPage({
   // reads are cookie-free (see deliveryRates.ts), so the page still
   // prerenders and is served from the CDN.
   const [product, rates] = await Promise.all([
-    getProductBySlug(slug),
+    chargerProduit(slug),
     getDeliveryRates(),
   ]);
 

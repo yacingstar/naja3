@@ -16,6 +16,20 @@
 // mid-sentence keeps it.
 const HANDMADE_BOILERPLATE = /^\s*imprim/i;
 
+// Quand il n'y a RIEN à découper : la description est vide en base.
+//
+// Pas un cas d'école — Ondine est dans cet état depuis sa mise en vente, et
+// on ne s'en est aperçu que le 25 novembre 2026, en branchant les aperçus de
+// lien. Sa fiche s'affichait sans un mot, et son aperçu de lien se résumait à
+// « Livraison dans les 58 wilayas » précédé d'une espace.
+//
+// Une phrase de repli vaut mieux qu'un blanc : elle est vraie de tout ce que
+// la maison vend, et elle ne fait pas croire que la fiche est cassée. Elle ne
+// remplace pas une vraie description — il faut toujours l'écrire dans l'admin.
+const LEAD_FALLBACK =
+  "Imprimée en 3D à Alger et fabriquée après votre commande, dans la " +
+  "couleur de votre choix.";
+
 // Used when the description is too short to have anything left over — two
 // sentences in, nothing out. True of every lamp, so it is safe to state.
 const ROOM_FALLBACK =
@@ -49,7 +63,7 @@ export function splitProductCopy(description: string): ProductCopy {
   const rest = sentences.slice(2).join(" ");
 
   return {
-    lead: sentences.slice(0, 2).join(" "),
+    lead: sentences.slice(0, 2).join(" ") || LEAD_FALLBACK,
     room: rest || ROOM_FALLBACK,
   };
 }

@@ -53,14 +53,48 @@ const caveat = Caveat({
 // "Lampes" alors que tout le site dit veilleuses, et ne mentionnait ni le
 // paiement à la livraison ni l'Algérie — les deux choses qu'une cliente vérifie
 // avant de commander en ligne ici.
+const DESCRIPTION =
+  "Des veilleuses et des horloges imprimées en 3D à Alger, fabriquées à la " +
+  "commande, dans les couleurs que vous choisissez. Livraison dans les 58 " +
+  "wilayas, paiement à la livraison.";
+
 export const metadata: Metadata = {
+  // Le domaine, dit une fois. Sans lui, toute image d'aperçu annoncée en
+  // chemin relatif fait échouer le build : un aperçu de lien est lu par un
+  // robot qui n'a aucune page de référence, donc « /og/naja.jpg » ne veut
+  // rien dire pour lui — il lui faut l'adresse complète.
+  metadataBase: new URL("https://najadz.com"),
   // Les autres pages posent leur propre titre ; le gabarit leur ajoute la marque.
   title: {
-    default: "Naja — veilleuses imprimées en 3D, faites main en Algérie",
+    default: "Naja — veilleuses et horloges imprimées en 3D, faites main en Algérie",
     template: "%s · Naja",
   },
-  description:
-    "Des veilleuses imprimées en 3D à Alger, fabriquées à la commande. 7 formes, 41 coloris. Livraison dans les 58 wilayas, paiement à la livraison.",
+  description: DESCRIPTION,
+  // ── Ce qui s'affiche quand un lien du site est collé quelque part ─────────
+  //
+  // Jusqu'au 25 novembre 2026 le site n'en annonçait AUCUNE : un lien envoyé
+  // en message privé ou posé dans une story arrivait nu, sans image et sous
+  // le titre d'accueil — y compris le lien d'une horloge, qui s'annonçait
+  // donc « veilleuses imprimées en 3D ». Pour une boutique dont les ventes
+  // se concluent en message privé, c'était le pire endroit où être muet.
+  //
+  // Une page qui ne redéfinit pas `openGraph` hérite de tout ce bloc (c'est
+  // la règle de Next : le champ est repris en entier, ou remplacé en entier).
+  // Les pages qui parlent d'un objet précis le remplacent ; les autres
+  // montrent les deux gammes, ce qui est exactement ce qu'on veut dire du
+  // site lui-même.
+  openGraph: {
+    type: "website",
+    siteName: "Naja",
+    locale: "fr_FR",
+    url: "/",
+    title: "Naja — veilleuses et horloges imprimées en 3D",
+    description: DESCRIPTION,
+    images: [{ url: "/og/naja.jpg", width: 1200, height: 630 }],
+  },
+  // Sans ça, X et quelques applications de messagerie affichent une vignette
+  // minuscule à côté du texte au lieu de l'image en grand.
+  twitter: { card: "summary_large_image" },
 };
 
 // Deliberately bare: no Header/Footer here. (site) and admin each get their

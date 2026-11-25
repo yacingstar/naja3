@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "photos:verifier": "node scripts/nettoyer-photos.mjs",
-    "photos:nettoyer": "node scripts/nettoyer-photos.mjs --vraiment"
+    "photos:nettoyer": "node scripts/nettoyer-photos.mjs --vraiment",
+    "partage:cartes": "node scripts/cartes-partage.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.4",
