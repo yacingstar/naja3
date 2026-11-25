@@ -69,7 +69,7 @@ export function BandeauHorloges({
   const encreDouce = encre === "#241c21" ? "rgba(36,28,33,.72)" : "rgba(255,253,247,.78)";
 
   return (
-    <section className="mx-5 mt-4 sm:mx-12 sm:mt-6">
+    <section data-apparait className="mx-5 mt-14 sm:mx-12">
       <div
         className="overflow-hidden rounded-[2.75rem] border-4 border-encre transition-colors duration-700"
         style={{ background: fond }}

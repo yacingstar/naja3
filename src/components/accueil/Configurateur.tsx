@@ -210,13 +210,17 @@ export function Configurateur({
           </div>
           {/* Keyé sur la forme : changer de veilleuse rejoue la montée du nom,
               donc le titre accompagne le changement au lieu de se substituer. */}
-          <h1
+          {/* h2 et non h1 depuis que les deux gammes ouvrent la page : le
+              titre de l'accueil est « Veilleuses & horloges », et le nom de la
+              veilleuse en cours de choix est une section dedans. Rien ne
+              change à l'écran — seule la hiérarchie du document est juste. */}
+          <h2
             key={produit.id}
             className="naja-monte mt-3 font-heading text-[60px] leading-[.86] font-bold tracking-[-.03em] sm:text-[76px]"
             style={{ color: encre, animationDelay: ".08s" }}
           >
             {produit.name.toLowerCase()}
-          </h1>
+          </h2>
           <p
             className="naja-monte mt-1.5 font-heading text-[27px] font-semibold sm:text-3xl"
             style={{ color: encre, animationDelay: ".16s" }}

@@ -51,6 +51,30 @@ export type Horloge3DProps = {
   className?: string;
 };
 
+// Les deux flèches qui encadrent la main : elles disent le SENS du geste.
+// Sans elles, une main qui va et vient peut se lire comme « appuyez ici ».
+function Chevron({ sens }: { sens: "gauche" | "droite" }) {
+  return (
+    <svg
+      width="14"
+      height="22"
+      viewBox="0 0 14 22"
+      className="naja-doigt-clignote"
+      style={{ transform: sens === "gauche" ? "scaleX(-1)" : undefined }}
+    >
+      <path
+        d="M3 3 L11 11 L3 19"
+        fill="none"
+        stroke="var(--color-encre)"
+        strokeWidth="3.4"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        opacity=".55"
+      />
+    </svg>
+  );
+}
+
 // Le fond de scène, repris du cadre de la photo des veilleuses pour que la
 // page reste d'une seule pièce.
 const FOND = "radial-gradient(circle at 50% 38%, rgba(255,253,247,.9), rgba(255,253,247,0) 70%)";
@@ -82,6 +106,10 @@ export function Horloge3D({
   const [vue, setVue] = useState(horloge.vues[0]?.id ?? "");
   // L'invite disparaît au premier contact, et ne revient pas.
   const [touchee, setTouchee] = useState(false);
+  // Elle s'efface aussi toute seule au bout de cinq secondes, touchée ou non :
+  // une main qui fait le même geste en boucle pendant qu'on lit le prix finit
+  // par agacer, et le message est passé bien avant.
+  const [indiceFini, setIndiceFini] = useState(false);
 
   // ── Le montage de la scène, une seule fois ────────────────────────────
   useEffect(() => {
@@ -397,6 +425,15 @@ export function Horloge3D({
     allerVue.current?.(vue);
   }, [vue, etat]);
 
+  // Le compte à rebours ne démarre qu'une fois la 3D affichée : parti au
+  // montage, il se serait écoulé pendant le téléchargement du modèle et
+  // l'invite aurait disparu avant que l'objet n'apparaisse.
+  useEffect(() => {
+    if (etat !== "prete") return;
+    const minuteur = setTimeout(() => setIndiceFini(true), 5000);
+    return () => clearTimeout(minuteur);
+  }, [etat]);
+
   const sansTroisD = etat === "sansTroisD";
 
   return (
@@ -424,10 +461,56 @@ export function Horloge3D({
           }`}
         />
 
-        {etat === "prete" && !touchee ? (
-          <p className="pointer-events-none absolute top-3 right-4 rounded-full bg-papier/85 px-3 py-1 text-[13px] font-semibold text-encre/70">
-            Faites-la tourner du doigt
-          </p>
+        {/* ── La main qui montre le geste ──────────────────────────────
+            Une visionneuse 3D ressemble à une photo : rien, sur l'écran, ne
+            dit qu'elle se tourne. La phrase le disait, mais on ne LIT pas une
+            page de boutique, on la regarde. La main fait donc le geste à la
+            place de la cliente, pendant cinq secondes.
+
+            Toujours montée tant que la 3D est là, et masquée par l'opacité
+            plutôt que retirée : ça lui laisse le temps de s'effacer en
+            douceur au lieu de disparaître d'un coup. `pointer-events-none`
+            sur tout le bloc — c'est une consigne, pas un bouton, et elle ne
+            doit jamais voler le doigt à l'objet qu'elle désigne. */}
+        {etat === "prete" ? (
+          <div
+            aria-hidden
+            className={`pointer-events-none absolute inset-x-0 bottom-[7%] flex flex-col items-center gap-2 transition-opacity duration-700 ${
+              touchee || indiceFini ? "opacity-0" : "opacity-100"
+            }`}
+          >
+            <div className="flex items-center gap-2">
+              <Chevron sens="gauche" />
+              <span className="naja-doigt-glisse">
+                {/* Une paume et un index, deux rectangles arrondis : le
+                    registre du site est fait de formes pleines cernées de
+                    noir, et une main détaillée y serait une pièce rapportée.
+                    Blanche cernée d'encre, elle se voit sur toutes les
+                    couleurs de bobine. */}
+                <svg
+                  width="40"
+                  height="48"
+                  viewBox="0 0 48 58"
+                  className="naja-doigt-clignote"
+                  style={{ filter: "drop-shadow(0 3px 7px rgba(36,28,33,.45))" }}
+                >
+                  <g
+                    fill="var(--color-papier)"
+                    stroke="var(--color-encre)"
+                    strokeWidth="3.4"
+                    strokeLinejoin="round"
+                  >
+                    <rect x="13" y="21" width="22" height="33" rx="11" />
+                    <rect x="19" y="4" width="10" height="26" rx="5" />
+                  </g>
+                </svg>
+              </span>
+              <Chevron sens="droite" />
+            </div>
+            <p className="rounded-full bg-papier/90 px-3 py-1 text-[13px] font-semibold text-encre/75">
+              Glissez le doigt pour la tourner
+            </p>
+          </div>
         ) : null}
       </div>
 

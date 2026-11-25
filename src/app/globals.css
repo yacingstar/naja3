@@ -532,6 +532,30 @@ html::-webkit-scrollbar {
 .naja-pop   { animation: naja-pop .42s cubic-bezier(.2, .9, .3, 1.6) backwards; }
 .naja-photo { animation: naja-photo .6s cubic-bezier(.2, .9, .3, 1.4) backwards; }
 
+/* ── La main qui montre qu'on peut tourner l'objet ──────────────────────
+   Une visionneuse 3D ne dit pas d'elle-même qu'elle se manipule : elle
+   ressemble à une photo. Une phrase le dit, mais on ne lit pas une page de
+   boutique — on la regarde. La main fait le geste à la place de la cliente.
+
+   Deux animations séparées sur deux éléments imbriqués : le glissement sur
+   le conteneur, le clignotement sur la main. Les combiner sur un seul
+   élément obligerait à réécrire la translation dans chaque image-clé de
+   l'opacité, et les deux rythmes ne pourraient plus différer. */
+@keyframes naja-doigt-glisse {
+  0%, 100% { transform: translateX(-20px) rotate(-7deg); }
+  50%      { transform: translateX(20px) rotate(7deg); }
+}
+@keyframes naja-doigt-clignote {
+  0%, 100% { opacity: 1; }
+  45%      { opacity: .58; }
+}
+.naja-doigt-glisse   { animation: naja-doigt-glisse 1.7s ease-in-out infinite; }
+.naja-doigt-clignote { animation: naja-doigt-clignote 1.7s ease-in-out infinite; }
+
 @media (prefers-reduced-motion: reduce) {
   .naja-monte, .naja-pop, .naja-photo { animation: none; }
+  /* La main reste, immobile : c'est une consigne, pas une décoration. Sans
+     elle, qui a demandé moins d'animations n'apprendrait jamais que l'objet
+     se tourne. */
+  .naja-doigt-glisse, .naja-doigt-clignote { animation: none; }
 }

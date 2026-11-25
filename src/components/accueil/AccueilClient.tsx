@@ -7,6 +7,7 @@ import { Configurateur } from "@/components/accueil/Configurateur";
 import { Etapes } from "@/components/accueil/Etapes";
 import { Faq } from "@/components/site/Faq";
 import { BandeauHorloges } from "@/components/accueil/Horloges";
+import { DeuxGammes } from "@/components/accueil/DeuxGammes";
 import { FondDoux } from "@/components/accueil/FondDoux";
 import { Retours } from "@/components/accueil/Retours";
 import { Test } from "@/components/accueil/Test";
@@ -57,13 +58,10 @@ export function AccueilClient({
       className="min-h-screen transition-colors duration-700"
       style={{ background: nuit ? "#17131a" : "var(--papier)" }}
     >
-      {/* Les horloges EN PREMIER, avant même le configurateur de veilleuses :
-          c'est la gamme qui vient de sortir, et une nouveauté placée à un
-          écran et demi du haut n'est pas une nouveauté, c'est une archive.
-          Décision de la patronne, le 25 novembre 2026. Le lien discret sous
-          le bouton renvoie les clientes venues pour une veilleuse au
-          configurateur, qui est juste en dessous. */}
-      <BandeauHorloges horloges={horloges} palette={palette} />
+      {/* Les deux gammes d'abord, à la même taille : la maison en vend deux
+          et le premier écran doit le dire. Tout ce qui suit est la page telle
+          qu'elle était. */}
+      <DeuxGammes produits={produits} horloges={horloges} />
 
       <Configurateur
         produits={produits}
@@ -95,6 +93,12 @@ export function AccueilClient({
 
       <div ref={zoneBasse} className="relative">
         <FondDoux teinte={pale(coloris?.colorHex ?? null)} nuit={nuit} />
+
+        {/* Le bloc détaillé des horloges : les portes en haut annoncent la
+            gamme, celui-ci la développe — cinq coloris qu'on essaie sans
+            quitter l'accueil. Il revient donc après le configurateur de
+            veilleuses, qui est l'équivalent pour l'autre gamme. */}
+        <BandeauHorloges horloges={horloges} palette={palette} />
 
         <Etapes encre={encre} encreDouce={encreDouce} />
 
