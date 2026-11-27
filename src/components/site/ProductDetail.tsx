@@ -175,10 +175,48 @@ export function ProductDetail({
   // choisie, et tout ce qui ressemble à une surprise à la fin fait abandonner.
   const resume = resumeTarifs(rates);
 
+  // ── La barre d'achat qui suit, sur téléphone ──────────────────────────
+  //
+  // La fiche fait presque sept écrans de téléphone et le bouton « Commander »
+  // vit au cinquième. Entre les deux, quelqu'un qui a décidé d'acheter doit
+  // faire défiler en espérant tomber dessus. Mesuré le 27 novembre 2026 sur
+  // la publicité qui amenait les gens ici : 326 fiches regardées, 3
+  // commandes.
+  //
+  // La barre apparaît quand le prix du haut sort de l'écran et disparaît dès
+  // que le bon de commande arrive : elle ne se montre que là où il n'y a rien
+  // d'autre pour acheter, et ne recouvre jamais le formulaire qu'elle sert.
+  const enteteMobile = useRef<HTMLDivElement>(null);
+  const bonDeCommande = useRef<HTMLDivElement>(null);
+  const [entetVue, setEnteteVue] = useState(true);
+  const [formulaireVu, setFormulaireVu] = useState(false);
+
+  useEffect(() => {
+    const paires: Array<[HTMLDivElement | null, (v: boolean) => void]> = [
+      [enteteMobile.current, setEnteteVue],
+      [bonDeCommande.current, setFormulaireVu],
+    ];
+    const guetteurs = paires.map(([element, poser]) => {
+      if (!element) return null;
+      const guetteur = new IntersectionObserver(
+        (entrees) => poser(entrees[0]?.isIntersecting ?? false),
+        // Une marge basse : le formulaire compte comme « arrivé » un peu
+        // avant d'affleurer, sinon la barre clignote au moment précis où on
+        // l'atteint.
+        { rootMargin: "0px 0px -72px 0px" },
+      );
+      guetteur.observe(element);
+      return guetteur;
+    });
+    return () => guetteurs.forEach((g) => g?.disconnect());
+  }, []);
+
+  const barreVisible = !entetVue && !formulaireVu;
+
   return (
     <div ref={zone} className="grid grid-cols-1 gap-10 lg:grid-cols-2 lg:items-start lg:gap-16">
       {/* Name and price lead on phones; the photograph remains centred below. */}
-      <div className="lg:hidden">
+      <div ref={enteteMobile} className="lg:hidden">
         <h1 className="font-heading text-[46px] leading-tight font-bold">{product.name.toLowerCase()}</h1>
         <p className="mt-3 font-heading text-[30px] font-bold">{formatPrice(product.price)}</p>
         {resume.minimum !== null ? (
@@ -279,11 +317,18 @@ export function ProductDetail({
             choose blind. The form is told not to repeat the step. */}
         {surMesure ? (
           <div className="mt-7">
+            {/* « Composez votre horloge » annonçait du travail, et c'est ce
+                qu'il y avait : six nuanciers. Maintenant la première chose
+                qu'on voit est une rangée de modèles finis, alors le titre
+                annonce un choix, pas un chantier — et la ligne en dessous dit
+                ce qui va se passer quand on touche, parce que le lien entre
+                la vignette et l'horloge 3D au-dessus n'est deviné par
+                personne tant qu'il n'a pas eu lieu une première fois. */}
             <p className="text-center font-heading text-lg font-semibold">
-              Composez votre horloge
+              Choisissez la vôtre
             </p>
             <p className="mt-1 text-center text-sm text-encre/60">
-              Une couleur par pièce. L&apos;horloge au-dessus est la vôtre.
+              Touchez un modèle : l&apos;horloge au-dessus change tout de suite.
             </p>
             <ConfigurateurPieces
               parts={pieces}
@@ -398,7 +443,7 @@ export function ProductDetail({
           ))}
         </ul>
 
-        <div data-apparait>
+        <div data-apparait ref={bonDeCommande}>
           {selectedColor ? (
             <DirectOrderForm
               product={{
@@ -453,6 +498,46 @@ export function ProductDetail({
             Comment cette lampe est fabriquée
           </Link>
         </p>
+      </div>
+
+      {/* ── La barre d'achat, sur téléphone seulement ───────────────── */}
+      {/* `inert` plutôt qu'un retrait du DOM : la barre glisse au lieu
+          d'apparaître d'un coup, et pendant qu'elle est sortie de l'écran
+          elle ne prend ni le clavier ni le lecteur d'écran. */}
+      <div
+        inert={!barreVisible}
+        aria-hidden={!barreVisible}
+        className={`fixed inset-x-0 bottom-0 z-40 transition-transform duration-300 lg:hidden ${
+          barreVisible ? "translate-y-0" : "translate-y-[130%]"
+        }`}
+        style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
+      >
+        <div className="mx-3 mb-3 flex items-center gap-3 rounded-full border-[3px] border-encre bg-papier py-2 pr-2 pl-5 shadow-[0_12px_30px_-12px_rgba(36,28,33,.6)]">
+          <span className="min-w-0 flex-1">
+            <span className="block font-heading text-[19px] leading-none font-bold text-encre">
+              {formatPrice(product.price)}
+            </span>
+            <span className="block truncate text-[12px] text-encre/60">
+              {/* Ce qu'on est en train de regarder, pour que la barre parle de
+                  l'objet choisi et pas d'un prix abstrait. Trois cas, et le
+                  troisième compte : cette barre sert aussi les veilleuses, qui
+                  n'ont ni pièces ni modèles — leur dire « votre composition »
+                  serait du jargon d'horloge sur une lampe. */}
+              {surMesure
+                ? (etat.ideeActive ?? "votre composition")
+                : (selectedColor?.colorName ?? "")}
+            </span>
+          </span>
+          <button
+            type="button"
+            onClick={() =>
+              bonDeCommande.current?.scrollIntoView({ behavior: "smooth", block: "start" })
+            }
+            className="shrink-0 rounded-full bg-encre px-6 py-3 font-heading text-[16px] text-papier transition active:scale-95"
+          >
+            Commander
+          </button>
+        </div>
       </div>
     </div>
   );
