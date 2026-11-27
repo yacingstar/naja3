@@ -790,293 +790,293 @@
  "livraison": [
   {
    "wilaya": "01 Adrar",
-   "domicilePrice": 1000,
-   "stopdeskPrice": 800
+   "domicilePrice": 1650,
+   "stopdeskPrice": 850
   },
   {
    "wilaya": "02 Chlef",
    "domicilePrice": 700,
-   "stopdeskPrice": 600
+   "stopdeskPrice": 450
   },
   {
    "wilaya": "03 Laghouat",
    "domicilePrice": 850,
-   "stopdeskPrice": 700
+   "stopdeskPrice": 450
   },
   {
    "wilaya": "04 Oum El Bouaghi",
-   "domicilePrice": 700,
-   "stopdeskPrice": 600
+   "domicilePrice": 850,
+   "stopdeskPrice": 450
   },
   {
    "wilaya": "05 Batna",
-   "domicilePrice": 700,
-   "stopdeskPrice": 600
+   "domicilePrice": 850,
+   "stopdeskPrice": 450
   },
   {
    "wilaya": "06 Béjaïa",
-   "domicilePrice": 700,
-   "stopdeskPrice": 600
+   "domicilePrice": 850,
+   "stopdeskPrice": 450
   },
   {
    "wilaya": "07 Biskra",
    "domicilePrice": 850,
-   "stopdeskPrice": 700
+   "stopdeskPrice": 650
   },
   {
    "wilaya": "08 Béchar",
-   "domicilePrice": 1000,
-   "stopdeskPrice": 800
+   "domicilePrice": 1200,
+   "stopdeskPrice": 650
   },
   {
    "wilaya": "09 Blida",
-   "domicilePrice": 550,
-   "stopdeskPrice": 450
+   "domicilePrice": 650,
+   "stopdeskPrice": 400
   },
   {
    "wilaya": "10 Bouira",
-   "domicilePrice": 700,
-   "stopdeskPrice": 600
+   "domicilePrice": 650,
+   "stopdeskPrice": 450
   },
   {
    "wilaya": "11 Tamanrasset",
-   "domicilePrice": 1500,
-   "stopdeskPrice": 1300
+   "domicilePrice": 1800,
+   "stopdeskPrice": 1000
   },
   {
    "wilaya": "12 Tébessa",
    "domicilePrice": 850,
-   "stopdeskPrice": 700
+   "stopdeskPrice": 450
   },
   {
    "wilaya": "13 Tlemcen",
-   "domicilePrice": 700,
-   "stopdeskPrice": 600
+   "domicilePrice": 850,
+   "stopdeskPrice": 450
   },
   {
    "wilaya": "14 Tiaret",
-   "domicilePrice": 700,
-   "stopdeskPrice": 600
+   "domicilePrice": 850,
+   "stopdeskPrice": 450
   },
   {
    "wilaya": "15 Tizi Ouzou",
-   "domicilePrice": 700,
-   "stopdeskPrice": 600
+   "domicilePrice": 650,
+   "stopdeskPrice": 450
   },
   {
    "wilaya": "16 Alger",
    "domicilePrice": 500,
-   "stopdeskPrice": 400
+   "stopdeskPrice": 500
   },
   {
    "wilaya": "17 Djelfa",
    "domicilePrice": 850,
-   "stopdeskPrice": 700
-  },
-  {
-   "wilaya": "18 Jijel",
-   "domicilePrice": 700,
-   "stopdeskPrice": 600
-  },
-  {
-   "wilaya": "19 Sétif",
-   "domicilePrice": 700,
-   "stopdeskPrice": 600
-  },
-  {
-   "wilaya": "20 Saïda",
-   "domicilePrice": 700,
-   "stopdeskPrice": 600
-  },
-  {
-   "wilaya": "21 Skikda",
-   "domicilePrice": 700,
-   "stopdeskPrice": 600
-  },
-  {
-   "wilaya": "22 Sidi Bel Abbès",
-   "domicilePrice": 700,
-   "stopdeskPrice": 600
-  },
-  {
-   "wilaya": "23 Annaba",
-   "domicilePrice": 700,
-   "stopdeskPrice": 600
-  },
-  {
-   "wilaya": "24 Guelma",
-   "domicilePrice": 700,
-   "stopdeskPrice": 600
-  },
-  {
-   "wilaya": "25 Constantine",
-   "domicilePrice": 700,
-   "stopdeskPrice": 600
-  },
-  {
-   "wilaya": "26 Médéa",
-   "domicilePrice": 700,
-   "stopdeskPrice": 600
-  },
-  {
-   "wilaya": "27 Mostaganem",
-   "domicilePrice": 700,
-   "stopdeskPrice": 600
-  },
-  {
-   "wilaya": "28 M'Sila",
-   "domicilePrice": 700,
-   "stopdeskPrice": 600
-  },
-  {
-   "wilaya": "29 Mascara",
-   "domicilePrice": 700,
-   "stopdeskPrice": 600
-  },
-  {
-   "wilaya": "30 Ouargla",
-   "domicilePrice": 850,
-   "stopdeskPrice": 700
-  },
-  {
-   "wilaya": "31 Oran",
-   "domicilePrice": 700,
-   "stopdeskPrice": 600
-  },
-  {
-   "wilaya": "32 El Bayadh",
-   "domicilePrice": 1000,
-   "stopdeskPrice": 800
-  },
-  {
-   "wilaya": "33 Illizi",
-   "domicilePrice": 1500,
-   "stopdeskPrice": 1300
-  },
-  {
-   "wilaya": "34 Bordj Bou Arréridj",
-   "domicilePrice": 700,
-   "stopdeskPrice": 600
-  },
-  {
-   "wilaya": "35 Boumerdès",
-   "domicilePrice": 550,
    "stopdeskPrice": 450
   },
   {
+   "wilaya": "18 Jijel",
+   "domicilePrice": 850,
+   "stopdeskPrice": 450
+  },
+  {
+   "wilaya": "19 Sétif",
+   "domicilePrice": 850,
+   "stopdeskPrice": 450
+  },
+  {
+   "wilaya": "20 Saïda",
+   "domicilePrice": 850,
+   "stopdeskPrice": 450
+  },
+  {
+   "wilaya": "21 Skikda",
+   "domicilePrice": 850,
+   "stopdeskPrice": 450
+  },
+  {
+   "wilaya": "22 Sidi Bel Abbès",
+   "domicilePrice": 850,
+   "stopdeskPrice": 450
+  },
+  {
+   "wilaya": "23 Annaba",
+   "domicilePrice": 850,
+   "stopdeskPrice": 450
+  },
+  {
+   "wilaya": "24 Guelma",
+   "domicilePrice": 850,
+   "stopdeskPrice": 450
+  },
+  {
+   "wilaya": "25 Constantine",
+   "domicilePrice": 850,
+   "stopdeskPrice": 450
+  },
+  {
+   "wilaya": "26 Médéa",
+   "domicilePrice": 650,
+   "stopdeskPrice": 450
+  },
+  {
+   "wilaya": "27 Mostaganem",
+   "domicilePrice": 850,
+   "stopdeskPrice": 450
+  },
+  {
+   "wilaya": "28 M'Sila",
+   "domicilePrice": 850,
+   "stopdeskPrice": 450
+  },
+  {
+   "wilaya": "29 Mascara",
+   "domicilePrice": 850,
+   "stopdeskPrice": 450
+  },
+  {
+   "wilaya": "30 Ouargla",
+   "domicilePrice": 1000,
+   "stopdeskPrice": 500
+  },
+  {
+   "wilaya": "31 Oran",
+   "domicilePrice": 850,
+   "stopdeskPrice": 450
+  },
+  {
+   "wilaya": "32 El Bayadh",
+   "domicilePrice": 850,
+   "stopdeskPrice": 450
+  },
+  {
+   "wilaya": "33 Illizi",
+   "domicilePrice": 1700,
+   "stopdeskPrice": 850
+  },
+  {
+   "wilaya": "34 Bordj Bou Arréridj",
+   "domicilePrice": 650,
+   "stopdeskPrice": 450
+  },
+  {
+   "wilaya": "35 Boumerdès",
+   "domicilePrice": 650,
+   "stopdeskPrice": 400
+  },
+  {
    "wilaya": "36 El Tarf",
-   "domicilePrice": 700,
-   "stopdeskPrice": 600
+   "domicilePrice": 850,
+   "stopdeskPrice": 550
   },
   {
    "wilaya": "37 Tindouf",
-   "domicilePrice": 1500,
-   "stopdeskPrice": 1300
-  },
-  {
-   "wilaya": "38 Tissemsilt",
-   "domicilePrice": 700,
-   "stopdeskPrice": 600
-  },
-  {
-   "wilaya": "39 El Oued",
-   "domicilePrice": 850,
+   "domicilePrice": 1650,
    "stopdeskPrice": 700
   },
   {
-   "wilaya": "40 Khenchela",
-   "domicilePrice": 700,
+   "wilaya": "38 Tissemsilt",
+   "domicilePrice": 850,
+   "stopdeskPrice": 450
+  },
+  {
+   "wilaya": "39 El Oued",
+   "domicilePrice": 950,
    "stopdeskPrice": 600
+  },
+  {
+   "wilaya": "40 Khenchela",
+   "domicilePrice": 850,
+   "stopdeskPrice": 450
   },
   {
    "wilaya": "41 Souk Ahras",
-   "domicilePrice": 700,
-   "stopdeskPrice": 600
+   "domicilePrice": 850,
+   "stopdeskPrice": 450
   },
   {
    "wilaya": "42 Tipaza",
-   "domicilePrice": 550,
+   "domicilePrice": 650,
    "stopdeskPrice": 450
   },
   {
    "wilaya": "43 Mila",
-   "domicilePrice": 700,
-   "stopdeskPrice": 600
+   "domicilePrice": 850,
+   "stopdeskPrice": 450
   },
   {
    "wilaya": "44 Aïn Defla",
-   "domicilePrice": 700,
-   "stopdeskPrice": 600
+   "domicilePrice": 650,
+   "stopdeskPrice": 450
   },
   {
    "wilaya": "45 Naâma",
-   "domicilePrice": 1000,
-   "stopdeskPrice": 800
+   "domicilePrice": 950,
+   "stopdeskPrice": 500
   },
   {
    "wilaya": "46 Aïn Témouchent",
-   "domicilePrice": 700,
-   "stopdeskPrice": 600
+   "domicilePrice": 850,
+   "stopdeskPrice": 450
   },
   {
    "wilaya": "47 Ghardaïa",
-   "domicilePrice": 850,
-   "stopdeskPrice": 700
+   "domicilePrice": 950,
+   "stopdeskPrice": 650
   },
   {
    "wilaya": "48 Relizane",
-   "domicilePrice": 700,
-   "stopdeskPrice": 600
+   "domicilePrice": 850,
+   "stopdeskPrice": 450
   },
   {
    "wilaya": "49 Timimoun",
-   "domicilePrice": 1000,
-   "stopdeskPrice": 800
-  },
-  {
-   "wilaya": "50 Bordj Badji Mokhtar",
-   "domicilePrice": 1000,
-   "stopdeskPrice": 800
-  },
-  {
-   "wilaya": "51 Ouled Djellal",
-   "domicilePrice": 850,
-   "stopdeskPrice": 700
-  },
-  {
-   "wilaya": "52 Béni Abbès",
-   "domicilePrice": 1000,
+   "domicilePrice": 1650,
    "stopdeskPrice": 850
   },
   {
+   "wilaya": "50 Bordj Badji Mokhtar",
+   "domicilePrice": 2000,
+   "stopdeskPrice": 1200
+  },
+  {
+   "wilaya": "51 Ouled Djellal",
+   "domicilePrice": 950,
+   "stopdeskPrice": 450
+  },
+  {
+   "wilaya": "52 Béni Abbès",
+   "domicilePrice": 1300,
+   "stopdeskPrice": 650
+  },
+  {
    "wilaya": "53 In Salah",
-   "domicilePrice": 1500,
-   "stopdeskPrice": 1300
+   "domicilePrice": 1650,
+   "stopdeskPrice": 850
   },
   {
    "wilaya": "54 In Guezzam",
-   "domicilePrice": 1500,
-   "stopdeskPrice": 1300
+   "domicilePrice": 2000,
+   "stopdeskPrice": 1200
   },
   {
    "wilaya": "55 Touggourt",
-   "domicilePrice": 850,
-   "stopdeskPrice": 700
+   "domicilePrice": 950,
+   "stopdeskPrice": 500
   },
   {
    "wilaya": "56 Djanet",
-   "domicilePrice": 1500,
-   "stopdeskPrice": 1300
+   "domicilePrice": 2000,
+   "stopdeskPrice": 1000
   },
   {
    "wilaya": "57 El M'Ghair",
-   "domicilePrice": 850,
-   "stopdeskPrice": 700
+   "domicilePrice": 950,
+   "stopdeskPrice": 500
   },
   {
    "wilaya": "58 El Meniaa",
-   "domicilePrice": 850,
-   "stopdeskPrice": 700
+   "domicilePrice": 750,
+   "stopdeskPrice": 450
   }
  ],
  "photosLocales": true

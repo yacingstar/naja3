@@ -386,7 +386,12 @@ export function DirectOrderForm({
                 checked={order.deliveryMethod === "stopdesk"}
                 onChange={() => order.setDeliveryMethod("stopdesk")}
                 disabled={order.stopdeskUnavailable}
-                title="Stopdesk"
+                // « Au bureau » et non « Stopdesk » : c'est le mot du
+                // transporteur sur sa propre grille, et celui que la patronne
+                // emploie. « Stopdesk » ne se devine pas quand on ne l'a
+                // jamais lu — et c'est maintenant l'option cochée par défaut,
+                // donc celle qu'il faut comprendre du premier coup d'œil.
+                title="Au bureau"
                 price={
                   order.selectedRate?.stopdeskPrice != null
                     ? formatPrice(order.selectedRate.stopdeskPrice)

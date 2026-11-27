@@ -19,7 +19,10 @@ export function CheckoutForm({ rates }: { rates: DeliveryRate[] }) {
   const [phone, setPhone] = useState("");
   const [wilaya, setWilaya] = useState("");
   const [commune, setCommune] = useState("");
-  const [deliveryMethod, setDeliveryMethod] = useState<"domicile" | "stopdesk">("domicile");
+  // Le bureau par défaut, comme dans le bon de commande direct — même raison,
+  // voir la note dans useDirectOrder.ts. Les deux écrans doivent proposer le
+  // même choix par défaut, sinon le prix change selon le chemin emprunté.
+  const [deliveryMethod, setDeliveryMethod] = useState<"domicile" | "stopdesk">("stopdesk");
   const [note, setNote] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -197,7 +200,9 @@ export function CheckoutForm({ rates }: { rates: DeliveryRate[] }) {
                 onChange={() => setDeliveryMethod("stopdesk")}
                 className="mr-2"
               />
-              Stopdesk
+              {/* Même mot que sur le bon de commande direct, et que sur la
+                  grille du transporteur. Voir la note là-bas. */}
+              Au bureau
             </label>
           </div>
         </fieldset>

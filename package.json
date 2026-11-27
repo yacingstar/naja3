@@ -9,7 +9,9 @@
     "lint": "eslint",
     "photos:verifier": "node scripts/nettoyer-photos.mjs",
     "photos:nettoyer": "node scripts/nettoyer-photos.mjs --vraiment",
-    "partage:cartes": "node scripts/cartes-partage.mjs"
+    "partage:cartes": "node scripts/cartes-partage.mjs",
+    "tarifs:verifier": "node scripts/tarifs-livraison.mjs",
+    "tarifs:appliquer": "node scripts/tarifs-livraison.mjs --appliquer --secours"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.4",

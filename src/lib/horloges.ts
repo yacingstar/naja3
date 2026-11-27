@@ -256,6 +256,14 @@ const TELE: Horloge = {
       message: "L'aiguille des minutes a la couleur du cadran : on ne la verra presque pas.",
     },
   ],
+  // Vingt combinaisons prêtes, dessinées avec les onze bobines de la maison.
+  //
+  // Les cinq premières ont un rendu .webp tiré du modèle 3D : ce sont elles
+  // qui illustrent l'accueil et la rubrique. Les quinze autres n'en ont pas
+  // et n'en ont pas besoin — le configurateur les dessine en SVG avec
+  // ApercuPlat, donc ajouter une combinaison ici suffit à la proposer, sans
+  // fabriquer d'image. Tout ce qui filtre sur `image` (le bandeau de
+  // l'accueil, les deux portes) continue de ne voir que les cinq.
   idees: [
     {
       nom: "Originale",
@@ -305,10 +313,6 @@ const TELE: Horloge = {
         support: "Jaune",
       },
     },
-    // Violet franc plutôt que rose sur rose : la version précédente mettait
-    // des chiffres « Rose bonbon » sur un cadre « Rose », et à deux mètres de
-    // distance — la distance à laquelle on lit une horloge — les deux teintes
-    // n'en faisaient plus qu'une.
     {
       nom: "Bonbon",
       image: "/horloges/tele-bonbon.webp",
@@ -319,6 +323,171 @@ const TELE: Horloge = {
         heures: "Rose bonbon",
         minutes: "Violet",
         support: "Violet",
+      },
+    },
+    {
+      nom: "Encre",
+      couleurs: {
+        cadre: "Noir",
+        cadran: "Blanc",
+        chiffres: "Noir",
+        heures: "Jaune",
+        minutes: "Noir",
+        support: "Noir",
+      },
+    },
+    {
+      nom: "Nuit blanche",
+      couleurs: {
+        cadre: "Blanc",
+        cadran: "Noir",
+        chiffres: "Blanc",
+        heures: "Rose bonbon",
+        minutes: "Blanc",
+        support: "Blanc",
+      },
+    },
+    {
+      nom: "Coquelicot",
+      couleurs: {
+        cadre: "Rouge",
+        cadran: "Blanc",
+        chiffres: "Rouge",
+        heures: "Noir",
+        minutes: "Rouge",
+        support: "Rouge",
+      },
+    },
+    {
+      nom: "Mandarine",
+      couleurs: {
+        cadre: "Orange",
+        cadran: "Blanc",
+        chiffres: "Orange",
+        heures: "Bleu",
+        minutes: "Orange",
+        support: "Orange",
+      },
+    },
+    {
+      nom: "Menthe",
+      couleurs: {
+        cadre: "Vert clair",
+        cadran: "Blanc",
+        chiffres: "Vert foncé",
+        heures: "Rouge",
+        minutes: "Vert foncé",
+        support: "Vert clair",
+      },
+    },
+    {
+      nom: "Lagon",
+      couleurs: {
+        cadre: "Bleu",
+        cadran: "Blanc",
+        chiffres: "Bleu",
+        heures: "Vert clair",
+        minutes: "Bleu",
+        support: "Bleu",
+      },
+    },
+    {
+      nom: "Prune",
+      couleurs: {
+        cadre: "Violet",
+        cadran: "Blanc",
+        chiffres: "Violet",
+        heures: "Orange",
+        minutes: "Violet",
+        support: "Violet",
+      },
+    },
+    {
+      nom: "Dragée",
+      couleurs: {
+        cadre: "Rose",
+        cadran: "Blanc",
+        chiffres: "Violet",
+        heures: "Violet",
+        minutes: "Violet",
+        support: "Rose",
+      },
+    },
+    {
+      nom: "Flamant",
+      couleurs: {
+        cadre: "Rose bonbon",
+        cadran: "Blanc",
+        chiffres: "Noir",
+        heures: "Noir",
+        minutes: "Noir",
+        support: "Rose bonbon",
+      },
+    },
+    {
+      nom: "Charbon",
+      couleurs: {
+        cadre: "Noir",
+        cadran: "Blanc",
+        chiffres: "Noir",
+        heures: "Vert clair",
+        minutes: "Noir",
+        support: "Noir",
+      },
+    },
+    {
+      nom: "Safran",
+      couleurs: {
+        cadre: "Jaune",
+        cadran: "Noir",
+        chiffres: "Jaune",
+        heures: "Blanc",
+        minutes: "Jaune",
+        support: "Jaune",
+      },
+    },
+    {
+      nom: "Réglisse",
+      couleurs: {
+        cadre: "Noir",
+        cadran: "Jaune",
+        chiffres: "Noir",
+        heures: "Rouge",
+        minutes: "Noir",
+        support: "Noir",
+      },
+    },
+    {
+      nom: "Océan",
+      couleurs: {
+        cadre: "Bleu",
+        cadran: "Blanc",
+        chiffres: "Bleu",
+        heures: "Rose bonbon",
+        minutes: "Bleu",
+        support: "Bleu",
+      },
+    },
+    {
+      nom: "Pistache",
+      couleurs: {
+        cadre: "Vert clair",
+        cadran: "Noir",
+        chiffres: "Vert clair",
+        heures: "Blanc",
+        minutes: "Vert clair",
+        support: "Vert clair",
+      },
+    },
+    {
+      nom: "Neige",
+      couleurs: {
+        cadre: "Blanc",
+        cadran: "Blanc",
+        chiffres: "Bleu",
+        heures: "Rouge",
+        minutes: "Bleu",
+        support: "Blanc",
       },
     },
   ],

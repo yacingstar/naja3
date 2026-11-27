@@ -53,8 +53,19 @@ export function useDirectOrder({
   const [phone, setPhoneState] = useState("");
   const [wilaya, setWilaya] = useState("");
   const [commune, setCommune] = useState("");
+  // Le bureau par défaut, depuis la grille du 27 novembre 2026.
+  //
+  // Jusque-là c'était le domicile, à une époque où les deux tarifs étaient
+  // proches. La nouvelle grille les écarte franchement : le bureau a baissé
+  // presque partout (600 → 450 dans la plupart des wilayas) et le domicile a
+  // monté (700 → 850). Laisser le domicile coché faisait donc payer à la
+  // cliente, sans qu'elle l'ait demandé, l'option la plus chère des deux.
+  //
+  // Le garde-fou de changeWilaya reste : si une wilaya n'avait pas de bureau,
+  // le choix retomberait sur le domicile au lieu d'envoyer une commande que
+  // la Server Action refuse. Les 58 en ont un aujourd'hui.
   const [deliveryMethod, setDeliveryMethod] = useState<"domicile" | "stopdesk">(
-    "domicile",
+    "stopdesk",
   );
   const [note, setNote] = useState("");
   const [submitting, setSubmitting] = useState(false);

@@ -331,6 +331,7 @@ export function ProductDetail({
               Touchez un modèle : l&apos;horloge au-dessus change tout de suite.
             </p>
             <ConfigurateurPieces
+              slug={product.slug}
               parts={pieces}
               palette={bobines}
               horloge={horloge}
